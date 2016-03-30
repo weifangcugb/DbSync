@@ -3,12 +3,32 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.cloudbeaver</groupId>
+    <groupId>com.cloudbeaver.dbsync</groupId>
     <artifactId>dbsync</artifactId>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>AppFuse Spring MVC Application</name>
-    <url>http://www.mycompany.com</url>
+    <name>dbsync</name>
+    <url>http://www.cloudbeaver.com</url>
+
+    <repositories>
+        <repository>
+            <id>cloud-beaver</id>
+            <name>cloud-beaver</name>
+            <url>http://192.168.1.160:18081/nexus/content/groups/public/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>cloud-beaver</id>
+            <name>cloud-beaver</name>
+            <url>http://192.168.1.160:18081/nexus/content/groups/public/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
     <prerequisites>
         <maven>2.0.6</maven>
@@ -34,10 +54,10 @@
 
     <developers>
         <developer>
-            <id></id>
-            <name></name>
-            <email></email>
-            <timezone></timezone>
+            <id>bg67950</id>
+            <name>gaobin</name>
+            <email>bin.gao@citi.com</email>
+            <timezone>utc+8</timezone>
         </developer>
     </developers>
     
