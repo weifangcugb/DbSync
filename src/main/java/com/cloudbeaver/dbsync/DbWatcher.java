@@ -74,7 +74,7 @@ public class DbWatcher {
                     java.util.Arrays.asList("max_" + t.getRowversion()));
             if (jsonAndList == null) continue;
             String res = jsonAndList.getJson();
-            if (res.length() > 2) {
+            if (!res.equals("[]")) {
                 sb.append(res.substring(1, res.length()-1))
                         .append(',');
                         //.append(',').append('\n');
