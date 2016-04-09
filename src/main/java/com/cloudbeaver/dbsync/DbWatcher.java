@@ -78,10 +78,14 @@ public class DbWatcher {
                 sb.append(res.substring(1, res.length()-1))
                         .append(',');
                         //.append(',').append('\n');
+            }
+            if (jsonAndList != null &&
+                    jsonAndList.getList() != null &&
+                    jsonAndList.getList().size() > 0) {
                 t.setXgsj(jsonAndList.getList().get(0).get("max_" + t.getRowversion()));
             }
         }
-        if (sb.charAt(sb.length()-1) == ',') {
+        if (sb.charAt(sb.length() - 1) == ',') {
             sb.deleteCharAt(sb.length() - 1);
         }
         sb.append(']');

@@ -1,5 +1,19 @@
 package com.cloudbeaver.dbsync;
 
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.impl.client.*;
+import org.apache.http.message.BasicHttpRequest;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 import org.apache.log4j.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.configuration2.*;
@@ -9,12 +23,16 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import org.apache.http.client.*;
 
 /**
  * Created by gaobin on 16-4-6.
  */
 public class DbSyncClient {
+
     private static Logger logger = Logger.getLogger(DbSyncClient.class);
+
+    private HttpClient httpClient = null;
 
     private Map<String, String> conf;
     private Map<String, String> dbConf;
@@ -73,8 +91,15 @@ public class DbSyncClient {
     public static void main(String[] args) {
 
         DbSyncClient dbSyncClient = new DbSyncClient();
+
         dbSyncClient.printConf();
         System.out.println(dbSyncClient.query());
+
+        String brokerList = HttpClientHelper.get("http://br0:8088/bls");
+        System.out.println(brokerList);
+
+        String brokerListPost = HttpClientHelper.post("http://br0:8088/");
+        System.out.println(brokerListPost);
         return;
     }
 
