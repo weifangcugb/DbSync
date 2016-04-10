@@ -134,7 +134,8 @@ public class DbSyncClient {
         String brokerList = HttpClientHelper.get("http://br0:8088/bls");
         System.out.println(brokerList);
 
-        String brokerListPost = HttpClientHelper.post("http://br0:8088/");
+        // 405
+        String brokerListPost = HttpClientHelper.post("http://bing.com/");
         System.out.println(brokerListPost);
         return;
     }

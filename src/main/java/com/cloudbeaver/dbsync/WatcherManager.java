@@ -44,7 +44,7 @@ public class WatcherManager {
         for (DbWatcher dbWatcher : databases) {
             logger.debug("Query database " + dbWatcher.db + " .");
             String res = dbWatcher.query();
-            if (!res.equals("[]")) {
+            if (res.length() > 2) {
                 sb.append(res).append(',');
                 //System.out.println(res);
             }

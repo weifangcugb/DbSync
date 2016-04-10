@@ -63,6 +63,7 @@ class HttpClientHelper {
             HttpResponse response = httpClient.execute(new HttpHost(host, port), httpRequest);
             byte[] bytes = new byte[100000];
             int statusCode = response.getStatusLine().getStatusCode();
+            logger.debug("http response status code : " + statusCode);
             if (statusCode >= 200 && statusCode < 300) {
                 response.getEntity().getContent().read(bytes);
                 responseBody = new String(bytes);
@@ -116,6 +117,6 @@ class HttpClientHelper {
     }
 
     public static String post(String url) {
-        return request("POST", url, null);
+        return post (url, null);
     }
 }
