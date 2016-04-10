@@ -43,6 +43,16 @@ public class DbSyncClient {
     private Configurations configurations;
     private WatcherManager watcherManager;
 
+    private String clientId;
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
     public String getTaskJson() {
 		return taskJson;
 	}
@@ -51,9 +61,54 @@ public class DbSyncClient {
 		this.taskJson = taskJson;
 	}
 
-	public DbSyncClient() {
+    public void fetchTasks () {
+        System.out.println(conf.get("tasks-server.url") + getClientId());
+        //String json = new DbSyncClient().getTaskJson();
+        String json = HttpClientHelper.get(conf.get("tasks-server.url") + clientId);
+        setTaskJson(json);
+        reloadTasks();
+    }
+
+    private void reloadTasks () {
+        if (taskJson == null || taskJson.length() == 0) {
+            return;
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            watcherManager = objectMapper.readValue(taskJson, WatcherManager.class);
+            watcherManager.setConf(dbConf);
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.fatal("Create bean `watcherManager` failed : " + e.getMessage());
+            System.out.println(getTaskJson());
+            System.out.println("程序崩溃了，json格式不对，联系周洪超。");
+            System.exit(1);
+        }
+    }
+
+    private void loadConfig () {
         conf = new HashMap<String, String>();
         dbConf = new HashMap<String, String>();
+        configurations = new Configurations();
+        try {
+            Configuration configuration = configurations.properties("dbname.conf");
+            Iterator<String> keys = configuration.getKeys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                if (! key.startsWith("db.")) {
+                    conf.put(key, configuration.getString(key));
+                } else {
+                    dbConf.put(key, configuration.getString(key));
+                }
+            }
+        } catch (ConfigurationException e) {
+            e.printStackTrace();
+            logger.error("Read conf from `dbname.conf` failed : " + e.getMessage());
+        }
+    }
+
+    @Deprecated
+	public DbSyncClient() {
         // TODO: Get tasks from the server.
         taskJson = "{\"databases\":[{\"prison\":\"1\",\"db\":\"DocumentDB\",\"rowversion\":\"xgsj\",\"tables\":"
         		+ "[{\"table\":\"da_jbxx\"},{\"table\":\"da_jl\"},"
@@ -82,39 +137,28 @@ public class DbSyncClient {
         		+ "{\"table\":\"wwzk\"},{\"table\":\"wwjc\"},{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\"},"
         		+ "{\"table\":\"sndd\"}]}]}";
 
-        configurations = new Configurations();
-        try {
-            Configuration configuration = configurations.properties("dbname.conf");
-            Iterator<String> keys = configuration.getKeys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                if (! key.startsWith("db.")) {
-                    conf.put(key, configuration.getString(key));
-                } else {
-                    dbConf.put(key, configuration.getString(key));
-                }
-            }
-        } catch (ConfigurationException e) {
-            e.printStackTrace();
-            logger.error("Read conf from `dbname.conf` failed : " + e.getMessage());
-        }
+    }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            watcherManager = objectMapper.readValue(taskJson, WatcherManager.class);
-            watcherManager.setConf(dbConf);
-        } catch (IOException e) {
-            e.printStackTrace();
-            logger.error("Create bean `watcherManager` failed : " + e.getMessage());
-        }
-
+    public DbSyncClient (String clientId) {
+        loadConfig();
+        setClientId(clientId);
     }
 
     public String query() {
+        assert (watcherManager != null);
         return watcherManager.query();
     }
 
-    private void printConf() {
+    public void sendToFlume (String str) {
+        // TODO: Send to Flume. Use HttpClientHelper.
+        System.out.println(str);
+    }
+
+    public void queryAndSendToFlume () {
+        sendToFlume(query());
+    }
+
+    protected void printConf() {
         // DEBUG
         for (String key : conf.keySet()) {
             System.out.println(key + " : " + conf.get(key));
@@ -126,10 +170,31 @@ public class DbSyncClient {
 
     public static void main(String[] args) {
 
-        DbSyncClient dbSyncClient = new DbSyncClient();
+        if (args.length == 0) {
+            System.out.println("Error: Client ID must be specified as a parameter.");
+            args = new String[1];
+            args[0] = "1";
+        }
+        System.out.println(args[0]);
 
+        DbSyncClient dbSyncClient = new DbSyncClient(args[0]);
+        dbSyncClient.setClientId("1");
+        dbSyncClient.fetchTasks();
+
+        while (true) {
+            System.out.println(dbSyncClient.query());
+            try {
+                dbSyncClient.queryAndSendToFlume();
+                Thread.sleep(1000 * 60 * 3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                logger.debug("Sleep Interrupted !");
+                break;
+            }
+        }
+
+        // 下面都是测试用的。
         dbSyncClient.printConf();
-        System.out.println(dbSyncClient.query());
 
         String brokerList = HttpClientHelper.get("http://br0:8088/bls");
         System.out.println(brokerList);
