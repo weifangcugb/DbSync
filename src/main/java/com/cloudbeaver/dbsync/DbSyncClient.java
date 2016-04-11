@@ -1,19 +1,6 @@
 package com.cloudbeaver.dbsync;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.impl.client.*;
-import org.apache.http.message.BasicHttpRequest;
-import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.HttpContext;
 import org.apache.log4j.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,11 +9,16 @@ import org.apache.commons.configuration2.*;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.apache.http.client.*;
 
 /**
  * Created by gaobin on 16-4-6.
@@ -80,8 +72,6 @@ public class DbSyncClient {
         } catch (IOException e) {
             e.printStackTrace();
             logger.fatal("Create bean `watcherManager` failed : " + e.getMessage());
-            System.out.println(getTaskJson());
-            System.out.println("程序崩溃了，json格式不对，联系周洪超。");
             System.exit(1);
         }
     }
@@ -150,8 +140,39 @@ public class DbSyncClient {
     }
 
     public void sendToFlume (String str) {
-        // TODO: Send to Flume. Use HttpClientHelper.
-        System.out.println(str);
+        str = str.replaceAll("\"", "\\\\\"");
+        String flumeJson = "[{ \"headers\" : {}, \"body\" : \"" + str + "\" }]";
+        // WRONG
+//        HttpClientHelper.post(conf.get("flume-server.url"), flumeJson);
+        // WRONG
+//        Map<String, String> map = new HashMap<String, String>();
+//        map.put("headers", "");
+//        map.put("body", str);
+//        HttpClientHelper.post(conf.get("flume-server.url"), map);
+        String flumeUrl = conf.get("flume-server.url");
+        if (flumeUrl != null && !flumeUrl.contains("://")) {
+            flumeUrl = "http://" + flumeUrl;
+        }
+        try {
+            URL url = new URL(flumeUrl);
+            URLConnection connection = url.openConnection();
+            connection.setDoOutput(true);
+            PrintWriter pWriter = new PrintWriter((connection.getOutputStream()));
+            logger.debug("Send message to flume-server : " + flumeJson);
+            pWriter.write(flumeJson);
+            pWriter.close();
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String line, result = "";
+            while ((line = in.readLine()) != null) {
+                result += line;
+            }
+            logger.debug("Got message from flume-server : " + result);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void queryAndSendToFlume () {
@@ -182,9 +203,8 @@ public class DbSyncClient {
         dbSyncClient.fetchTasks();
 
         while (true) {
-            System.out.println(dbSyncClient.query());
+            dbSyncClient.queryAndSendToFlume();
             try {
-                dbSyncClient.queryAndSendToFlume();
                 Thread.sleep(1000 * 60 * 3);
             } catch (InterruptedException e) {
                 e.printStackTrace();

@@ -8,6 +8,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.message.BasicNameValuePair;
@@ -16,6 +17,8 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,23 +34,33 @@ class HttpClientHelper {
     private static HttpClientBuilder hcb = HttpClientBuilder.create();
     private static HttpClient httpClient = hcb.build();
 
-    private static HttpRequest makeRequest(String method, String uri, Map<String, String> params) {
+    private static HttpRequest makeRequest(String method, String uri, Object params) {
         HttpRequest httpRequest = null;
         if (method.equalsIgnoreCase("GET")) {
             httpRequest = new HttpGet(uri);
         } else if (method.equalsIgnoreCase("POST")) {
             HttpPost httpPost = new HttpPost(uri);
-            List<NameValuePair> paramList = new ArrayList<NameValuePair>();
-            if (params != null && params.size() > 0) {
-                for (String k : params.keySet()) {
-                    paramList.add(new BasicNameValuePair(k, params.get(k)));
+            if (params != null) {
+                if (params instanceof String) {
+                    String paramString = (String) params;
+                    if (paramString.length() > 0) {
+                        httpPost.setEntity(new StringEntity(paramString, HTTP.UTF_8));
+                    }
+                } else if (params instanceof Map) {
+                    List<NameValuePair> paramList = new ArrayList<NameValuePair>();
+                    Map<String, String> paramMap = (Map<String, String>) params;
+                    if (paramMap != null && paramMap.size() > 0) {
+                        for (String k : paramMap.keySet()) {
+                            paramList.add(new BasicNameValuePair(k, paramMap.get(k)));
+                        }
+                    }
+                    try {
+                        httpPost.setEntity(new UrlEncodedFormEntity(paramList, HTTP.UTF_8));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                        logger.error("Invalid params : " + e.getMessage());
+                    }
                 }
-            }
-            try {
-                httpPost.setEntity(new UrlEncodedFormEntity(paramList, HTTP.UTF_8));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-                logger.error("Invalid params : " + e.getMessage());
             }
             httpRequest = httpPost;
         } else {
@@ -57,8 +70,17 @@ class HttpClientHelper {
     }
 
     public static String request(String method, String host, int port, String uri, Map<String, String> params) {
+        return _request(method, host, port, uri, params);
+    }
+
+    public static String request(String method, String host, int port, String uri, String params) {
+        return _request(method, host, port, uri, params);
+    }
+
+    private static String _request(String method, String host, int port, String uri, Object params) {
         String responseBody = "";
         HttpRequest httpRequest = makeRequest(method, uri, params);
+        System.out.println(httpRequest.toString());
         try {
             HttpResponse response = httpClient.execute(new HttpHost(host, port), httpRequest);
             byte[] bytes = new byte[100000];
@@ -74,49 +96,58 @@ class HttpClientHelper {
         return responseBody;
     }
 
-    public static String request(String method, String url, Map<String, String> params) {
-        String uri;
-        String host;
-        int port;
-        int indexOfDoubleBackSlash = url.indexOf("://");
-        if (indexOfDoubleBackSlash >= 0) {
-            url = url.substring(indexOfDoubleBackSlash + 3);
+    public static String request(String method, String urlSpec) {
+        return _request(method, urlSpec, null);
+    }
+
+    public static String request(String method, String urlSpec, Map<String, String> params) {
+        return _request(method, urlSpec, params);
+    }
+
+    public static String request(String method, String urlSpec, String params) {
+        return _request(method, urlSpec, params);
+    }
+
+    private static String _request(String method, String urlSpec, Object params) {
+        if (urlSpec != null && !urlSpec.contains("://")) {
+            urlSpec = "http://" + urlSpec;
         }
-        int indexOfBackSlash = url.indexOf('/');
-        String hostAndPort;
-        if (indexOfBackSlash > 0) {
-            hostAndPort = url.substring(0, indexOfBackSlash);
-            uri = url.substring(indexOfBackSlash);
-        } else if (indexOfBackSlash == 0) {
-            hostAndPort = "localhost:80";
-            uri = url;
-        } else {
-            hostAndPort = url;
-            uri = "/";
+        String uri = "/";
+        String host = "localhost";
+        int port = 80;
+        try {
+            URL url = new URL(urlSpec);
+            host = url.getHost();
+            port = url.getPort();
+            uri = url.getFile();
+            if (host == null || host.length() == 0) {
+                host = "localhost";
+            }
+            if (port == 0) {
+                port = 80;
+            }
+            if (uri == null || uri.length() == 0) {
+                uri = "/";
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
         }
-        int indexOfColon = hostAndPort.indexOf(':');
-        if (indexOfColon > 0) {
-            host = hostAndPort.substring(0, indexOfColon);
-            port = Integer.parseInt(hostAndPort.substring(indexOfColon + 1));
-        } else if (indexOfColon == 0) {
-            host = "localhost";
-            port = Integer.parseInt(hostAndPort.substring(indexOfColon + 1));
-        } else {
-            host = hostAndPort;
-            port = 80;
-        }
-        return request(method, host, port, uri, params);
+        return _request(method, host, port, uri, params);
     }
 
     public static String get(String url) {
-        return request("GET", url, null);
+        return request("GET", url);
     }
 
     public static String post(String url, Map<String, String> params) {
         return request("POST", url, params);
     }
 
+    public static String post(String url, String params) {
+        return request("POST", url, params);
+    }
+
     public static String post(String url) {
-        return post (url, null);
+        return post (url, "");
     }
 }
