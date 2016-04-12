@@ -15,8 +15,6 @@ public class WatcherManager {
     private Map<String, String> conf;
     private ArrayList<DbWatcher> databases;
 
-    private Map<DbWatcher, DbExtractor> dbConnectionBank;
-
     public Map<String, String> getConf() {
         return conf;
     }
