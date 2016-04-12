@@ -40,8 +40,9 @@ public class AppTest extends TestCase {
 
 	@Test
 	public void testGetMsg() throws Exception {
-		DbSyncClient dbSyncClient = new DbSyncClient();
-		//dbSyncClient.setTaskJson(taskJson);
+		String clientId = "1";
+		DbSyncClient dbSyncClient = new DbSyncClient(clientId);
+		dbSyncClient.fetchTasks();
 		String reply = dbSyncClient.query();
 		System.out.println(reply);
 
@@ -51,7 +52,7 @@ public class AppTest extends TestCase {
 			JsonNode dbNode = root.get(i);
 			for (int j = 0; j < dbNode.size(); j++) {
 				JsonNode item = dbNode.get(j);
-				assertEquals(item.get("hdfs_prison"), "1");
+				assertEquals(item.get("hdfs_prison"), 1);
 				assertEquals(item.get("hdfs_db"), "DocumentDB");
 			}
 		}
