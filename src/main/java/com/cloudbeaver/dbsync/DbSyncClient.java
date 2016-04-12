@@ -57,6 +57,7 @@ public class DbSyncClient {
         System.out.println(conf.get("tasks-server.url") + getClientId());
         //String json = new DbSyncClient().getTaskJson();
         String json = HttpClientHelper.get(conf.get("tasks-server.url") + clientId);
+        logger.debug("Tasks : " + json);
         setTaskJson(json);
         reloadTasks();
     }
@@ -135,7 +136,9 @@ public class DbSyncClient {
     }
 
     public String query() {
-        assert (watcherManager != null);
+        //assert (watcherManager != null);
+        if (watcherManager == null)
+            return "";
         return watcherManager.query();
     }
 
@@ -203,9 +206,11 @@ public class DbSyncClient {
         dbSyncClient.fetchTasks();
 
         while (true) {
+            logger.debug("AGAIN");
             dbSyncClient.queryAndSendToFlume();
             try {
-                Thread.sleep(1000 * 60 * 3);
+                Thread.sleep(1000 * 3); // DEBUG QUICKLY
+                //Thread.sleep(1000 * 60 * 3); // PRODUCT
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 logger.debug("Sleep Interrupted !");

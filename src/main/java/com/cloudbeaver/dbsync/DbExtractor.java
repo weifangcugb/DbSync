@@ -14,15 +14,55 @@ public class DbExtractor {
 
     private static Logger logger = Logger.getLogger(DbExtractor.class);
 
+    String url;
+    String username;
+    String password;
     Connection conn;
     String driverClassName = null;
 
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     public DbExtractor (String url, String username, String password) {
+        setUrl(url);
+        setUsername(username);
+        setPassword(password);
         getConn(url, username, password);
     }
 
-    protected Connection getConn (String url, String username, String password) {
-        if (conn == null) {
+    protected Connection getConn () {
+        boolean connClosed = false;
+        try {
+            if (conn == null) {
+                connClosed = true;
+            } else {
+                connClosed = conn.isClosed();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (connClosed) {
             if (driverClassName == null) {
                 if (url.startsWith("jdbc:sqlserver")) {
                     driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
@@ -40,6 +80,14 @@ public class DbExtractor {
             }
         }
         return conn;
+    }
+
+    @Deprecated
+    protected Connection getConn (String url, String username, String password) {
+        setUrl(url);
+        setUsername(username);
+        setPassword(password);
+        return getConn();
     }
 
     private static String resultSetToJson(ResultSet rs) throws SQLException
@@ -135,27 +183,22 @@ public class DbExtractor {
             e.printStackTrace();
             logger.error(e.getMessage());
             //System.exit(1);
+            getConn();
         }
         return json;
     }
 
     public String extractJson(String statement) {
-        if (conn != null) {
-            PreparedStatement s = null;
-            try {
-                s = conn.prepareStatement(statement);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                logger.error(e.getMessage());
-                //System.exit(1);
-            }
-            return extractJson(s);
-        } else {
-            System.out.println("NO Conn Exception");
-            logger.error("NO Conn Exception");
+        PreparedStatement s = null;
+        try {
+            s = getConn().prepareStatement(statement);
+            s.setQueryTimeout(10);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
             //System.exit(1);
-            return null;
         }
+        return extractJson(s);
     }
 
     public List<Map<String, String>> extractList(PreparedStatement s) {
@@ -168,60 +211,52 @@ public class DbExtractor {
             e.printStackTrace();
             logger.error(e.getMessage());
             //System.exit(1);
+            getConn();
         }
         return list;
     }
 
     public List<Map<String, String>> extractList(String statement) {
-        if (conn != null) {
-            PreparedStatement s = null;
-            try {
-                s = conn.prepareStatement(statement);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                logger.error(e.getMessage());
-                //System.exit(1);
-            }
-            return extractList(s);
-        } else {
-            System.out.println("NO Conn Exception");
-            logger.error("NO Conn Exception");
+        PreparedStatement s = null;
+        try {
+            s = getConn().prepareStatement(statement);
+            s.setQueryTimeout(10);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
             //System.exit(1);
-            return null;
         }
+        return extractList(s);
     }
 
     public JsonAndList extractJsonAndList(PreparedStatement s, Collection<String> excludedColumns) {
         JsonAndList jsonAndList = null;
         ResultSet rs = null;
         try {
+            s.setQueryTimeout(10);
+            System.out.println(s.getQueryTimeout());
             rs = s.executeQuery();
             jsonAndList = this.resultSetToJsonAndList(rs, excludedColumns);
         } catch (SQLException e) {
             e.printStackTrace();
             logger.error("SQL ERROR: 错误原因: " + e.getMessage());
             //System.exit(1);
+            getConn();
         }
         return jsonAndList;
     }
 
     public JsonAndList extractJsonAndList(String statement, Collection<String> excludedColumns) {
-        if (conn != null) {
-            PreparedStatement s = null;
-            try {
-                s = conn.prepareStatement(statement);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                logger.error(e.getMessage());
-                //System.exit(1);
-            }
-            return extractJsonAndList(s, excludedColumns);
-        } else {
-            System.out.println("NO Conn Exception");
-            logger.error("NO Conn Exception");
+        PreparedStatement s = null;
+        try {
+            s = getConn().prepareStatement(statement);
+            s.setQueryTimeout(10);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            logger.error(e.getMessage());
             //System.exit(1);
-            return null;
         }
+        return extractJsonAndList(s, excludedColumns);
     }
 
     public void setDriverClassName (String driverClassName) {
@@ -232,12 +267,14 @@ public class DbExtractor {
         DbExtractor ya = new DbExtractor("jdbc:sqlserver://192.168.1.107;databaseName=st1417", "gaobin", "abc#123");
         PreparedStatement preparedStatement = null;
         try {
+            ya.conn = ya.getConn();
             preparedStatement = ya.conn.prepareStatement("SELECT TOP 1000 [xm]\n" +
                     "      ,[nl]\n" +
                     "      ,[sr]\n" +
                     "      ,[rw]\n" +
                     "  FROM [st1417].[dbo].[ycjy]\n" +
                     "  where rw >= 0x00000000000007D3");
+            preparedStatement.setQueryTimeout(10);
         } catch (SQLException e) {
             e.printStackTrace();
         }

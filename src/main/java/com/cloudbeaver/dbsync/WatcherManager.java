@@ -15,6 +15,8 @@ public class WatcherManager {
     private Map<String, String> conf;
     private ArrayList<DbWatcher> databases;
 
+    private Map<DbWatcher, DbExtractor> dbConnectionBank;
+
     public Map<String, String> getConf() {
         return conf;
     }
@@ -37,6 +39,7 @@ public class WatcherManager {
     public void setDatabases(ArrayList<DbWatcher> databases) {
         this.databases = databases;
     }
+
 
     public String query() {
         StringBuilder sb = new StringBuilder();
