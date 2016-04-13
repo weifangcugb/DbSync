@@ -16,6 +16,7 @@ import org.apache.http.protocol.HTTP;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -79,16 +80,20 @@ class HttpClientHelper {
 
     private static String _request(String method, String host, int port, String uri, Object params) {
         String responseBody = "";
+        StringBuilder sb = new StringBuilder();
         HttpRequest httpRequest = makeRequest(method, uri, params);
-        System.out.println(httpRequest.toString());
         try {
             HttpResponse response = httpClient.execute(new HttpHost(host, port), httpRequest);
-            byte[] bytes = new byte[100000];
             int statusCode = response.getStatusLine().getStatusCode();
             logger.debug("http response status code : " + statusCode);
             if (statusCode >= 200 && statusCode < 300) {
-                response.getEntity().getContent().read(bytes);
-                responseBody = new String(bytes);
+                InputStream content = response.getEntity().getContent();
+                byte[] bytes = new byte[65536];
+                int len;
+                while ((len = response.getEntity().getContent().read(bytes, 0, 65536)) > 0) {
+                    sb.append(new String(bytes, 0, len));
+                }
+                responseBody = sb.toString();
             }
         } catch (IOException e) {
             e.printStackTrace();

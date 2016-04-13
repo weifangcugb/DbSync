@@ -41,7 +41,7 @@ public class AppTest extends TestCase {
 	@Test
 	public void testGetMsg() throws Exception {
 		String clientId = "1";
-		DbSyncClient dbSyncClient = new DbSyncClient(clientId);
+		DbSyncClient dbSyncClient = new DbSyncClient();
 		dbSyncClient.fetchTasks();
 		String reply = dbSyncClient.query();
 		System.out.println(reply);

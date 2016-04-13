@@ -9,13 +9,7 @@ import org.apache.commons.configuration2.*;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,6 +19,8 @@ import java.util.Map;
  */
 public class DbSyncClient {
 
+    private final String DB_SYNC_CLIENT_CONFIG_FILE_NAME = "DbSyncClient.conf";
+    private final String TASKS_SERVER_URL = "tasks-server.url";
     private static Logger logger = Logger.getLogger(DbSyncClient.class);
 
     private HttpClient httpClient = null;
@@ -54,9 +50,8 @@ public class DbSyncClient {
 	}
 
     public void fetchTasks () {
-        System.out.println(conf.get("tasks-server.url") + getClientId());
-        //String json = new DbSyncClient().getTaskJson();
-        String json = HttpClientHelper.get(conf.get("tasks-server.url") + clientId);
+        System.out.println(conf.get(TASKS_SERVER_URL) + getClientId());
+        String json = HttpClientHelper.get(conf.get(TASKS_SERVER_URL) + clientId);
         logger.debug("Tasks : " + json);
         setTaskJson(json);
         reloadTasks();
@@ -82,7 +77,8 @@ public class DbSyncClient {
         dbConf = new HashMap<String, String>();
         configurations = new Configurations();
         try {
-            Configuration configuration = configurations.properties("dbname.conf");
+            Configuration configuration
+                    = configurations.properties(DB_SYNC_CLIENT_CONFIG_FILE_NAME);
             Iterator<String> keys = configuration.getKeys();
             while (keys.hasNext()) {
                 String key = keys.next();
@@ -94,14 +90,13 @@ public class DbSyncClient {
             }
         } catch (ConfigurationException e) {
             e.printStackTrace();
-            logger.error("Read conf from `dbname.conf` failed : " + e.getMessage());
+            logger.error("Read conf from `" + DB_SYNC_CLIENT_CONFIG_FILE_NAME + "` failed : "
+                    + e.getMessage());
         }
     }
 
-    @Deprecated
-	public DbSyncClient() {
-        // TODO: Get tasks from the server.
-        taskJson = "{\"databases\":[{\"prison\":\"1\",\"db\":\"DocumentDB\",\"rowversion\":\"xgsj\",\"tables\":"
+	private String defaultTaskJson() {
+        return  "{\"databases\":[{\"prison\":\"1\",\"db\":\"DocumentDB\",\"rowversion\":\"xgsj\",\"tables\":"
         		+ "[{\"table\":\"da_jbxx\"},{\"table\":\"da_jl\"},"
         		+ "{\"table\":\"da_qklj\"},{\"table\":\"da_shgx\"},"
         		+ "{\"table\":\"da_tzzb\"},{\"table\":\"da_tszb\",\"join\":[\"da_tscb\"],\"key\":\"da_tszb.bh=da_tscb.bh\"},"
@@ -127,12 +122,15 @@ public class DbSyncClient {
         		+ "{\"table\":\"wp_bgzb\",\"join\":[\"wp_bgbc\"],\"key\":\"wp_bgzb.bh=wp_bgbc.bh AND wp_bgzb.djrq=wp_bgbc.djrq\"},"
         		+ "{\"table\":\"wwzk\"},{\"table\":\"wwjc\"},{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\"},"
         		+ "{\"table\":\"sndd\"}]}]}";
-
     }
 
-    public DbSyncClient (String clientId) {
+    public DbSyncClient () {
         loadConfig();
-        setClientId(clientId);
+        if (conf.containsKey("client.id")) {
+            setClientId(conf.get("client.id"));
+        } else {
+            setClientId("1");
+        }
     }
 
     public String query() {
@@ -145,37 +143,7 @@ public class DbSyncClient {
     public void sendToFlume (String str) {
         str = str.replaceAll("\"", "\\\\\"");
         String flumeJson = "[{ \"headers\" : {}, \"body\" : \"" + str + "\" }]";
-        // WRONG
-//        HttpClientHelper.post(conf.get("flume-server.url"), flumeJson);
-        // WRONG
-//        Map<String, String> map = new HashMap<String, String>();
-//        map.put("headers", "");
-//        map.put("body", str);
-//        HttpClientHelper.post(conf.get("flume-server.url"), map);
-        String flumeUrl = conf.get("flume-server.url");
-        if (flumeUrl != null && !flumeUrl.contains("://")) {
-            flumeUrl = "http://" + flumeUrl;
-        }
-        try {
-            URL url = new URL(flumeUrl);
-            URLConnection connection = url.openConnection();
-            connection.setDoOutput(true);
-            PrintWriter pWriter = new PrintWriter((connection.getOutputStream()));
-            logger.debug("Send message to flume-server : " + flumeJson);
-            pWriter.write(flumeJson);
-            pWriter.close();
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String line, result = "";
-            while ((line = in.readLine()) != null) {
-                result += line;
-            }
-            logger.debug("Got message from flume-server : " + result);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        HttpClientHelper.post(conf.get("flume-server.url"), flumeJson);
     }
 
     public void queryAndSendToFlume () {
@@ -194,23 +162,14 @@ public class DbSyncClient {
 
     public static void main(String[] args) {
 
-        if (args.length == 0) {
-            System.out.println("Error: Client ID must be specified as a parameter.");
-            args = new String[1];
-            args[0] = "1";
-        }
-        System.out.println(args[0]);
-
-        DbSyncClient dbSyncClient = new DbSyncClient(args[0]);
-        dbSyncClient.setClientId("1");
+        DbSyncClient dbSyncClient = new DbSyncClient();
         dbSyncClient.fetchTasks();
 
         while (true) {
-            logger.debug("AGAIN");
             dbSyncClient.queryAndSendToFlume();
             try {
-                Thread.sleep(1000 * 3); // DEBUG QUICKLY
-                //Thread.sleep(1000 * 60 * 3); // PRODUCT
+                // Thread.sleep(1000 * 3); // DEBUG QUICKLY
+                Thread.sleep(1000 * 60 * 3); // PRODUCT
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 logger.debug("Sleep Interrupted !");

@@ -192,7 +192,7 @@ public class DbExtractor {
         PreparedStatement s = null;
         try {
             s = getConn().prepareStatement(statement);
-            s.setQueryTimeout(10);
+            //s.setQueryTimeout(10);
         } catch (SQLException e) {
             e.printStackTrace();
             logger.error(e.getMessage());
@@ -220,7 +220,7 @@ public class DbExtractor {
         PreparedStatement s = null;
         try {
             s = getConn().prepareStatement(statement);
-            s.setQueryTimeout(10);
+            //s.setQueryTimeout(10);
         } catch (SQLException e) {
             e.printStackTrace();
             logger.error(e.getMessage());
@@ -233,8 +233,6 @@ public class DbExtractor {
         JsonAndList jsonAndList = null;
         ResultSet rs = null;
         try {
-            s.setQueryTimeout(10);
-            System.out.println(s.getQueryTimeout());
             rs = s.executeQuery();
             jsonAndList = this.resultSetToJsonAndList(rs, excludedColumns);
         } catch (SQLException e) {
@@ -250,7 +248,7 @@ public class DbExtractor {
         PreparedStatement s = null;
         try {
             s = getConn().prepareStatement(statement);
-            s.setQueryTimeout(10);
+            //s.setQueryTimeout(10);
         } catch (SQLException e) {
             e.printStackTrace();
             logger.error(e.getMessage());
@@ -268,13 +266,14 @@ public class DbExtractor {
         PreparedStatement preparedStatement = null;
         try {
             ya.conn = ya.getConn();
+
             preparedStatement = ya.conn.prepareStatement("SELECT TOP 1000 [xm]\n" +
                     "      ,[nl]\n" +
                     "      ,[sr]\n" +
                     "      ,[rw]\n" +
                     "  FROM [st1417].[dbo].[ycjy]\n" +
                     "  where rw >= 0x00000000000007D3");
-            preparedStatement.setQueryTimeout(10);
+            //preparedStatement.setQueryTimeout(10);
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -25,6 +25,12 @@ public class DbWatcher {
         this.dbExtractor = dbExtractor;
     }
 
+    public void setDbExtractor(String url, String username, String password) {
+        this.setDbExtractor(new DbExtractor(
+                url, username, password
+        ));
+    }
+
     public ArrayList<TableWatcher> getTables() {
         return tables;
     }
