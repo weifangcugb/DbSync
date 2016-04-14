@@ -16,6 +16,10 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.dbsync.common.BeaverUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.BeanUtil;
+
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 public class FileUploader implements Runnable {
 	private static Logger logger = Logger.getLogger(FileUploader.class);
@@ -113,18 +117,20 @@ public class FileUploader implements Runnable {
 
 		ExecutorService executor = Executors.newCachedThreadPool();
 		for (final DirInfo dirInfo : dirInfos) {
+			logger.debug("handle dirinfo, path:" + dirInfo.dir.getAbsolutePath());
 			executor.submit(new Runnable() {
-				
 				@Override
 				public void run() {
+					logger.info("start thread to upload files, threadId:" + Thread.currentThread().getId());
 					dirInfo.listSortUploadFiles();
+					logger.info("exit thread to upload files, threadId:" + Thread.currentThread().getId());
 				}
 			});
 		}
 
 		while (KEEP_RUNNING) {
 			try {
-				executor.awaitTermination(5, TimeUnit.SECONDS);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -189,13 +195,32 @@ public class FileUploader implements Runnable {
 	}
 
 	public static void main(String[] args) {
-		new Thread(new FileUploader("PicLoader")).start();
+		Thread fileUploaderThread = new Thread(new FileUploader("FileUploader"));
+		fileUploaderThread.start();
+
+		Signal sig = new Signal("USR2");
+		Signal.handle(sig, new StopHandler());
 
 		try {
-			System.in.read();
-		} catch (IOException e) {
-			e.printStackTrace();
+			fileUploaderThread.join();
+		} catch (InterruptedException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("join failed");
 		}
 	}
 
+	public static void stopRunning() {
+		KEEP_RUNNING = false;
+	}
+}
+
+class StopHandler implements SignalHandler{
+	Logger logger = Logger.getLogger(StopHandler.class);
+
+	@Override
+	public void handle(Signal sig) {
+		logger.info("get signal, signal:" + sig);
+		FileUploader.stopRunning();
+	}
+	
 }

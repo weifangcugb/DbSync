@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.apache.http.HttpStatus;
 import org.apache.log4j.Logger;
 
 public class BeaverUtils {
@@ -34,8 +35,11 @@ public class BeaverUtils {
 	        while((tmp = br.readLine()) != null){
 	        	sb.append(tmp);
 	        }
-
-	        return sb.toString();
+	        if (urlConnection.getResponseCode() == HttpStatus.SC_OK) {
+				return sb.toString();
+			}else {
+				return null;
+			}
 		} catch (IOException e) {
 			PrintStackTrace(e);
 			throw e;
