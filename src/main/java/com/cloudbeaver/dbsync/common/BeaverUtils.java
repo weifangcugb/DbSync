@@ -51,4 +51,10 @@ public class BeaverUtils {
 			}
 		}
 	}
+
+	public static void clearByteArray(byte[] buffer){
+		for (int i = 0; i < buffer.length; i++) {
+			buffer[i] = 0;
+		}
+	}
 }
