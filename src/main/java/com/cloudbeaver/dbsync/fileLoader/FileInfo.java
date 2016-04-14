@@ -97,7 +97,7 @@ public class FileInfo implements Comparable<FileInfo>{
 	public void uploadData() throws IOException {
 		logger.info("start to upload pic, file:" + file.getAbsolutePath());
 		String fileData = getFileData();
-		uploadFileData(file.getName(),fileData, file.lastModified());
+		uploadFileData(file.getName(),fileData, modifyTime);
 		logger.info("finish upload pic, file:" + file.getAbsolutePath());
 	}
 }

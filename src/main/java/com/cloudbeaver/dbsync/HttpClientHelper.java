@@ -3,6 +3,7 @@ package com.cloudbeaver.dbsync;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -86,7 +87,7 @@ class HttpClientHelper {
             HttpResponse response = httpClient.execute(new HttpHost(host, port), httpRequest);
             int statusCode = response.getStatusLine().getStatusCode();
             logger.debug("http response status code : " + statusCode);
-            if (statusCode >= 200 && statusCode < 300) {
+            if (statusCode == HttpStatus.SC_OK) {
                 InputStream content = response.getEntity().getContent();
                 byte[] bytes = new byte[65536];
                 int len;
