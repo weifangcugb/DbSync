@@ -16,8 +16,8 @@ import org.apache.log4j.Logger;
 public class FileInfo implements Comparable<FileInfo>{
 	private static Logger logger = Logger.getLogger(DirInfo.class);
 
-	File file = null;
-	long modifyTime = 0;
+	private File file = null;
+	private long modifyTime = 0;
 
 	public FileInfo(File file, long changeTime) {
 		this.file = file;

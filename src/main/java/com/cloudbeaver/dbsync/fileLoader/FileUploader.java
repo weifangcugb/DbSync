@@ -16,7 +16,6 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.dbsync.common.BeaverUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.BeanUtil;
 
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -122,7 +121,16 @@ public class FileUploader implements Runnable {
 				@Override
 				public void run() {
 					logger.info("start thread to upload files, threadId:" + Thread.currentThread().getId());
-					dirInfo.listSortUploadFiles();
+					while(KEEP_RUNNING){
+						dirInfo.listSortUploadFiles();
+						try {
+//							have a break after each time
+							Thread.sleep(5000);
+						} catch (InterruptedException e) {
+							BeaverUtils.PrintStackTrace(e);
+							logger.error("sleep interrupted, msg:" + e.getMessage());
+						}
+					}
 					logger.info("exit thread to upload files, threadId:" + Thread.currentThread().getId());
 				}
 			});
@@ -132,7 +140,8 @@ public class FileUploader implements Runnable {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				BeaverUtils.PrintStackTrace(e);
+				logger.error("sleep interrupted, msg:" + e.getMessage());
 			}
 		}
 
@@ -142,7 +151,7 @@ public class FileUploader implements Runnable {
 			try {
 				executor.awaitTermination(1, TimeUnit.SECONDS);
 			} catch (InterruptedException e){
-				logger.error("sleep exception, msg:" + e.getMessage());
+				logger.error("sleep interrupted, msg:" + e.getMessage());
 			}
 		}
 	}

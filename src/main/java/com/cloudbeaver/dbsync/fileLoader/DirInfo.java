@@ -39,9 +39,12 @@ public class DirInfo {
 	}
 
 	private void listAndSortFiles() {
+		finfos.clear();
+
 		File[] files = dir.listFiles();
 		for (File file : files) {
 			long changeTime = file.lastModified();
+//			System.out.println("file:" + file.getName() + " changeTime:" + changeTime + " mini:" + miniChangeTime);
 			if (changeTime > miniChangeTime) {
 				FileInfo finfo = new FileInfo(file, changeTime);
 				finfos.add(finfo);
@@ -54,9 +57,18 @@ public class DirInfo {
 		for (FileInfo fileInfo : finfos) {
 			try {
 				fileInfo.uploadData();
+				setMiniChangeTime(fileInfo.getModifyTime());
 			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("upload file error, msg:" + e.getMessage());
+				logger.error("upload file error, file: " + fileInfo.getFile().getAbsolutePath() + "msg:" + e.getMessage());
+			}
+
+			try {
+//				have a break after every file uploaded
+				Thread.sleep(200);
+			} catch (InterruptedException e) {
+				BeaverUtils.PrintStackTrace(e);
+				logger.error("sleep interrupted, msg:" + e.getMessage());
 			}
 		}
 	}
