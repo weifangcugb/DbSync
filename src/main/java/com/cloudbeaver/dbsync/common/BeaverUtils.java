@@ -1,4 +1,4 @@
-package com.cloudbeaver.dbsync;
+package com.cloudbeaver.dbsync.common;
 
 import java.io.BufferedReader;
 import java.io.IOException;
