@@ -52,16 +52,16 @@ public class FileInfo implements Comparable<FileInfo>{
 		 */
 		String uploadData = "[[{\"hdfs_prison\":\"" + FileUploader.getClientId() + "\",\"hdfs_db\":\"files\",\"hdfs_table\":\"pics\",\"pic_name\":\"" 
 							+ fileName + "\", \"pic_data\":\"" + fileData + "\", \"xgsj\":\"" +  lastModified + "\"}]]";
-		System.out.println();
+
 		uploadData = uploadData.replaceAll("\"", "\\\\\"");
         String flumeJson = "[{ \"headers\" : {}, \"body\" : \"" + uploadData + "\" }]";
-//		System.out.println(flumeJson);
 
         URL url = new URL(FileUploader.getFlumeServer());
         URLConnection connection = url.openConnection();
+        connection.setConnectTimeout(20000);
+
         connection.setDoOutput(true);
         PrintWriter pWriter = new PrintWriter((connection.getOutputStream()));
-//            logger.debug("Send message to flume-server : " + flumeJson);
         pWriter.write(flumeJson);
         pWriter.close();
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
