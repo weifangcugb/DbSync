@@ -1,4 +1,4 @@
-package com.cloudbeaver.dbsync.fileLoader;
+package com.cloudbeaver.client.fileLoader;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;

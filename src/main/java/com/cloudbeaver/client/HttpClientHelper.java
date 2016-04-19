@@ -1,4 +1,4 @@
-package com.cloudbeaver.dbsync;
+package com.cloudbeaver.client;
 
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;

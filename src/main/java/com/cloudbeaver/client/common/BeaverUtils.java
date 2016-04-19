@@ -1,4 +1,4 @@
-package com.cloudbeaver.dbsync.common;
+package com.cloudbeaver.client.common;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,6 +23,10 @@ public class BeaverUtils {
 	public static String getSimplePage(String urlString) throws IOException {
 		BufferedReader br = null;
 		try {
+			if (urlString.indexOf("http://") == -1) {
+				urlString = "http://" + urlString;
+			}
+
 			URL url = new URL(urlString);
 
 			HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -38,11 +42,8 @@ public class BeaverUtils {
 	        if (urlConnection.getResponseCode() == HttpStatus.SC_OK) {
 				return sb.toString();
 			}else {
-				return null;
+				throw new IOException("http server return not SC_OK, responseCode:" + urlConnection.getResponseCode());
 			}
-		} catch (IOException e) {
-			PrintStackTrace(e);
-			throw e;
 		} finally {
 			if (br != null) {
 				try {
@@ -58,5 +59,13 @@ public class BeaverUtils {
 		for (int i = 0; i < buffer.length; i++) {
 			buffer[i] = 0;
 		}
+	}
+
+	public static void sleep(long sleepTime) {
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            logger.debug("sleep interrupted, msg:" + e.getMessage());
+        }
 	}
 }

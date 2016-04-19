@@ -1,15 +1,15 @@
-package com.cloudbeaver.dbsync;
+package com.cloudbeaver.client;
 
 import java.sql.*;
 import java.util.*;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+
 import org.apache.log4j.*;
 
-/**
- * Created by gaobin on 16-3-31.
- */
+import com.cloudbeaver.client.common.BeaverUtils;
+
 public class DbExtractor {
 
     private static Logger logger = Logger.getLogger(DbExtractor.class);
@@ -76,7 +76,6 @@ public class DbExtractor {
             } catch (Exception ex) {
                 ex.printStackTrace();
                 logger.error(ex.getMessage());
-                //System.exit(1);
             }
         }
         return conn;
@@ -90,19 +89,14 @@ public class DbExtractor {
         return getConn();
     }
 
-    private static String resultSetToJson(ResultSet rs) throws SQLException
-    {
-        // json数组
+    private static String resultSetToJson(ResultSet rs) throws SQLException {
         JSONArray array = new JSONArray();
-        // 获取列数
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
 
-        // 遍历ResultSet中的每条数据
         while (rs.next()) {
             JSONObject jsonObj = new JSONObject();
 
-            // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
                 String columnName =metaData.getColumnLabel(i);
                 String value = rs.getString(columnName);
@@ -114,8 +108,7 @@ public class DbExtractor {
         return array.toString();
     }
 
-    private static List<Map<String, String>> resultSetToList(ResultSet rs) throws SQLException
-    {
+    private static List<Map<String, String>> resultSetToList(ResultSet rs) throws SQLException {
         ArrayList<Map<String, String>> arrayList = new ArrayList<Map<String, String>>();
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
@@ -123,7 +116,6 @@ public class DbExtractor {
         while (rs.next()) {
             Map<String, String> map = new HashMap<String, String>();
 
-            // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
                 String columnName =metaData.getColumnLabel(i);
                 String value = rs.getString(columnName);
@@ -135,20 +127,17 @@ public class DbExtractor {
         return arrayList;
     }
 
-    private static JsonAndList resultSetToJsonAndList(ResultSet rs, Collection<String> excludedColumns) throws SQLException
-    {
+    private static JsonAndList resultSetToJsonAndList(ResultSet rs, Collection<String> excludedColumns) throws SQLException {
         JSONArray array = new JSONArray();
         ArrayList<Map<String, String>> arrayList = new ArrayList<Map<String, String>>();
 
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
 
-        // 遍历ResultSet中的每条数据
         while (rs.next()) {
             JSONObject jsonObj = new JSONObject();
             Map<String, String> map = new HashMap<String, String>();
 
-            // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
                 String columnName =metaData.getColumnLabel(i);
                 String value = rs.getString(columnName);
@@ -178,7 +167,7 @@ public class DbExtractor {
         ResultSet rs = null;
         try {
             rs = s.executeQuery();
-            json = this.resultSetToJson(rs);
+            json = resultSetToJson(rs);
         } catch (SQLException e) {
             e.printStackTrace();
             logger.error(e.getMessage());
@@ -196,7 +185,6 @@ public class DbExtractor {
         } catch (SQLException e) {
             e.printStackTrace();
             logger.error(e.getMessage());
-            //System.exit(1);
         }
         return extractJson(s);
     }
@@ -206,7 +194,7 @@ public class DbExtractor {
         ResultSet rs = null;
         try {
             rs = s.executeQuery();
-            list = this.resultSetToList(rs);
+            list = resultSetToList(rs);
         } catch (SQLException e) {
             e.printStackTrace();
             logger.error(e.getMessage());
@@ -229,32 +217,18 @@ public class DbExtractor {
         return extractList(s);
     }
 
-    public JsonAndList extractJsonAndList(PreparedStatement s, Collection<String> excludedColumns) {
-        JsonAndList jsonAndList = null;
-        ResultSet rs = null;
-        try {
-            rs = s.executeQuery();
-            jsonAndList = this.resultSetToJsonAndList(rs, excludedColumns);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error("SQL ERROR: 错误原因: " + e.getMessage());
-            //System.exit(1);
-            getConn();
-        }
-        return jsonAndList;
-    }
-
     public JsonAndList extractJsonAndList(String statement, Collection<String> excludedColumns) {
-        PreparedStatement s = null;
+        PreparedStatement pStatement = null;
         try {
-            s = getConn().prepareStatement(statement);
+        	pStatement = getConn().prepareStatement(statement);
             //s.setQueryTimeout(10);
+            ResultSet rs = pStatement.executeQuery();
+            return resultSetToJsonAndList(rs, excludedColumns);
         } catch (SQLException e) {
-            e.printStackTrace();
-            logger.error(e.getMessage());
-            //System.exit(1);
+            BeaverUtils.PrintStackTrace(e);
+            logger.error("sql query exception, msg:" + e.getMessage());
+            return null;
         }
-        return extractJsonAndList(s, excludedColumns);
     }
 
     public void setDriverClassName (String driverClassName) {
@@ -278,6 +252,5 @@ public class DbExtractor {
             e.printStackTrace();
         }
         System.out.println(ya.extractJson(preparedStatement));
-        //System.out.println(ya);
     }
 }

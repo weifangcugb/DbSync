@@ -1,20 +1,17 @@
-package com.cloudbeaver.dbsync;
+package com.cloudbeaver.client.bean;
 
 import org.apache.log4j.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Map;
 
-/**
- * Created by gaobin on 16-4-7.
- */
-public class WatcherManager {
+public class MultiDatabaseBean {
+	public static String FILE_UPLOAD_DB_NAME = "DocumentFiles";
 
-    private Logger logger = Logger.getLogger(WatcherManager.class);
+    private Logger logger = Logger.getLogger(MultiDatabaseBean.class);
 
     private Map<String, String> conf;
-    private ArrayList<DbWatcher> databases;
+    private ArrayList<DatabaseBean> databases;
 
     public Map<String, String> getConf() {
         return conf;
@@ -22,14 +19,15 @@ public class WatcherManager {
 
     public void setConf(Map<String, String> conf) {
         this.conf = conf;
-        ArrayList<DbWatcher> dbWatchersToRemove = new ArrayList<DbWatcher>();
-        for (DbWatcher dbWatcher : databases) {
-            if (conf.get("db." + dbWatcher.db + ".url").equalsIgnoreCase("null")) {
+        ArrayList<DatabaseBean> dbWatchersToRemove = new ArrayList<DatabaseBean>();
+        for (DatabaseBean dbWatcher : databases) {
+            if (dbWatcher.db.equals(FILE_UPLOAD_DB_NAME )) {
                 dbWatchersToRemove.add(dbWatcher);
             }
         }
+
         databases.removeAll(dbWatchersToRemove);
-        for (DbWatcher dbWatcher : databases) {
+        for (DatabaseBean dbWatcher : databases) {
             dbWatcher.setDbExtractor(
                     conf.get("db." + dbWatcher.db + ".url"),
                     conf.get("db." + dbWatcher.db + ".username"),
@@ -38,24 +36,23 @@ public class WatcherManager {
         }
     }
 
-    public ArrayList<DbWatcher> getDatabases() {
+    public ArrayList<DatabaseBean> getDatabases() {
         return databases;
     }
 
-    public void setDatabases(ArrayList<DbWatcher> databases) {
+    public void setDatabases(ArrayList<DatabaseBean> databases) {
         this.databases = databases;
     }
 
     public String query() {
         StringBuilder sb = new StringBuilder();
         sb.append('[');
-        for (DbWatcher dbWatcher : databases) {
+        for (DatabaseBean dbWatcher : databases) {
             System.out.println(dbWatcher.getDb());
             logger.debug("Query database " + dbWatcher.db + " .");
             String res = dbWatcher.query();
             if (res.length() > 2) {
                 sb.append(res).append(',');
-                //System.out.println(res);
             }
         }
         if (sb.charAt(sb.length()-1) == ',') {

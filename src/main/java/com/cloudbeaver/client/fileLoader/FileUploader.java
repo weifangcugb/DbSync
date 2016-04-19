@@ -1,4 +1,4 @@
-package com.cloudbeaver.dbsync.fileLoader;
+package com.cloudbeaver.client.fileLoader;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.log4j.Logger;
 
-import com.cloudbeaver.dbsync.common.BeaverUtils;
+import com.cloudbeaver.client.common.BeaverUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

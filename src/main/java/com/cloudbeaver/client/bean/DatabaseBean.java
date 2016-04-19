@@ -1,17 +1,20 @@
-package com.cloudbeaver.dbsync;
+package com.cloudbeaver.client.bean;
 
 import org.apache.log4j.*;
+
+import com.cloudbeaver.client.DbExtractor;
+import com.cloudbeaver.client.JsonAndList;
+
 import java.util.ArrayList;
 
 /**
  * DB Watcher Bean
- * Created by gaobin on 16-4-6.
  */
-public class DbWatcher {
+public class DatabaseBean {
 
-    private static Logger logger = Logger.getLogger(DbWatcher.class);
+    private static Logger logger = Logger.getLogger(DatabaseBean.class);
 
-    ArrayList<TableWatcher> tables = new ArrayList<TableWatcher>();
+    ArrayList<TableBean> tables = new ArrayList<TableBean>();
     String rowversion = null;
     String prison = null;
     String db = null;
@@ -31,13 +34,13 @@ public class DbWatcher {
         ));
     }
 
-    public ArrayList<TableWatcher> getTables() {
+    public ArrayList<TableBean> getTables() {
         return tables;
     }
 
-    public void setTables(ArrayList<TableWatcher> tables) {
+    public void setTables(ArrayList<TableBean> tables) {
         this.tables = tables;
-        for (TableWatcher tableWatcher : tables) {
+        for (TableBean tableWatcher : tables) {
             tableWatcher.setDbWatcher(this);
         }
     }
@@ -66,14 +69,14 @@ public class DbWatcher {
         this.db = db;
     }
 
-    public DbWatcher() {
+    public DatabaseBean() {
         logger.debug("Created DbWatcher");
     }
 
     public String query() {
         StringBuilder sb = new StringBuilder();
         sb.append('[');
-        for (TableWatcher t : tables) {
+        for (TableBean t : tables) {
             logger.debug("Executing query : " + t.sql());
             //String res = dbExtractor.extractJson(t.sql());
             JsonAndList jsonAndList = dbExtractor.extractJsonAndList(t.sql(),

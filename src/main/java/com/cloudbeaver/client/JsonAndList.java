@@ -1,4 +1,4 @@
-package com.cloudbeaver.dbsync;
+package com.cloudbeaver.client;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,5 @@ public class JsonAndList {
     JsonAndList(String json, List<Map<String, String>> list) {
         this.json = json;
         this.list = list;
-//        System.out.println("<<<< " + json + " >>>>");
-//        System.out.println("[[[[ " + list + " ]]]]");
     }
 }

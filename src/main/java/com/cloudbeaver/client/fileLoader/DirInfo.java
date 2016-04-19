@@ -1,4 +1,4 @@
-package com.cloudbeaver.dbsync.fileLoader;
+package com.cloudbeaver.client.fileLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.cloudbeaver.dbsync.common.BeaverUtils;
+import com.cloudbeaver.client.common.BeaverUtils;
 
 public class DirInfo {
 	private static Logger logger = Logger.getLogger(DirInfo.class);

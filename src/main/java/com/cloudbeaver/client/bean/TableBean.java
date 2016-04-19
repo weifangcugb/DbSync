@@ -1,28 +1,27 @@
-package com.cloudbeaver.dbsync;
+package com.cloudbeaver.client.bean;
 
 import org.apache.log4j.*;
 import java.util.ArrayList;
 
 /**
- * Table Watcher Bean
- * Created by gaobin on 16-4-6.
+ * Table Bean
  */
-public class TableWatcher {
+public class TableBean {
 
-    private static Logger logger = Logger.getLogger(TableWatcher.class);
+    private static Logger logger = Logger.getLogger(TableBean.class);
 
-    private DbWatcher dbWatcher = null;
+    private DatabaseBean dbWatcher = null;
     private String table = null;
     private String rowversion = null;
     private String xgsj = "0";
     private ArrayList<String> join = null;
     private String key = null;
 
-    public DbWatcher getDbWatcher() {
+    public DatabaseBean getDbWatcher() {
         return dbWatcher;
     }
 
-    public void setDbWatcher(DbWatcher dbWatcher) {
+    public void setDbWatcher(DatabaseBean dbWatcher) {
         this.dbWatcher = dbWatcher;
     }
 
@@ -70,7 +69,7 @@ public class TableWatcher {
         this.key = key;
     }
 
-    public TableWatcher () {
+    public TableBean () {
         logger.debug("Created TableWatcher");
     }
 
