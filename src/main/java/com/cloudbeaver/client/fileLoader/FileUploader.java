@@ -23,7 +23,7 @@ import sun.misc.SignalHandler;
 public class FileUploader implements Runnable {
 	private static Logger logger = Logger.getLogger(FileUploader.class);
 
-	private static final String PIC_DIRECTORY_NAME = "pic_directory";
+	private static final String PIC_DIRECTORY_NAME = "db.DocumentFiles.url";
 	private static final String FLUME_SERVER_URL = "flume-server.url";
 	private static final String CLIENT_ID = "clientid";
 	private static final boolean USE_REMOTE_DIRS = false;
@@ -35,7 +35,7 @@ public class FileUploader implements Runnable {
 
 	private List<DirInfo> dirInfos = new ArrayList<DirInfo>();
 	private String threadName = null;
-	private String confName = "dbname.conf";
+	private String confName = "DbSyncClient.conf";
 
 	public static String getFlumeServer() {
 		return flumeServer;
@@ -108,7 +108,7 @@ public class FileUploader implements Runnable {
 
 //		load file dirs from remote server
 		try {
-			updateFileInfo();
+			getFileTask();
 		} catch (ConfigurationException | IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("update task list error, msg:" + e.getMessage());
@@ -156,10 +156,10 @@ public class FileUploader implements Runnable {
 		}
 	}
 
-	private void updateFileInfo() throws ConfigurationException, IOException {
+	private void getFileTask() throws ConfigurationException, IOException {
 		Configurations configurations = new Configurations();
 		Configuration conf = configurations.properties(confName);
-			String json = BeaverUtils.getSimplePage(conf.getString("tasks-server.url") + clientId);//HttpClientHelper.get(conf.getString("tasks-server.url") + clientId);
+			String json = BeaverUtils.doGet(conf.getString("tasks-server.url") + clientId);//HttpClientHelper.get(conf.getString("tasks-server.url") + clientId);
 			ObjectMapper objectMapper = new ObjectMapper();
 			JsonNode root = objectMapper.readTree(json);
 			JsonNode dbs = root.get("databases");

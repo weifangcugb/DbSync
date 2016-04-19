@@ -3,9 +3,6 @@ package com.cloudbeaver.client;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by gaobin on 16-4-7.
- */
 public class JsonAndList {
     public String json;
     public List<Map<String, String>> list;

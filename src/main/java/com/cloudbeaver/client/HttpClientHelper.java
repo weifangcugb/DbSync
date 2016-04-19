@@ -25,9 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by gaobin on 16-4-8.
- */
+@Deprecated
 class HttpClientHelper {
 
     private static Logger logger = Logger.getLogger(HttpClientHelper.class);

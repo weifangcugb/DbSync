@@ -46,7 +46,7 @@ public class DbSyncClient {
 
     public void getTasks () throws IOException {
 //        String json = HttpClientHelper.get(conf.get(TASKS_SERVER_URL) + clientId);
-        String json = BeaverUtils.getSimplePage(conf.get(TASK_SERVER_URL) + clientId);
+        String json = BeaverUtils.doGet(conf.get(TASK_SERVER_URL) + clientId);
         logger.debug("fetch tasks, tasks:" + json);
 
         setTaskJson(json);
@@ -86,13 +86,14 @@ public class DbSyncClient {
         return multiDatabaseBean.query();
     }
 
-    public void sendToFlume (String str) {
+    public void sendToFlume (String str) throws IOException {
         str = str.replaceAll("\"", "\\\\\"");
         String flumeJson = "[{ \"headers\" : {}, \"body\" : \"" + str + "\" }]";
-        HttpClientHelper.post(conf.get("flume-server.url"), flumeJson);
+//        HttpClientHelper.post(conf.get("flume-server.url"), flumeJson);
+        BeaverUtils.doPost(conf.get("flume-server.url"), flumeJson);
     }
 
-    public void queryAndSendToFlume () {
+    public void queryAndSendToFlume () throws IOException {
         sendToFlume(query());
     }
 
@@ -119,7 +120,12 @@ public class DbSyncClient {
 				}
 			}
 
-            dbSyncClient.queryAndSendToFlume();
+            try {
+				dbSyncClient.queryAndSendToFlume();
+			} catch (IOException e) {
+				BeaverUtils.PrintStackTrace(e);
+				logger.error("query and post db data error, msg:" + e.getMessage());
+			}
 
             BeaverUtils.sleep(3 * 60 * 1000);
         }

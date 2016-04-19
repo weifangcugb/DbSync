@@ -13,6 +13,8 @@ import java.net.URLConnection;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+import com.cloudbeaver.client.common.BeaverUtils;
+
 public class FileInfo implements Comparable<FileInfo>{
 	private static Logger logger = Logger.getLogger(DirInfo.class);
 
@@ -56,20 +58,7 @@ public class FileInfo implements Comparable<FileInfo>{
 		uploadData = uploadData.replaceAll("\"", "\\\\\"");
         String flumeJson = "[{ \"headers\" : {}, \"body\" : \"" + uploadData + "\" }]";
 
-        URL url = new URL(FileUploader.getFlumeServer());
-        URLConnection connection = url.openConnection();
-        connection.setConnectTimeout(20000);
-
-        connection.setDoOutput(true);
-        PrintWriter pWriter = new PrintWriter((connection.getOutputStream()));
-        pWriter.write(flumeJson);
-        pWriter.close();
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String line, result = "";
-        while ((line = in.readLine()) != null) {
-            result += line;
-        }
-        logger.debug("Got message from flume-server : " + result);
+        BeaverUtils.doPost(FileUploader.getFlumeServer(), flumeJson);
 	}
 
 	private String getFileData() throws IOException {
