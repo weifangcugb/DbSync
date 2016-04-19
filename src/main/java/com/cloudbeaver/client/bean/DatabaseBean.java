@@ -2,8 +2,8 @@ package com.cloudbeaver.client.bean;
 
 import org.apache.log4j.*;
 
-import com.cloudbeaver.client.DbExtractor;
-import com.cloudbeaver.client.JsonAndList;
+import com.cloudbeaver.client.dbLoader.DbExtractor;
+import com.cloudbeaver.client.dbLoader.JsonAndList;
 
 import java.util.ArrayList;
 

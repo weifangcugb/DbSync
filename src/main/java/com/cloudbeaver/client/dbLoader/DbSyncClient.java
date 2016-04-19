@@ -1,4 +1,4 @@
-package com.cloudbeaver.client;
+package com.cloudbeaver.client.dbLoader;
 
 import org.apache.log4j.*;
 

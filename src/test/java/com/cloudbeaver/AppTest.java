@@ -4,7 +4,7 @@ import net.sf.json.JSONArray;
 
 import org.junit.Test;
 
-import com.cloudbeaver.client.DbSyncClient;
+import com.cloudbeaver.client.dbLoader.DbSyncClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
