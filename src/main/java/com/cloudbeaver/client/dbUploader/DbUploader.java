@@ -15,6 +15,7 @@ public class DbUploader extends FixedNumThreadPool{
 	private final static String CONF_CLIENT_ID = "client.id";
 	private final static String CONFIG_FILE_NAME = "SyncClient.properties";
     private final static String TASK_SERVER_URL = "tasks-server.url";
+    private static String FILE_UPLOAD_DB_NAME = "DocumentFiles";
 
     private static Logger logger = Logger.getLogger(DbUploader.class);
 
@@ -78,7 +79,16 @@ public class DbUploader extends FixedNumThreadPool{
 
 	@Override
 	public Object getTaskObject(int threadIndex) {
-		return multiDatabaseBean.getDatabases().get(threadIndex);
+		DatabaseBean dbBean = multiDatabaseBean.getDatabases().get(threadIndex);
+		if (shouldSkipDb(dbBean)) {
+			return null;
+		}
+
+		return dbBean;
+	}
+
+	public boolean shouldSkipDb(DatabaseBean dbBean) {
+		return dbBean.getDb().equals(FILE_UPLOAD_DB_NAME);
 	}
 
 	@Override

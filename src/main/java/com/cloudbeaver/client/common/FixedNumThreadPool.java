@@ -42,6 +42,13 @@ public abstract class FixedNumThreadPool implements Runnable{
 		ExecutorService executor = Executors.newCachedThreadPool();
 		for (int i = 0; i < getThreadNum(); i++) {
 			final Object taskObject = getTaskObject(i);
+			/*
+			 * if taskObject is null, that means subclass asks the thread-pool to skip this object
+			 */
+			if (taskObject == null) {
+				continue;
+			}
+
 			executor.submit(new Runnable() {
 				long thisThreadId = -1;
 				

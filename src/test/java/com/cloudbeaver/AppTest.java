@@ -45,8 +45,12 @@ public class AppTest extends TestCase {
 		dbUploader.beforeTask();
 
 		for (int index = 0; index < dbUploader.getThreadNum(); index++) {
-			Object dbBean = dbUploader.getTaskObject(index);
-			String reply = dbUploader.getDbUploadData((DatabaseBean)dbBean);
+			DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
+			if (dbBean == null) {
+				continue;
+			}
+
+			String reply = dbUploader.getDbUploadData(dbBean);
 //			reply:[{"hdfs_prison":"1","hdfs_db":"DocumentDB", xxx}]
 			System.out.println("reply:" + reply);
 
