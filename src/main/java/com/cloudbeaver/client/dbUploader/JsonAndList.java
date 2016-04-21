@@ -23,7 +23,7 @@ public class JsonAndList {
         this.list = list;
     }
 
-    JsonAndList(String json, List<Map<String, String>> list) {
+    public JsonAndList(String json, List<Map<String, String>> list) {
         this.json = json;
         this.list = list;
     }

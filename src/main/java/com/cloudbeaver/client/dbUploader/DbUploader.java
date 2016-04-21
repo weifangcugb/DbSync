@@ -4,11 +4,14 @@ import org.apache.log4j.*;
 
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
+import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
+import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Map;
 
 public class DbUploader extends FixedNumThreadPool{
@@ -21,7 +24,7 @@ public class DbUploader extends FixedNumThreadPool{
 
     private Map<String, String> conf = null;
     private String taskJson = null;
-    private MultiDatabaseBean multiDatabaseBean = null;
+    private MultiDatabaseBean dbBeans = null;
 
     private String clientId = null;
 
@@ -73,13 +76,13 @@ public class DbUploader extends FixedNumThreadPool{
 
 	@Override
 	public int getThreadNum() {
-		return multiDatabaseBean.getDatabases().size();
+		return dbBeans.getDatabases().size();
 	}
 
 
 	@Override
 	public Object getTaskObject(int threadIndex) {
-		DatabaseBean dbBean = multiDatabaseBean.getDatabases().get(threadIndex);
+		DatabaseBean dbBean = dbBeans.getDatabases().get(threadIndex);
 		if (shouldSkipDb(dbBean)) {
 			return null;
 		}
@@ -94,17 +97,50 @@ public class DbUploader extends FixedNumThreadPool{
 	@Override
 	public void doTask(Object taskObject) {
 		DatabaseBean dbBean = (DatabaseBean)taskObject;
-        String flumeJson = getDbUploadData(dbBean);
-        try {
+        String flumeJson;
+		try {
+			flumeJson = getDbUploadData(dbBean);
 			BeaverUtils.doPost(conf.get("flume-server.url"), flumeJson);
+		} catch (SQLException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("post faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));
 		}
 	}
 
-	public String getDbUploadData(DatabaseBean dbBean) {
-		String dbInfo = dbBean.query();
+    public String queryDb(DatabaseBean dbBean) throws SQLException {
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        for (TableBean tableBean : dbBean.getTables()) {
+            logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion()));
+
+            JsonAndList jsonAndList = SqlHelper.extractJsonAndList(dbBean, tableBean, this);
+            if (jsonAndList == null) continue;
+
+            String res = jsonAndList.getJson();
+            if (res.length() > 2) {
+                sb.append(res.substring(1, res.length()-1))
+                        .append(',');
+                        //.append(',').append('\n');
+            }
+
+//            if (jsonAndList != null &&
+//                    jsonAndList.getList() != null &&
+//                    jsonAndList.getList().size() > 0) {
+//                tableBean.setXgsj(jsonAndList.getList().get(0).get("max_" + dbBean.getRowversion()));
+//            }
+        }
+        if (sb.charAt(sb.length() - 1) == ',') {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        sb.append(']');
+        return sb.toString();
+    }
+    
+	public String getDbUploadData(DatabaseBean dbBean) throws SQLException {
+		String dbInfo = queryDb(dbBean);
 		String oriDbInfo = dbInfo;
 
         dbInfo = dbInfo.replaceAll("\"", "\\\\\"");
@@ -143,8 +179,12 @@ public class DbUploader extends FixedNumThreadPool{
         setTaskJson(json);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        multiDatabaseBean = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
-        multiDatabaseBean.setConf(conf);
+        dbBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
+        for (DatabaseBean dbBean : dbBeans.getDatabases()) {
+        	dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
+        	dbBean.setDbUserName(conf.get("db." + dbBean.getDb() + ".username"));
+        	dbBean.setDbPassword(conf.get("db." + dbBean.getDb() + ".password"));
+        }
     }
 
     public static void main(String[] args) {

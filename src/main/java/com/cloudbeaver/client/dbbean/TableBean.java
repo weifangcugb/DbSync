@@ -7,23 +7,12 @@ import java.util.ArrayList;
  * bean for one table
  */
 public class TableBean {
-
     private static Logger logger = Logger.getLogger(TableBean.class);
 
-    private DatabaseBean dbWatcher = null;
     private String table = null;
-    private String rowversion = null;
     private String xgsj = "0";
     private ArrayList<String> join = null;
     private String key = null;
-
-    public DatabaseBean getDbWatcher() {
-        return dbWatcher;
-    }
-
-    public void setDbWatcher(DatabaseBean dbWatcher) {
-        this.dbWatcher = dbWatcher;
-    }
 
     public String getTable() {
         return table;
@@ -31,16 +20,6 @@ public class TableBean {
 
     public void setTable(String table) {
         this.table = table;
-    }
-
-
-    public String getRowversion() {
-        if (rowversion == null) rowversion = dbWatcher.rowversion;
-        return rowversion;
-    }
-
-    public void setRowversion(String rowversion) {
-        this.rowversion = rowversion;
     }
 
     public String getXgsj() {
@@ -69,20 +48,10 @@ public class TableBean {
         this.key = key;
     }
 
-    public String sql() {
-        return "SELECT " + dbWatcher.prison + " AS hdfs_prison, '" +
-                dbWatcher.db + "' AS hdfs_db, '" +
-                table + "' AS hdfs_table, *, max_" + getRowversion() + " " +
-                fromClause() +
-                ", (SELECT MAX(" + getRowversion() + ") AS max_" + getRowversion() + " FROM " + table + ") AS Xesx " +
-                whereClause();
-    }
-
-    public String sqlWithoutRowversion() {
-        return "SELECT " + dbWatcher.prison + " AS hdfs_prison, '" +
-                dbWatcher.db + "' AS hdfs_db, '" +
-                table + "' AS hdfs_table, * " +
-                fromClause() + whereClause();
+    public String getSqlString(String prison, String dbName, String rowVersionColumn) {
+        return "SELECT " + prison + " AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
+                table + "' AS hdfs_table, *" + fromClause() + whereClause(rowVersionColumn)
+                + " order by " + rowVersionColumn + "limit 20";
     }
 
     private String fromClause() {
@@ -101,22 +70,14 @@ public class TableBean {
         }
     }
 
-    private String whereClause() {
+    private String whereClause(String rowVersionColumn) {
         if (join == null || key == null) {
             return "WHERE " +
-                    table + "." + rowversionColumn() + " > " + xgsj + " ";
+                    table + "." + rowVersionColumn + " > " + xgsj + " ";
         } else {
             return "WHERE " +
                     key + " AND " +
-                    table + "." + rowversionColumn() + " > " + xgsj + " ";
-        }
-    }
-
-    private String rowversionColumn() {
-        if (rowversion == null) {
-            return dbWatcher.rowversion;
-        } else {
-            return rowversion;
+                    table + "." + rowVersionColumn + " > " + xgsj + " ";
         }
     }
 }

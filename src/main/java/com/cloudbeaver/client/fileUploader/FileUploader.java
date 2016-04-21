@@ -112,7 +112,7 @@ public class FileUploader extends FixedNumThreadPool {
 		}
 
 //		load file dirs from remote server
-		while (KEEP_RUNNING) {
+		while (isRunning()) {
 			try {
 				getFileTask();
 				break;

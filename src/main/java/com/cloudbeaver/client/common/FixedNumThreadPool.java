@@ -13,14 +13,14 @@ public abstract class FixedNumThreadPool implements Runnable{
 	private Logger logger = Logger.getLogger(FixedNumThreadPool.class);
 	public static final String STOP_SIGNAL = "USR2";
 
-	protected boolean KEEP_RUNNING = true;
-
     protected abstract void beforeTask();
 	protected abstract void doTask(Object taskObject);
 	protected abstract int getThreadNum();
 	protected abstract Object getTaskObject(int index);
 	protected abstract long getSleepTimeBetweenTaskInnerLoop();
 	protected abstract String getTaskDescription();
+
+	private boolean KEEP_RUNNING = true;
 
 	@Override
 	public void run() {
@@ -78,6 +78,10 @@ public abstract class FixedNumThreadPool implements Runnable{
 		}
 
 		logger.info("start thread pool, task:" + getTaskDescription());
+	}
+
+	public boolean isRunning(){
+		return KEEP_RUNNING;
 	}
 
 	public static void main(String[] args) {
