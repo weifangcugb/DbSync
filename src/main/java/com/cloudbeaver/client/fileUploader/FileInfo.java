@@ -1,4 +1,4 @@
-package com.cloudbeaver.client.fileLoader;
+package com.cloudbeaver.client.fileUploader;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;

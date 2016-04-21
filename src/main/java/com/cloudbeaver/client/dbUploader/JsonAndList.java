@@ -1,4 +1,4 @@
-package com.cloudbeaver.client.dbLoader;
+package com.cloudbeaver.client.dbUploader;
 
 import java.util.List;
 import java.util.Map;

@@ -4,7 +4,7 @@ import net.sf.json.JSONArray;
 
 import org.junit.Test;
 
-import com.cloudbeaver.client.dbLoader.DbSyncClient;
+import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -40,10 +40,10 @@ public class AppTest extends TestCase {
 
 	@Test
 	public void testGetMsg() throws Exception {
-		DbSyncClient dbSyncClient = new DbSyncClient();
-		dbSyncClient.loadConfig();
-		dbSyncClient.getTasks();
-		String reply = dbSyncClient.query();
+		DbUploader dbUploader = new DbUploader();
+		dbUploader.loadConfig();
+		dbUploader.loadTasks();
+		String reply = dbUploader.doQuerySingleThread();
 		System.out.println(reply);
 
 		ObjectMapper oMapper = new ObjectMapper();

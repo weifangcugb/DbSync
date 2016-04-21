@@ -47,14 +47,15 @@ public class MultiDatabaseBean {
     public String query() {
         StringBuilder sb = new StringBuilder();
         sb.append('[');
-        for (DatabaseBean dbWatcher : databases) {
-            System.out.println(dbWatcher.getDb());
-            logger.debug("Query database " + dbWatcher.db + " .");
-            String res = dbWatcher.query();
+        for (DatabaseBean database : databases) {
+            System.out.println(database.getDb());
+            logger.debug("Query database " + database.db + " .");
+            String res = database.query();
             if (res.length() > 2) {
                 sb.append(res).append(',');
             }
         }
+
         if (sb.charAt(sb.length()-1) == ',') {
             sb.deleteCharAt(sb.length() - 1);
         }

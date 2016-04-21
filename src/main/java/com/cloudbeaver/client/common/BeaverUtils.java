@@ -12,7 +12,7 @@ import java.net.URLConnection;
 import org.apache.http.HttpStatus;
 import org.apache.log4j.Logger;
 
-import com.cloudbeaver.client.fileLoader.FileUploader;
+import com.cloudbeaver.client.fileUploader.FileUploader;
 
 public class BeaverUtils {
 	private static Logger logger = Logger.getLogger(BeaverUtils.class);
@@ -84,7 +84,7 @@ public class BeaverUtils {
 	        URL url = new URL(urlString);
 	        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 	        urlConnection.setRequestMethod("POST");
-	        
+	        urlConnection.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
 	        urlConnection.setConnectTimeout(20000);
 
 	        urlConnection.setDoOutput(true);

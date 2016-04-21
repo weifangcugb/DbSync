@@ -1,4 +1,4 @@
-package com.cloudbeaver.client.dbLoader;
+package com.cloudbeaver.client.dbUploader;
 
 import java.sql.*;
 import java.util.*;

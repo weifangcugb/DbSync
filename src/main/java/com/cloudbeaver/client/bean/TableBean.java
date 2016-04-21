@@ -69,10 +69,6 @@ public class TableBean {
         this.key = key;
     }
 
-    public TableBean () {
-        logger.debug("Created TableWatcher");
-    }
-
     public String sql() {
         return "SELECT " + dbWatcher.prison + " AS hdfs_prison, '" +
                 dbWatcher.db + "' AS hdfs_db, '" +

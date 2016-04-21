@@ -2,8 +2,8 @@ package com.cloudbeaver.client.bean;
 
 import org.apache.log4j.*;
 
-import com.cloudbeaver.client.dbLoader.DbExtractor;
-import com.cloudbeaver.client.dbLoader.JsonAndList;
+import com.cloudbeaver.client.dbUploader.DbExtractor;
+import com.cloudbeaver.client.dbUploader.JsonAndList;
 
 import java.util.ArrayList;
 
@@ -19,6 +19,10 @@ public class DatabaseBean {
     String prison = null;
     String db = null;
     DbExtractor dbExtractor;
+
+    public String toString(){
+    	return db + "," + prison + "," + rowversion;
+    }
 
     public DbExtractor getDbExtractor() {
         return dbExtractor;
@@ -67,10 +71,6 @@ public class DatabaseBean {
 
     public void setDb(String db) {
         this.db = db;
-    }
-
-    public DatabaseBean() {
-        logger.debug("Created DbWatcher");
     }
 
     public String query() {
