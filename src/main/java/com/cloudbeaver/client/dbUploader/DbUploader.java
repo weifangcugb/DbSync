@@ -40,20 +40,6 @@ public class DbUploader extends FixedNumThreadPool{
 		this.taskJson = taskJson;
 	}
 
-/*
- *     this function should be just used for unit-test
- *     the returned string is a json contained db content
- */
-    public String doQuerySingleThread() throws IOException {
-        if (multiDatabaseBean == null)
-            return "";
-        String dbInfo = multiDatabaseBean.query();
-        dbInfo = dbInfo.replaceAll("\"", "\\\\\"");
-        String flumeJson = "[{ \"headers\" : {}, \"body\" : \"" + dbInfo + "\" }]";
-        BeaverUtils.doPost(conf.get("flume-server.url"), flumeJson);
-        return flumeJson;
-    }
-
 	@Override
 	public void beforeTask() {
         try {
