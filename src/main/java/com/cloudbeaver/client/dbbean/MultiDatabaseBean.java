@@ -44,6 +44,7 @@ public class MultiDatabaseBean {
         this.databases = databases;
     }
 
+    @Deprecated
     public String query() {
         StringBuilder sb = new StringBuilder();
         sb.append('[');

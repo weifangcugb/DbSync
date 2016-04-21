@@ -2,12 +2,10 @@ package com.cloudbeaver.client.fileUploader;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverUtils;
@@ -17,18 +15,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FileUploader extends FixedNumThreadPool {
     private static Logger logger = Logger.getLogger(FileUploader.class);
-	private static final String PIC_DIRECTORY_NAME = "db.DocumentFiles.url";
-	private static final String FLUME_SERVER_URL = "flume-server.url";
-	private static final String CLIENT_ID = "clientid";
+
+    public final static String CONF_FILE_NAME = "SyncClient.properties";
+    public final static String CONF_TASK_SERVER = "tasks-server.url";
+	public static final String PIC_DIRECTORY_NAME = "db.DocumentFiles.url";
+	public static final String FLUME_SERVER_URL = "flume-server.url";
+	public static final String CONF_CLIENT_ID = "clientid";
+
 	private static final boolean USE_REMOTE_DIRS = false;
 
-	private static String flumeServer = "192.168.1.109:9092";
-	private static String clientId = "1";
+	private static String taskServer = null;
+	private static String flumeServer = null;
+	private static String clientId = null;
+
+	private Map<String, String> conf = null;
 
 	private List<DirInfo> dirInfos = new ArrayList<DirInfo>();
 	private String threadName = null;
-	private String confName = "DbSyncClient.conf";
 
+	public static String getTaskServer() {
+		return flumeServer;
+	}
+
+	public static void setTaskServer(String taskServer) {
+		FileUploader.taskServer = taskServer;
+	}
+	
 	public static String getFlumeServer() {
 		return flumeServer;
 	}
@@ -61,29 +73,27 @@ public class FileUploader extends FixedNumThreadPool {
 		}
 	}
 
-	private void loadFileConfig () throws ConfigurationException {
-    	Configurations configurations = new Configurations();
-        Configuration configuration = configurations.properties(confName);
-        Iterator<String> keys = configuration.getKeys();
-        while (keys.hasNext()) {
-        	String key = keys.next();
+	private void loadFileConfig () throws IOException {
+		conf = BeaverUtils.loadConfig(CONF_FILE_NAME);
+		Set<String> keys = conf.keySet();
+		for (String key : keys) {
         	switch (key) {
 			case PIC_DIRECTORY_NAME:
-				setFilePath(configuration.getString(key));
+				setFilePath(conf.get(key));
 				break;
 			case FLUME_SERVER_URL :
-				flumeServer = configuration.getString(key);
+				flumeServer = conf.get(key);
 				if (flumeServer != null && !flumeServer.contains("://")) {
 		        	flumeServer = "http://" + flumeServer;
 		        }
 				break;
-			case CLIENT_ID:
-				setClientId(configuration.getString(key));
+			case CONF_CLIENT_ID:
+				setClientId(conf.get(key));
 				break;
 			default:
 				break;
 			}
-        }
+		}
     }
 
 	@Override
@@ -91,9 +101,14 @@ public class FileUploader extends FixedNumThreadPool {
 //		load file dirs from local config files
 		try {
 			loadFileConfig();
-		} catch (ConfigurationException e){
+			if (clientId == null || taskServer == null || flumeServer == null) {
+				logger.fatal("no client.id in conf file, confName:" + CONF_FILE_NAME);
+				return;
+			}
+		} catch (IOException e){
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("load config file error, msg:" + e.getMessage());
+			return;
 		}
 
 //		load file dirs from remote server
@@ -101,7 +116,7 @@ public class FileUploader extends FixedNumThreadPool {
 			try {
 				getFileTask();
 				break;
-			} catch (ConfigurationException | IOException e) {
+			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
 				logger.error("update task list error, msg:" + e.getMessage());
 				BeaverUtils.sleep(10 * 1000);
@@ -135,10 +150,8 @@ public class FileUploader extends FixedNumThreadPool {
 		return "file_uploader";
 	}
 
-	private void getFileTask() throws ConfigurationException, IOException {
-		Configurations configurations = new Configurations();
-		Configuration conf = configurations.properties(confName);
-		String json = BeaverUtils.doGet(conf.getString("tasks-server.url") + clientId);
+	private void getFileTask() throws  IOException {
+		String json = BeaverUtils.doGet(taskServer + clientId);
 		ObjectMapper objectMapper = new ObjectMapper();
 		JsonNode root = objectMapper.readTree(json);
 		JsonNode dbs = root.get("databases");
@@ -172,7 +185,7 @@ public class FileUploader extends FixedNumThreadPool {
 					}
 				}
 			}else {
-//					do nothing for now
+//				do nothing for now
 			}
 		}
 

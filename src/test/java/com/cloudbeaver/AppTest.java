@@ -5,6 +5,7 @@ import net.sf.json.JSONArray;
 import org.junit.Test;
 
 import com.cloudbeaver.client.dbUploader.DbUploader;
+import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -41,19 +42,20 @@ public class AppTest extends TestCase {
 	@Test
 	public void testGetMsg() throws Exception {
 		DbUploader dbUploader = new DbUploader();
-		dbUploader.loadConfig();
-		dbUploader.loadTasks();
-		String reply = dbUploader.doQuerySingleThread();
-		System.out.println(reply);
+		dbUploader.beforeTask();
 
-		ObjectMapper oMapper = new ObjectMapper();
-		JsonNode root = oMapper.readTree(reply);
-		for (int i = 0; i < root.size(); i++) {
-			JsonNode dbNode = root.get(i);
-			for (int j = 0; j < dbNode.size(); j++) {
-				JsonNode item = dbNode.get(j);
-				assertEquals(item.get("hdfs_prison"), 1);
-				assertEquals(item.get("hdfs_db"), "DocumentDB");
+		for (int index = 0; index < dbUploader.getThreadNum(); index++) {
+			Object dbBean = dbUploader.getTaskObject(index);
+			String reply = dbUploader.getDbUploadData((DatabaseBean)dbBean);
+//			reply:[{"hdfs_prison":"1","hdfs_db":"DocumentDB", xxx}]
+			System.out.println("reply:" + reply);
+
+			ObjectMapper oMapper = new ObjectMapper();
+			JsonNode root = oMapper.readTree(reply);
+			for (int i = 0; i < root.size(); i++) {
+				JsonNode item = root.get(i);
+				assertEquals(item.get("hdfs_prison").asInt(), 1);
+				assertEquals(item.get("hdfs_db").asText(), "DocumentDB");
 			}
 		}
 	}

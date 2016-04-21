@@ -16,6 +16,9 @@ public abstract class FixedNumThreadPool implements Runnable{
 	protected boolean KEEP_RUNNING = true;
 
     protected abstract void beforeTask();
+    /*
+     * return the task, just result for test
+     */
 	protected abstract void doTask(Object taskObject);
 	protected abstract int getThreadNum();
 	protected abstract Object getTaskObject(int index);
