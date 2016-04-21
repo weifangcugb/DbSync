@@ -2,10 +2,10 @@ package com.cloudbeaver.client.dbUploader;
 
 import org.apache.log4j.*;
 
-import com.cloudbeaver.client.bean.DatabaseBean;
-import com.cloudbeaver.client.bean.MultiDatabaseBean;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
+import com.cloudbeaver.client.dbbean.DatabaseBean;
+import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.configuration2.*;

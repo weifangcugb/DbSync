@@ -1,4 +1,4 @@
-package com.cloudbeaver.client.bean;
+package com.cloudbeaver.client.dbbean;
 
 import org.apache.log4j.*;
 import java.util.ArrayList;
