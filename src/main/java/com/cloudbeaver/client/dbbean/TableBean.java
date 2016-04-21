@@ -4,7 +4,7 @@ import org.apache.log4j.*;
 import java.util.ArrayList;
 
 /**
- * Table Bean
+ * bean for one table
  */
 public class TableBean {
 

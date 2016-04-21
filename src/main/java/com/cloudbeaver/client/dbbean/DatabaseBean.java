@@ -8,7 +8,7 @@ import com.cloudbeaver.client.dbUploader.JsonAndList;
 import java.util.ArrayList;
 
 /**
- * DB Watcher Bean
+ * bean for one database
  */
 public class DatabaseBean {
 
