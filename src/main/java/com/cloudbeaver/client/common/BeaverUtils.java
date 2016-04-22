@@ -1,26 +1,25 @@
 package com.cloudbeaver.client.common;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.apache.log4j.Logger;
-
-import com.cloudbeaver.client.dbUploader.DbUploader;
-import com.cloudbeaver.client.fileUploader.FileUploader;
 
 public class BeaverUtils {
 	private static Logger logger = Logger.getLogger(BeaverUtils.class);
@@ -150,13 +149,31 @@ public class BeaverUtils {
         return conf;
     }
 
-	public static String gzipAndbase64(String data) {
+	public static String gzipAndbase64(String data) throws IOException {
 //		data = data.replaceAll("\"", "\\\\\"");
-//		TODO: add gzip compression
-		return Base64.encodeBase64String(data.getBytes(Charset.forName(DEFAULT_CHARSET)));
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		GZIPOutputStream gout = new GZIPOutputStream(bout);
+		gout.write(data.getBytes(Charset.forName(DEFAULT_CHARSET)));
+		gout.close();
+		return Base64.encodeBase64String(bout.toByteArray());
 	}
 
-	public static String compressAndFormatFlumeHttp(String data) {
+	public static String compressAndFormatFlumeHttp(String data) throws IOException {
 		return "[{ \"headers\" : {}, \"body\" : \"" + gzipAndbase64(data) + "\" }]";
+	}
+
+	public static byte[] decompress(byte[] base64) throws IOException {
+		return UnGzip(Base64.decodeBase64(base64));
+	}
+
+	private static byte[] UnGzip(byte[] data) throws IOException {
+		GZIPInputStream gzipIn = new GZIPInputStream(new ByteArrayInputStream(data));
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int len = 0;
+		while((len = gzipIn.read(buffer)) != -1){
+			bout.write(buffer, 0, len);
+		}
+		return bout.toByteArray();
 	}
 }

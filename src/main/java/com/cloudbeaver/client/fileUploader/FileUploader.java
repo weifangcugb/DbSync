@@ -99,7 +99,7 @@ public class FileUploader extends FixedNumThreadPool {
     }
 
 	@Override
-	protected void beforeTask() {
+	protected void setup() {
 //		load file dirs from local config files
 		try {
 			loadFileConfig();

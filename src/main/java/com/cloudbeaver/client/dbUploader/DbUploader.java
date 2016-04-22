@@ -51,7 +51,7 @@ public class DbUploader extends FixedNumThreadPool{
 	}
 
 	@Override
-	public void beforeTask() {
+	public void setup() {
         try {
 			conf = BeaverUtils.loadConfig(CONF_FILE_NAME);
 	        if (conf.containsKey(CONF_CLIENT_ID)) {
@@ -132,7 +132,17 @@ public class DbUploader extends FixedNumThreadPool{
 
                 logger.debug("get db data, json:" + jArray.toString());
 
-                String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(jArray.toString());
+                String flumeJson = null;
+				try {
+					flumeJson = BeaverUtils.compressAndFormatFlumeHttp(jArray.toString());
+				} catch (IOException e) {
+//					this is impossible unless system memory has some error, as I think
+					BeaverUtils.PrintStackTrace(e);
+					logger.error("write gzip stream to memory error, msg:" + e.getMessage());
+					BeaverUtils.sleep(1000);
+					continue;
+				}
+
                 logger.debug("upload db data, data:" + flumeJson);
 
                 try {
