@@ -17,7 +17,7 @@ public class AppTest extends TestCase {
 	@Test
 	public void testGetMsg() throws Exception {
 		DbUploader dbUploader = new DbUploader();
-		dbUploader.beforeTask();
+		dbUploader.setup();
 
 		for (int index = 0; index < dbUploader.getThreadNum(); index++) {
 			DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
@@ -29,8 +29,7 @@ public class AppTest extends TestCase {
 				JSONArray jArray = new JSONArray();
 				String maxVersion = SqlHelper.execSqlQuery(dbBean, tBean, dbUploader, 1, jArray);
 
-//				reply:[{"hdfs_prison":"1","hdfs_db":"DocumentDB", xxx}]
-
+//				jArray : [{"hdfs_prison":"1","hdfs_db":"DocumentDB", xxx}]
 				ObjectMapper oMapper = new ObjectMapper();
 				JsonNode root = oMapper.readTree(jArray.toString());
 				for (int i = 0; i < root.size(); i++) {

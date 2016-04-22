@@ -13,12 +13,16 @@ public abstract class FixedNumThreadPool implements Runnable{
 	private Logger logger = Logger.getLogger(FixedNumThreadPool.class);
 	public static final String STOP_SIGNAL = "USR2";
 
-    protected abstract void beforeTask();
+    protected abstract void setup();
 	protected abstract void doTask(Object taskObject);
 	protected abstract int getThreadNum();
 	protected abstract Object getTaskObject(int index);
 	protected abstract long getSleepTimeBetweenTaskInnerLoop();
 	protected abstract String getTaskDescription();
+
+	protected void shutdown() {
+//		as default, do nothing
+	}
 
 	private boolean KEEP_RUNNING = true;
 
@@ -34,7 +38,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 			}
 		});
 
-		beforeTask();
+		setup();
 
 		ExecutorService executor = Executors.newCachedThreadPool();
 		for (int i = 0; i < getThreadNum(); i++) {
@@ -67,6 +71,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 			BeaverUtils.sleep(1 * 1000);
 		}
 
+		shutdown();
 		executor.shutdown();
 
 		while ( !executor.isTerminated() ) {
