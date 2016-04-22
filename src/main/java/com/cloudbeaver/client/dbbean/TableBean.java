@@ -26,10 +26,11 @@ public class TableBean {
         return xgsj;
     }
 
-    public void setXgsj(String xgsj) {
-        if (xgsj.indexOf('x') == -1 && xgsj.indexOf('X') == -1)
-            xgsj = "0x" + xgsj;
-        this.xgsj = xgsj;
+    public void setXgsj(String maxXgsj) {
+    	if (!maxXgsj.startsWith("0x")) {
+			maxXgsj = "0x" + maxXgsj;
+		}
+        this.xgsj = maxXgsj;
     }
 
     public ArrayList<String> getJoin() {
@@ -48,10 +49,10 @@ public class TableBean {
         this.key = key;
     }
 
-    public String getSqlString(String prison, String dbName, String rowVersionColumn) {
-        return "SELECT " + prison + " AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-                table + "' AS hdfs_table, *" + fromClause() + whereClause(rowVersionColumn)
-                + " order by " + rowVersionColumn + "limit 20";
+    public String getSqlString(String prison, String dbName, String rowVersionColumn, int sqlLimitNum) {
+        return "SELECT top " + sqlLimitNum + " " +prison + " AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
+                table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+                + " order by " + table + "." + rowVersionColumn;
     }
 
     private String fromClause() {

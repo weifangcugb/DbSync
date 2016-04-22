@@ -9,11 +9,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.apache.log4j.Logger;
 
@@ -22,6 +24,8 @@ import com.cloudbeaver.client.fileUploader.FileUploader;
 
 public class BeaverUtils {
 	private static Logger logger = Logger.getLogger(BeaverUtils.class);
+
+	public static String DEFAULT_CHARSET = "utf-8";
 
 	public static boolean DEBUG_MODE = true;
 
@@ -131,7 +135,7 @@ public class BeaverUtils {
     	Map<String, String> conf = new HashMap<String, String>();
 
         Properties pps = new Properties();
-        pps.load(DbUploader.class.getClassLoader().getResourceAsStream(confFileName));
+        pps.load(BeaverUtils.class.getClassLoader().getResourceAsStream(confFileName));
         Enumeration<?> enum1 = pps.propertyNames();
         while(enum1.hasMoreElements()) {
             String strKey = (String) enum1.nextElement();
@@ -145,4 +149,14 @@ public class BeaverUtils {
 		}
         return conf;
     }
+
+	public static String gzipAndbase64(String data) {
+//		data = data.replaceAll("\"", "\\\\\"");
+//		TODO: add gzip compression
+		return Base64.encodeBase64String(data.getBytes(Charset.forName(DEFAULT_CHARSET)));
+	}
+
+	public static String compressAndFormatFlumeHttp(String data) {
+		return "[{ \"headers\" : {}, \"body\" : \"" + gzipAndbase64(data) + "\" }]";
+	}
 }

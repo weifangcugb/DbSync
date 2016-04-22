@@ -22,6 +22,8 @@ public class FileUploader extends FixedNumThreadPool {
 	public static final String FLUME_SERVER_URL = "flume-server.url";
 	public static final String CONF_CLIENT_ID = "clientid";
 
+    public final static String FILE_UPLOAD_DB_NAME = "DocumentFiles";
+
 	private static final boolean USE_REMOTE_DIRS = false;
 
 	private static String taskServer = null;
@@ -127,7 +129,8 @@ public class FileUploader extends FixedNumThreadPool {
 	@Override
 	protected void doTask(Object taskObject) {
 		DirInfo dirInfo = (DirInfo)taskObject;
-		dirInfo.listSortUploadFiles();
+		dirInfo.listAndSortFiles();
+		dirInfo.uploadFiles();
 	}
 
 	@Override

@@ -8,7 +8,6 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
 
-import com.cloudbeaver.client.dbUploader.JsonAndList;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
@@ -16,6 +15,10 @@ import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
 public class SqlHelper {
     private static Logger logger = Logger.getLogger(SqlHelper.class);
 
+    /*
+     * one connection per db
+     * so this class can't used in multi-thread env
+     */
     private static Hashtable conMap = new Hashtable();
 
     public static Connection getConn(DatabaseBean dbBean, FixedNumThreadPool threadPool) {
@@ -38,7 +41,8 @@ public class SqlHelper {
     			} catch (ClassNotFoundException | SQLException e) {
     	            BeaverUtils.PrintStackTrace(e);
     	            logger.error("get sql connection error, msg:" + e.getMessage());
-    	            
+    	            conMap.remove(dbBean.getDb());
+
     	            BeaverUtils.sleep(3 * 1000);
     			}
 			}
@@ -47,8 +51,8 @@ public class SqlHelper {
         }
     }
 
-	public static JsonAndList extractJsonAndList(DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool) throws SQLException {
-		String sqlQuery = tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion());
+	public static String execSqlQuery(DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException {
+		String sqlQuery = tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum);
 		Connection con = getConn(dbBean, threadPool);
 		if (!threadPool.isRunning() || con == null) {
 			return null;
@@ -58,15 +62,11 @@ public class SqlHelper {
         //s.setQueryTimeout(10);
         ResultSet rs = pStatement.executeQuery();
 
-        JSONArray array = new JSONArray();
-        ArrayList<Map<String, String>> arrayList = new ArrayList<Map<String, String>>();
-
+        String maxXgsj = null;
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
-
         while (rs.next()) {
             JSONObject jsonObj = new JSONObject();
-            Map<String, String> map = new HashMap<String, String>();
 
             for (int i = 1; i <= columnCount; i++) {
                 String columnName =metaData.getColumnLabel(i);
@@ -74,12 +74,17 @@ public class SqlHelper {
                 if (value == null) value = "";
 
                 jsonObj.put(columnName.trim(), value.trim());
-                map.put(columnName.trim(), value.trim());
             }
-            array.add(jsonObj);
-            arrayList.add(map);
+            jArray.add(jsonObj);
+            String ts = rs.getString(dbBean.getRowversion());
+
+            maxXgsj = ts;
         }
 
-        return new JsonAndList(array.toString(), arrayList);
+        return maxXgsj;
+	}
+
+	public static void removeConnection(DatabaseBean dbBean) {
+		conMap.remove(dbBean.getDb());
 	}
 }

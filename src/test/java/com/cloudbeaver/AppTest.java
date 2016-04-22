@@ -4,8 +4,10 @@ import net.sf.json.JSONArray;
 
 import org.junit.Test;
 
+import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
+import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -23,16 +25,19 @@ public class AppTest extends TestCase {
 				continue;
 			}
 
-			String reply = dbUploader.getDbUploadData(dbBean);
-//			reply:[{"hdfs_prison":"1","hdfs_db":"DocumentDB", xxx}]
-			System.out.println("reply:" + reply);
+			for (TableBean tBean : dbBean.getTables()) {
+				JSONArray jArray = new JSONArray();
+				String maxVersion = SqlHelper.execSqlQuery(dbBean, tBean, dbUploader, 1, jArray);
 
-			ObjectMapper oMapper = new ObjectMapper();
-			JsonNode root = oMapper.readTree(reply);
-			for (int i = 0; i < root.size(); i++) {
-				JsonNode item = root.get(i);
-				assertEquals(item.get("hdfs_prison").asInt(), 1);
-				assertEquals(item.get("hdfs_db").asText(), "DocumentDB");
+//				reply:[{"hdfs_prison":"1","hdfs_db":"DocumentDB", xxx}]
+
+				ObjectMapper oMapper = new ObjectMapper();
+				JsonNode root = oMapper.readTree(jArray.toString());
+				for (int i = 0; i < root.size(); i++) {
+					JsonNode item = root.get(i);
+					assertEquals(item.get("hdfs_prison").asInt(), 1);
+					assertEquals(item.get("hdfs_db").asText(), "DocumentDB");
+				}
 			}
 		}
 	}

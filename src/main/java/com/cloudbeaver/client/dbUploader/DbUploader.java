@@ -1,5 +1,7 @@
 package com.cloudbeaver.client.dbUploader;
 
+import net.sf.json.JSONArray;
+
 import org.apache.log4j.*;
 
 import com.cloudbeaver.client.common.BeaverUtils;
@@ -16,10 +18,14 @@ import java.util.Map;
 
 public class DbUploader extends FixedNumThreadPool{
 	private final static String CONF_CLIENT_ID = "client.id";
-	private final static String CONFIG_FILE_NAME = "SyncClient.properties";
-    private final static String TASK_SERVER_URL = "tasks-server.url";
-    private static String FILE_UPLOAD_DB_NAME = "DocumentFiles";
+	private final static String CONF_FILE_NAME = "SyncClient.properties";
+	private final static String CONF_FLUME_SERVER_URL = "flume-server.url";
+    private final static String CONF_TASK_SERVER_URL = "tasks-server.url";
 
+    private final static String FILE_UPLOAD_DB_NAME = "DocumentFiles";
+
+    private final static int sqlLimitNum = 1;
+    
     private static Logger logger = Logger.getLogger(DbUploader.class);
 
     private Map<String, String> conf = null;
@@ -47,7 +53,7 @@ public class DbUploader extends FixedNumThreadPool{
 	@Override
 	public void beforeTask() {
         try {
-			conf = BeaverUtils.loadConfig(CONFIG_FILE_NAME);
+			conf = BeaverUtils.loadConfig(CONF_FILE_NAME);
 	        if (conf.containsKey(CONF_CLIENT_ID)) {
 				setClientId(conf.get(CONF_CLIENT_ID));
 			}else {
@@ -56,7 +62,7 @@ public class DbUploader extends FixedNumThreadPool{
 			}
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
-			logger.fatal("load config failed, please restart process. confName:" + CONFIG_FILE_NAME + " msg:" + e.getMessage());
+			logger.fatal("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage());
 			return;
 		}
 
@@ -68,7 +74,7 @@ public class DbUploader extends FixedNumThreadPool{
 				break;
 			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("get tasks failed, url:" + TASK_SERVER_URL + " msg:" + e.getMessage() + " json:" + getTaskJson());
+				logger.error("get tasks failed, url:" + CONF_TASK_SERVER_URL + " msg:" + e.getMessage() + " json:" + getTaskJson());
 				BeaverUtils.sleep(60 * 1000);
 			}
         }
@@ -97,57 +103,50 @@ public class DbUploader extends FixedNumThreadPool{
 	@Override
 	public void doTask(Object taskObject) {
 		DatabaseBean dbBean = (DatabaseBean)taskObject;
-        String flumeJson;
-		try {
-			flumeJson = getDbUploadData(dbBean);
-			BeaverUtils.doPost(conf.get("flume-server.url"), flumeJson);
-		} catch (SQLException e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));
-		} catch (IOException e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.error("post faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));
-		}
-	}
 
-    public String queryDb(DatabaseBean dbBean) throws SQLException {
-        StringBuilder sb = new StringBuilder();
-        sb.append('[');
         for (TableBean tableBean : dbBean.getTables()) {
-            logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion()));
+//        	keep trying until get some data from table
+        	while (true) {
+//                logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum));
+                JSONArray jArray = new JSONArray();
+                String maxXgsj = null;
+				try {
+					maxXgsj = SqlHelper.execSqlQuery(dbBean, tableBean, this, sqlLimitNum, jArray);
+				} catch (SQLException e) {
+					BeaverUtils.PrintStackTrace(e);
+					logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));
+					SqlHelper.removeConnection(dbBean);
+					BeaverUtils.sleep(1000);
+					continue;
+				}
 
-            JsonAndList jsonAndList = SqlHelper.extractJsonAndList(dbBean, tableBean, this);
-            if (jsonAndList == null) continue;
+				if (maxXgsj == null) {
+//					time to exit, user ask to exist
+					return;
+				}
 
-            String res = jsonAndList.getJson();
-            if (res.length() > 2) {
-                sb.append(res.substring(1, res.length()-1))
-                        .append(',');
-                        //.append(',').append('\n');
-            }
+                if (jArray.isEmpty()) {
+//	                no new record, next table
+    				break;
+    			}
 
-//            if (jsonAndList != null &&
-//                    jsonAndList.getList() != null &&
-//                    jsonAndList.getList().size() > 0) {
-//                tableBean.setXgsj(jsonAndList.getList().get(0).get("max_" + dbBean.getRowversion()));
-//            }
+                logger.debug("get db data, json:" + jArray.toString());
+
+                String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(jArray.toString());
+                logger.debug("upload db data, data:" + flumeJson);
+
+                try {
+    				BeaverUtils.doPost(conf.get(CONF_FLUME_SERVER_URL), flumeJson);
+    				if (maxXgsj != null) {
+    					tableBean.setXgsj(maxXgsj);
+					}
+    				logger.info("send db data to flume server, json:" + flumeJson);
+    			} catch (IOException e) {
+    				BeaverUtils.PrintStackTrace(e);
+    				logger.error("post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL) + " json:" + flumeJson);
+    			}
+			}
         }
-        if (sb.charAt(sb.length() - 1) == ',') {
-            sb.deleteCharAt(sb.length() - 1);
-        }
-        sb.append(']');
-        return sb.toString();
-    }
-    
-	public String getDbUploadData(DatabaseBean dbBean) throws SQLException {
-		String dbInfo = queryDb(dbBean);
-		String oriDbInfo = dbInfo;
-
-        dbInfo = dbInfo.replaceAll("\"", "\\\\\"");
-        String flumeJson = "[{ \"headers\" : {}, \"body\" : \"[" + dbInfo + "]\" }]";
-        logger.debug("upload db data, data:" + flumeJson);
-
-        return oriDbInfo;
 	}
 
 	@Override
@@ -173,7 +172,7 @@ public class DbUploader extends FixedNumThreadPool{
 	}
 
     private void loadTasks() throws IOException {
-        String json = BeaverUtils.doGet(conf.get(TASK_SERVER_URL) + clientId);
+        String json = BeaverUtils.doGet(conf.get(CONF_TASK_SERVER_URL) + clientId);
         logger.debug("fetch tasks, tasks:" + json);
 
         setTaskJson(json);

@@ -9,6 +9,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.dbUploader.DbUploader;
 
 public class FileInfo implements Comparable<FileInfo>{
 	private static Logger logger = Logger.getLogger(DirInfo.class);
@@ -42,21 +43,20 @@ public class FileInfo implements Comparable<FileInfo>{
 		this.modifyTime = modifyTime;
 	}
 
-	private void uploadFileData(String fileName, String fileData, long lastModified) throws IOException{
+	public void uploadFileData(String fileName, String fileData, long lastModified) throws IOException{
 		/*
 		 * e.g.
 		 * [[{\"hdfs_prison\":\"1\",\"hdfs_db\":\"DocumentDB\",\"hdfs_table\":\"da_jbxx\",\"id\":\"337178\"
 		 */
-		String uploadData = "[[{\"hdfs_prison\":\"" + FileUploader.getClientId() + "\",\"hdfs_db\":\"files\",\"hdfs_table\":\"pics\",\"pic_name\":\"" 
-							+ fileName + "\", \"pic_data\":\"" + fileData + "\", \"xgsj\":\"" +  lastModified + "\"}]]";
+		String uploadData = "[{\"hdfs_prison\":\"" + FileUploader.getClientId() + "\",\"hdfs_db\":\"" + FileUploader.FILE_UPLOAD_DB_NAME 
+				+ "\",\"hdfs_table\":\"pics\",\"file_name\":\"" + fileName + "\", \"file_data\":\"" + fileData 
+				+ "\", \"xgsj\":\"" +  lastModified + "\"}]";
 
-		uploadData = uploadData.replaceAll("\"", "\\\\\"");
-        String flumeJson = "[{ \"headers\" : {}, \"body\" : \"" + uploadData + "\" }]";
-
+        String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(uploadData);
         BeaverUtils.doPost(FileUploader.getFlumeServer(), flumeJson);
 	}
 
-	private String getFileData() throws IOException {
+	public String getFileData() throws IOException {
 		FileInputStream fin = new FileInputStream(file);
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
 
@@ -76,12 +76,5 @@ public class FileInfo implements Comparable<FileInfo>{
 		}else {
 			return new String(Base64.encodeBase64(datas));
 		}
-	}
-
-	public void uploadData() throws IOException {
-		logger.info("start to upload pic, file:" + file.getAbsolutePath());
-		String fileData = getFileData();
-		uploadFileData(file.getName(),fileData, modifyTime);
-		logger.info("finish upload pic, file:" + file.getAbsolutePath());
 	}
 }

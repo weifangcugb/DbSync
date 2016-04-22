@@ -38,43 +38,48 @@ public class DirInfo {
 		this.miniChangeTime = miniChangeTime;
 	}
 
-	private void listAndSortFiles() {
+	public void listAndSortFiles() {
 		finfos.clear();
 
 		File[] files = dir.listFiles();
 		for (File file : files) {
 			long changeTime = file.lastModified();
-//			System.out.println("file:" + file.getName() + " changeTime:" + changeTime + " mini:" + miniChangeTime);
+//			logger.debug("file:" + file.getName() + " changeTime:" + changeTime + " mini:" + miniChangeTime);
 			if (changeTime > miniChangeTime) {
 				FileInfo finfo = new FileInfo(file, changeTime);
 				finfos.add(finfo);
 			}
 		}
+
 		Collections.sort(finfos);
 	}
 
-	private void uploadFiles() {
+	public void uploadFiles() {
 		for (FileInfo fileInfo : finfos) {
+			String fileData = "";
 			try {
-				fileInfo.uploadData();
-				setMiniChangeTime(fileInfo.getModifyTime());
+				logger.info("start to read file, file:" + fileInfo.getFile().getAbsolutePath());
+				fileData = fileInfo.getFileData();
+				logger.info("finish read file, file:" + fileInfo.getFile().getAbsolutePath());
 			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("upload file error, file: " + fileInfo.getFile().getAbsolutePath() + "msg:" + e.getMessage());
+				logger.error("read file data error, maybe disk block damaged, will jump this error file. file: " + fileInfo.getFile().getAbsolutePath() + "msg:" + e.getMessage());
+
+				continue;
 			}
 
+//			TODO: resend logic
 			try {
-//				have a break after every file uploaded
-				Thread.sleep(200);
-			} catch (InterruptedException e) {
+				logger.info("start to upload file, file:" + fileInfo.getFile().getAbsolutePath());
+				fileInfo.uploadFileData(fileInfo.getFile().getName(), fileData, fileInfo.getModifyTime());
+				setMiniChangeTime(fileInfo.getModifyTime());
+				logger.info("finish upload file, file:" + fileInfo.getFile().getAbsolutePath());
+			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("sleep interrupted, msg:" + e.getMessage());
+				logger.error("upload file data error, will jump this error file. file: " + fileInfo.getFile().getAbsolutePath() + "msg:" + e.getMessage());
 			}
-		}
-	}
 
-	public void listSortUploadFiles() {
-		listAndSortFiles();
-		uploadFiles();
+			BeaverUtils.sleep(200);
+		}
 	}
 }
