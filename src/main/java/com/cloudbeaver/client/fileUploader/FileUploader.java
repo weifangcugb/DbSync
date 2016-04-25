@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -99,18 +100,18 @@ public class FileUploader extends FixedNumThreadPool {
     }
 
 	@Override
-	protected void setup() {
+	protected void setup() throws BeaverFatalException {
 //		load file dirs from local config files
 		try {
 			loadFileConfig();
 			if (clientId == null || taskServer == null || flumeServer == null) {
 				logger.fatal("no client.id in conf file, confName:" + CONF_FILE_NAME);
-				return;
+				throw new BeaverFatalException("no client.id in config file");
 			}
 		} catch (IOException e){
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("load config file error, msg:" + e.getMessage());
-			return;
+			throw new BeaverFatalException("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage(), e);
 		}
 
 //		load file dirs from remote server
