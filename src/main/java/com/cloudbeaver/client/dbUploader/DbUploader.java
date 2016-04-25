@@ -4,6 +4,7 @@ import net.sf.json.JSONArray;
 
 import org.apache.log4j.*;
 
+import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
 import com.cloudbeaver.client.common.SqlHelper;
@@ -51,19 +52,19 @@ public class DbUploader extends FixedNumThreadPool{
 	}
 
 	@Override
-	public void setup() {
+	public void setup() throws BeaverFatalException {
         try {
 			conf = BeaverUtils.loadConfig(CONF_FILE_NAME);
 	        if (conf.containsKey(CONF_CLIENT_ID)) {
 				setClientId(conf.get(CONF_CLIENT_ID));
 			}else {
 				logger.fatal("no client.id in config file");
-				return;
+				throw new BeaverFatalException("no client.id in config file");
 			}
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.fatal("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage());
-			return;
+			throw new BeaverFatalException("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage(), e);
 		}
 
 //      get tasks from web server

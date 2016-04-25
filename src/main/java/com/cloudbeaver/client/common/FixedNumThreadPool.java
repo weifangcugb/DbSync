@@ -13,7 +13,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 	private Logger logger = Logger.getLogger(FixedNumThreadPool.class);
 	public static final String STOP_SIGNAL = "USR2";
 
-    protected abstract void setup();
+    protected abstract void setup() throws BeaverFatalException;
 	protected abstract void doTask(Object taskObject);
 	protected abstract int getThreadNum();
 	protected abstract Object getTaskObject(int index);
@@ -38,7 +38,13 @@ public abstract class FixedNumThreadPool implements Runnable{
 			}
 		});
 
-		setup();
+		try {
+			setup();
+		} catch (BeaverFatalException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.fatal("get fatal error when setup thread pool, process will exit. msg:" + e.getMessage());
+			return;
+		}
 
 		ExecutorService executor = Executors.newCachedThreadPool();
 		for (int i = 0; i < getThreadNum(); i++) {
