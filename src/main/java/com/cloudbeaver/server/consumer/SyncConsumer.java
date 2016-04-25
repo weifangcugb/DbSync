@@ -28,20 +28,25 @@ import kafka.message.MessageAndMetadata;
 /**
  * get db/file data from kafka, upload them to web server
  */
-public class SyncConsumer extends FixedNumThreadPool{	
+public class SyncConsumer extends FixedNumThreadPool{
 	private static Logger logger = Logger.getLogger(SyncConsumer.class);
 
 	private static final String CONF_UPLOAD_FILE_URL = "upload.file.url";
 	private static final String CONF_UPLOAD_DB_URL = "upload.db.url";
-
-	private static final int TOPIC_PARTITION_NUM = 10;
-	private static final String TOPIC_NAME = "hdfs_upload";
 	private static final String LOCAL_FILE_STORED_PATH = "/tmp/";
-
 	private static final String CONF_FILE_NAME = "SyncConsumer.properties";
+	private static final String FILED_HDFS_DB = "hdfs_db";
+	private static final String KAFKA_TOPIC = "hdfs_upload";
+	private static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
+	private static final String KAFKA_GROUP_ID = "group.id";
+	private static final String KAFKA_AUTO_COMMIT_INTERVALS = "auto.commit.interval.ms";
+	private static final String DEFAULT_CONSUMER_GROUP_ID = "g1";
+	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
+	private static final boolean STOR_IN_LOCAL = true;
+	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = false;
 
-//	this config just for test
-	private static boolean STOR_IN_LOCAL = true;
+	private static int TOPIC_PARTITION_NUM = 10;
+	private static String TOPIC_NAME = "hdfs_upload";
 
 	List<KafkaStream<byte[], byte[]>> streams = null;
 	ConsumerConnector consumer = null;
@@ -66,6 +71,10 @@ public class SyncConsumer extends FixedNumThreadPool{
 			}else {
 				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_FILE_URL + " confFile:" + CONF_FILE_NAME);
 			}
+
+			if (!conf.containsKey(ZOOKEEPER_CONNECT)) {
+				throw new BeaverFatalException("FATAL: no conf " + ZOOKEEPER_CONNECT + " confFile:" + CONF_FILE_NAME);
+			}
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.fatal("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage());
@@ -73,14 +82,14 @@ public class SyncConsumer extends FixedNumThreadPool{
 		}
 
 		Properties props = new Properties();
-		props.put("zookeeper.connect", "br1:2181/kafka");
-		props.put("group.id", "g1");
-		props.put("auto.commit.interval.ms", "1000");
+		props.put(ZOOKEEPER_CONNECT, conf.get(ZOOKEEPER_CONNECT));
+		props.put(KAFKA_GROUP_ID, conf.get(KAFKA_GROUP_ID) == null? DEFAULT_CONSUMER_GROUP_ID: conf.get(KAFKA_GROUP_ID));
+		props.put(KAFKA_AUTO_COMMIT_INTERVALS, conf.get(KAFKA_AUTO_COMMIT_INTERVALS) == null ? DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS : conf.get(KAFKA_AUTO_COMMIT_INTERVALS));
 
 		ConsumerConfig consumerConfig = new ConsumerConfig(props);
 		consumer = (ConsumerConnector) Consumer.createJavaConsumerConnector(consumerConfig);
 
-		String topic = "hdfs_upload";
+		String topic = KAFKA_TOPIC;
 
 		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 		topicCountMap.put(TOPIC_NAME, TOPIC_PARTITION_NUM);
@@ -114,25 +123,35 @@ public class SyncConsumer extends FixedNumThreadPool{
 			JsonNode root;
 			try {
 				root = oMapper.readTree(msgBody);
-				for (int i = 0; i < root.size(); i++) {
-					JsonNode item = root.get(i);
-					if (item.get("hdfs_db").asText().equals("DocumentFiles")) {
-						System.out.println(item.get("file_name").asText());
-						if (STOR_IN_LOCAL) {
-							writeToFile(Base64.decodeBase64(item.get("file_data").asText()));
-						}else {
-							BeaverUtils.doPost(dbUploadUrl, msgBody);
-						}
-					}else if (item.get("hdfs_db").asText().equals("DocumentDB")) {
+				if (root.isArray() && root.get(0) != null && root.get(0).has(FILED_HDFS_DB)) {
+					String dbName = root.get(0).get(FILED_HDFS_DB).asText();
+					if (dbName.equals("DocumentDB")) {
 //						upload db data to web server
-						BeaverUtils.doPost(fileUploadUrl, msgBody);
+						BeaverUtils.doPost(dbUploadUrl, msgBody);
+					}else if (dbName.equals("DocumentFile")) {
+						if (UPLOAD_FILE_TO_WEB_SERVER) {
+							BeaverUtils.doPost(fileUploadUrl, msgBody);
+						}
+
+						if (STOR_IN_LOCAL) {
+							for (int i = 0; i < root.size(); i++) {
+								JsonNode item = root.get(i);
+								if (item.get("hdfs_db").asText().equals("DocumentFiles")) {
+									System.out.println(item.get("file_name").asText());
+									writeToFile(Base64.decodeBase64(item.get("file_data").asText()));
+								}
+							}
+						}
 					}else {
-						logger.error("unknow db type, hdfs_db:" + item.get("hdfs_db") + " msg:" + msgBody);
+						logger.error("unknow db type," + " dbName:" + dbName + " msg:" + msgBody);
 					}
+				}else{
+					logger.error("there is no filed " + FILED_HDFS_DB + " in message, msg:" + msgBody);
+					continue;
 				}
 			} catch (Exception e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("write file data to local fs error, msg:" + e.getMessage());
+				logger.error("not a valid message, errMsg:" + e.getMessage() + " key:" + msgKey + " msg:" + msgBody);
 			}
 		}
 	}
