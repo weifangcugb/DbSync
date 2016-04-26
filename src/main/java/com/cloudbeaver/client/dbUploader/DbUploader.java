@@ -22,8 +22,8 @@ public class DbUploader extends FixedNumThreadPool{
 	private final static String CONF_FILE_NAME = "SyncClient.properties";
 	private final static String CONF_FLUME_SERVER_URL = "flume-server.url";
     private final static String CONF_TASK_SERVER_URL = "tasks-server.url";
-
-    private final static String FILE_UPLOAD_DB_NAME = "DocumentFiles";
+	private static final String TASK_DB_NAME = "DocumentDB";
+	private static final String TASK_FILE_NAME = "DocumentFiles";
 
     private final static int sqlLimitNum = 1;
     
@@ -75,7 +75,7 @@ public class DbUploader extends FixedNumThreadPool{
 				break;
 			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("get tasks failed, url:" + CONF_TASK_SERVER_URL + " msg:" + e.getMessage() + " json:" + getTaskJson());
+				logger.error("get tasks failed, url:" + conf.get(CONF_TASK_SERVER_URL) + " msg:" + e.getMessage() + " json:" + getTaskJson());
 				BeaverUtils.sleep(60 * 1000);
 			}
         }
@@ -98,7 +98,7 @@ public class DbUploader extends FixedNumThreadPool{
 	}
 
 	public boolean shouldSkipDb(DatabaseBean dbBean) {
-		return dbBean.getDb().equals(FILE_UPLOAD_DB_NAME);
+		return dbBean.getDb().equals(TASK_FILE_NAME);
 	}
 
 	@Override

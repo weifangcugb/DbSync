@@ -50,7 +50,7 @@ public class TableBean {
     }
 
     public String getSqlString(String prison, String dbName, String rowVersionColumn, int sqlLimitNum) {
-        return "SELECT top " + sqlLimitNum + " " +prison + " AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
+        return "SELECT top " + sqlLimitNum + " '" + prison + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
                 table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
                 + " order by " + table + "." + rowVersionColumn;
     }

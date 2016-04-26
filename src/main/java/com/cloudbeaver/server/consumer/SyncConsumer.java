@@ -10,11 +10,13 @@ import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.http.HttpStatus;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
+import com.cloudbeaver.client.common.HttpResponseMsg;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -33,17 +35,24 @@ public class SyncConsumer extends FixedNumThreadPool{
 
 	private static final String CONF_UPLOAD_FILE_URL = "upload.file.url";
 	private static final String CONF_UPLOAD_DB_URL = "upload.db.url";
+	private static final String CONF_HEARTBEAT_URL = "upload.heartbeat.url";
 	private static final String LOCAL_FILE_STORED_PATH = "/tmp/";
 	private static final String CONF_FILE_NAME = "SyncConsumer.properties";
-	private static final String FILED_HDFS_DB = "hdfs_db";
+	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
+	private static final String JSON_FILED_HDFS_PRISON = "hdfs_prison";
 	private static final String KAFKA_TOPIC = "hdfs_upload";
 	private static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
 	private static final String KAFKA_GROUP_ID = "group.id";
 	private static final String KAFKA_AUTO_COMMIT_INTERVALS = "auto.commit.interval.ms";
 	private static final String DEFAULT_CONSUMER_GROUP_ID = "g1";
+	private static final String TASK_DB_NAME = "DocumentDB";
+	private static final String TASK_FILE_NAME = "DocumentFiles";
+	private static final String TASK_HEART_BEAT = "HeartBeat";
 	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
 	private static final boolean STOR_IN_LOCAL = true;
 	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = false;
+
+	private static final int MAX_POST_RETRY_TIME = 20;
 
 	private static int TOPIC_PARTITION_NUM = 10;
 	private static String TOPIC_NAME = "hdfs_upload";
@@ -55,6 +64,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 
 	private String fileUploadUrl= null;
 	private String dbUploadUrl = null;
+	private String heartBeatUrl = null;
 
 	@Override
 	protected void setup() throws BeaverFatalException {
@@ -70,6 +80,12 @@ public class SyncConsumer extends FixedNumThreadPool{
 				fileUploadUrl = conf.get(CONF_UPLOAD_FILE_URL);
 			}else {
 				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_FILE_URL + " confFile:" + CONF_FILE_NAME);
+			}
+
+			if (conf.containsKey(CONF_HEARTBEAT_URL)) {
+				heartBeatUrl = conf.get(CONF_HEARTBEAT_URL);
+			}else {
+				throw new BeaverFatalException("FATAL: no conf " + CONF_HEARTBEAT_URL + " confFile:" + CONF_FILE_NAME);
 			}
 
 			if (!conf.containsKey(ZOOKEEPER_CONNECT)) {
@@ -123,35 +139,56 @@ public class SyncConsumer extends FixedNumThreadPool{
 			JsonNode root;
 			try {
 				root = oMapper.readTree(msgBody);
-				if (root.isArray() && root.get(0) != null && root.get(0).has(FILED_HDFS_DB)) {
-					String dbName = root.get(0).get(FILED_HDFS_DB).asText();
-					if (dbName.equals("DocumentDB")) {
-//						upload db data to web server
-						BeaverUtils.doPost(dbUploadUrl, msgBody);
-					}else if (dbName.equals("DocumentFile")) {
-						if (UPLOAD_FILE_TO_WEB_SERVER) {
-							BeaverUtils.doPost(fileUploadUrl, msgBody);
-						}
-
-						if (STOR_IN_LOCAL) {
-							for (int i = 0; i < root.size(); i++) {
-								JsonNode item = root.get(i);
-								if (item.get("hdfs_db").asText().equals("DocumentFiles")) {
-									System.out.println(item.get("file_name").asText());
-									writeToFile(Base64.decodeBase64(item.get("file_data").asText()));
+				if (root.isArray() && root.get(0) != null && root.get(0).has(JSON_FILED_HDFS_DB) && root.get(0).has(JSON_FILED_HDFS_PRISON)) {
+					String dbName = root.get(0).get(JSON_FILED_HDFS_DB).asText();
+					int tryTime = 0;
+					for (; tryTime < MAX_POST_RETRY_TIME; tryTime++) {
+						try {
+							if (dbName.equals(TASK_DB_NAME)) {
+//								upload db data to web server
+								BeaverUtils.doPost(dbUploadUrl, msgBody);
+							}else if (dbName.equals(TASK_FILE_NAME)) {
+								if (UPLOAD_FILE_TO_WEB_SERVER) {
+									BeaverUtils.doPost(fileUploadUrl, msgBody);
 								}
+
+								if (STOR_IN_LOCAL) {
+									for (int i = 0; i < root.size(); i++) {
+										JsonNode item = root.get(i);
+										if (item.get("hdfs_db").asText().equals("DocumentFiles")) {
+											System.out.println(item.get("file_name").asText());
+											writeToFile(Base64.decodeBase64(item.get("file_data").asText()));
+										}
+									}
+								}
+							}else if (dbName.equals(TASK_HEART_BEAT)) {
+								BeaverUtils.doPost(heartBeatUrl + root.get(0).get(JSON_FILED_HDFS_PRISON), msgBody);
+							}else {
+								logger.error("unknow db type," + " dbName:" + dbName + " msg:" + msgBody);
+							}
+
+							break;
+						}catch(IOException e){
+							BeaverUtils.PrintStackTrace(e);
+							logger.error("invalid json message, errMsg:" + e.getMessage() + " key:" + msgKey + " msg:" + msgBody);
+							if (BeaverUtils.isHttpServerInternalError(e.getMessage())) {
+								BeaverUtils.sleep(1 * 1000);
+							}else {
+								break;
 							}
 						}
-					}else {
-						logger.error("unknow db type," + " dbName:" + dbName + " msg:" + msgBody);
+					}
+
+					if (tryTime == MAX_POST_RETRY_TIME) {
+						logger.error("post data error, retry too many times, drop it. msg:" + msgBody);
 					}
 				}else{
-					logger.error("there is no filed " + FILED_HDFS_DB + " in message, msg:" + msgBody);
+					logger.error("invalid message, no filed " + JSON_FILED_HDFS_DB + " in message, msg:" + msgBody);
 					continue;
 				}
 			} catch (Exception e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("not a valid message, errMsg:" + e.getMessage() + " key:" + msgKey + " msg:" + msgBody);
+				logger.error("invalid json message, errMsg:" + e.getMessage() + " key:" + msgKey + " msg:" + msgBody);
 			}
 		}
 	}
