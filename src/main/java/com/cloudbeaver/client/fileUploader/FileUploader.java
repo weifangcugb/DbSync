@@ -22,8 +22,8 @@ public class FileUploader extends FixedNumThreadPool {
 	public static final String PIC_DIRECTORY_NAME = "db.DocumentFiles.url";
 	public static final String FLUME_SERVER_URL = "flume-server.url";
 	public static final String CONF_CLIENT_ID = "clientid";
-
-    public final static String FILE_UPLOAD_DB_NAME = "DocumentFiles";
+	public static final String TASK_FILE_NAME = "DocumentFiles";
+	public static final String TASK_DB_NAME = "DocumentDB";
 
 	private static final boolean USE_REMOTE_DIRS = false;
 
@@ -170,7 +170,7 @@ public class FileUploader extends FixedNumThreadPool {
 			if (db == null || !db.has("db")){
 				logger.error("this task has no db entry, task:" + db);
 				continue;
-			}else if (db.get("db").asText().equals("DocumentFiles")) {
+			}else if (db.get("db").asText().equals(TASK_FILE_NAME)) {
 				JsonNode tables = db.get("tables");
 				for (int j = 0; j < tables.size(); j++) {
 					JsonNode table = tables.get(j);

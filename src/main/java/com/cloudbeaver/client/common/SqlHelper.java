@@ -1,7 +1,6 @@
 package com.cloudbeaver.client.common;
 
 import java.sql.*;
-import java.util.*;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -22,7 +21,7 @@ public class SqlHelper {
     private static Hashtable conMap = new Hashtable();
 
     public static Connection getConn(DatabaseBean dbBean, FixedNumThreadPool threadPool) {
-        if (conMap.contains(dbBean.getDb())) {
+        if (conMap.containsKey(dbBean.getDb())) {
             return (Connection) conMap.get(dbBean.getDb());
         } else {
         	String driverClassName = null;
@@ -32,6 +31,7 @@ public class SqlHelper {
                 driverClassName = "oracle.jdbc.driver.OracleDriver";
             }
 
+            logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
             while (threadPool.isRunning()) {
                 try {
     				Class.forName(driverClassName);

@@ -84,16 +84,23 @@ public class BeaverUtils {
 	}
 
 	public static String doPost(String urlString, String flumeJson) throws IOException {
+		return doPost(urlString, flumeJson, "application/json");
+	}
+	
+	public static String doPost(String urlString, String flumeJson, String contentType) throws IOException {
 		BufferedReader br = null;
+		HttpURLConnection urlConnection = null;
 		try {
 			if (urlString.indexOf("http://") == -1) {
 				urlString = "http://" + urlString;
 			}
 
 	        URL url = new URL(urlString);
-	        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+	        
+	        urlConnection = (HttpURLConnection) url.openConnection();
 	        urlConnection.setRequestMethod("POST");
-	        urlConnection.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
+	        urlConnection.setRequestProperty("Content-Type", contentType + " charset=utf-8");//text/plain
+	        urlConnection.setRequestProperty("Content-Length", ""+flumeJson.length());
 	        urlConnection.setConnectTimeout(20000);
 
 	        urlConnection.setDoOutput(true);
@@ -109,13 +116,8 @@ public class BeaverUtils {
 	        }
 
 	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + urlConnection.getResponseCode() + " reply:" + sb.toString());
-
-	        if (urlConnection.getResponseCode() == HttpStatus.SC_OK) {
-				return sb.toString();
-			}else {
-				throw new IOException("http server return not SC_OK, responseCode:" + urlConnection.getResponseCode());
-			}
-		} finally {
+	        return sb.toString();
+		}finally {
 			if (br != null) {
 				try {
 					br.close();
@@ -175,5 +177,9 @@ public class BeaverUtils {
 			bout.write(buffer, 0, len);
 		}
 		return bout.toByteArray();
+	}
+
+	public static boolean isHttpServerInternalError(String message) {
+		return message.indexOf("Server returned HTTP response code: 500") != -1;
 	}
 }
