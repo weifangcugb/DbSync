@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -16,9 +17,31 @@ public class DirInfo {
 	File dir = null;
 	long miniChangeTime = 0;
 	List<FileInfo> finfos = new ArrayList<FileInfo>();
+	private String queryTime = null;
+	private FileInfo UploadingFile = null;
 
-	public DirInfo(String dirName, long miniChangeTime) throws Exception {
-		this(new File(dirName), miniChangeTime);
+	public void setQueryTime(String touchTime){
+		this.queryTime = touchTime;
+	}
+
+	public String getQueryTime() {
+		return queryTime;
+	}
+
+	public File getDir() {
+		return dir;
+	}
+
+	public void setDir(File dir) {
+		this.dir = dir;
+	}
+
+	public String getUploadingFile(){
+		return UploadingFile == null ? "" : UploadingFile.getFile().getName();
+	}
+
+	public DirInfo(String dirName, String miniChangeTime) throws Exception {
+		this(new File(dirName), BeaverUtils.hexTolong(miniChangeTime));
 	}
 
 	public DirInfo(File dir, long miniChangeTime) throws Exception {
@@ -30,8 +53,12 @@ public class DirInfo {
 		}
 	}
 
-	public long getMiniChangeTime() {
-		return miniChangeTime;
+	public String getMiniChangeTimeAsHexString(){
+		String hex = BeaverUtils.longToHex(miniChangeTime);
+		for (int i = 0; i < 16 - hex.length(); i++) {
+			hex = "0" + hex;
+		}
+		return hex;
 	}
 
 	public void setMiniChangeTime(long miniChangeTime) {
@@ -56,6 +83,9 @@ public class DirInfo {
 
 	public void uploadFiles() {
 		for (FileInfo fileInfo : finfos) {
+			setQueryTime((new Date()).toString());
+			UploadingFile = fileInfo;
+
 			String fileData = "";
 			try {
 				logger.info("start to read file, file:" + fileInfo.getFile().getAbsolutePath());
@@ -71,7 +101,7 @@ public class DirInfo {
 //			TODO: resend logic
 			try {
 				logger.info("start to upload file, file:" + fileInfo.getFile().getAbsolutePath());
-				fileInfo.uploadFileData(fileInfo.getFile().getName(), fileData, fileInfo.getModifyTime());
+				fileInfo.uploadFileData(fileInfo.getFile().getName(), fileData, fileInfo.getModifyTime(), getDir().getAbsolutePath());
 				setMiniChangeTime(fileInfo.getModifyTime());
 				logger.info("finish upload file, file:" + fileInfo.getFile().getAbsolutePath());
 			} catch (IOException e) {
@@ -79,6 +109,7 @@ public class DirInfo {
 				logger.error("upload file data error, will jump this error file. file: " + fileInfo.getFile().getAbsolutePath() + "msg:" + e.getMessage());
 			}
 
+			UploadingFile = null;
 			BeaverUtils.sleep(200);
 		}
 	}

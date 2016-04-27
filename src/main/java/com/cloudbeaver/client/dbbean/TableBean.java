@@ -1,6 +1,7 @@
 package com.cloudbeaver.client.dbbean;
 
 import org.apache.log4j.*;
+
 import java.util.ArrayList;
 
 /**
@@ -13,7 +14,8 @@ public class TableBean {
     private String xgsj = "0";
     private ArrayList<String> join = null;
     private String key = null;
-
+    private String queryTime= null;
+    
     public String getTable() {
         return table;
     }
@@ -81,5 +83,13 @@ public class TableBean {
                     table + "." + rowVersionColumn + " > " + xgsj + " ";
         }
     }
+
+    public void setQueryTime(String touchTime){
+    	this.queryTime = touchTime;
+    }
+
+	public String getQueryTime() {
+		return queryTime;
+	}
 }
 

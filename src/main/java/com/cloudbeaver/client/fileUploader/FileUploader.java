@@ -2,9 +2,13 @@ package com.cloudbeaver.client.fileUploader;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 
@@ -20,12 +24,15 @@ public class FileUploader extends FixedNumThreadPool {
     public final static String CONF_FILE_NAME = "SyncClient.properties";
     public final static String CONF_TASK_SERVER = "tasks-server.url";
 	public static final String PIC_DIRECTORY_NAME = "db.DocumentFiles.url";
-	public static final String FLUME_SERVER_URL = "flume-server.url";
-	public static final String CONF_CLIENT_ID = "clientid";
+	public static final String CONF_FLUME_SERVER_URL = "flume-server.url";
+	public static final String CONF_CLIENT_ID = "client.id";
 	public static final String TASK_FILE_NAME = "DocumentFiles";
 	public static final String TASK_DB_NAME = "DocumentDB";
 
-	private static final boolean USE_REMOTE_DIRS = false;
+	private static final boolean USE_REMOTE_DIRS = true;
+
+	private static final String TYPE_NAME = "dataType";
+	private static final String TYPE_HEARTBEAT = "HeartBeat";
 
 	private static String taskServer = null;
 	private static String flumeServer = null;
@@ -68,7 +75,7 @@ public class FileUploader extends FixedNumThreadPool {
 		String[] dirs = filePathes.split(",");
 		for (String dir : dirs) {
 			try {
-				DirInfo dirInfo = new DirInfo(dir, 0);
+				DirInfo dirInfo = new DirInfo(dir, "" + 0);
 				dirInfos.add(dirInfo);
 			} catch (Exception e) {
 				logger.error("dir is not exist or not a directory, skip it. dir:" + dir);
@@ -84,7 +91,10 @@ public class FileUploader extends FixedNumThreadPool {
 			case PIC_DIRECTORY_NAME:
 				setFilePath(conf.get(key));
 				break;
-			case FLUME_SERVER_URL :
+			case CONF_TASK_SERVER:
+				setTaskServer(conf.get(key));
+				break;
+			case CONF_FLUME_SERVER_URL:
 				flumeServer = conf.get(key);
 				if (flumeServer != null && !flumeServer.contains("://")) {
 		        	flumeServer = "http://" + flumeServer;
@@ -130,6 +140,7 @@ public class FileUploader extends FixedNumThreadPool {
 	@Override
 	protected void doTask(Object taskObject) {
 		DirInfo dirInfo = (DirInfo)taskObject;
+		dirInfo.setQueryTime((new Date()).toString());
 		dirInfo.listAndSortFiles();
 		dirInfo.uploadFiles();
 	}
@@ -177,7 +188,7 @@ public class FileUploader extends FixedNumThreadPool {
 					if (table != null && table.has("table") && table.has("xgsj")) {
 						DirInfo dirInfo;
 						try {
-							dirInfo = new DirInfo(table.get("table").asText(), table.get("xgsj").asLong());
+							dirInfo = new DirInfo(table.get("table").asText(), table.get("xgsj").asText());
 							remoteSetDirs.add(dirInfo);
 							logger.info("get one dir from remote server, dir:" + table.toString());
 						} catch (Exception e) {
@@ -197,7 +208,38 @@ public class FileUploader extends FixedNumThreadPool {
 			if (USE_REMOTE_DIRS) {
 				dirInfos = remoteSetDirs;
 			}
+		}else {
+			logger.fatal("all dirs got from server are not exist, task:" + json);
+			throw new IOException("dir are all not exist, will try again");
 		}
+	}
+
+	@Override
+	protected void doHeartBeat() {
+		JSONArray dbsReport = new JSONArray();
+		JSONObject fileDb = new JSONObject();
+		fileDb.put("client.id", "1");
+		fileDb.put("hdfs_prison", clientId);
+		fileDb.put("hdfs_db", conf.get(TASK_FILE_NAME));
+		fileDb.put(TYPE_NAME, TYPE_HEARTBEAT);
+		JSONArray tables = new JSONArray();
+		for (DirInfo dirInfo: dirInfos) {
+			JSONObject table = new JSONObject();
+			table.put("table", dirInfo.getDir().getAbsolutePath());
+			table.put("xgsj", "" + dirInfo.getMiniChangeTimeAsHexString());
+			table.put("queryTime", dirInfo.getQueryTime());
+			table.put("uploadingFile", dirInfo.getUploadingFile());
+			tables.add(table);
+		}
+		fileDb.put("tables", tables);
+		dbsReport.add(fileDb);
+
+		try {
+			BeaverUtils.doPost(conf.get(CONF_FLUME_SERVER_URL), BeaverUtils.compressAndFormatFlumeHttp(dbsReport.toString()));
+		} catch (IOException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("send heart beat error. msg:" + e.getMessage());
+		}		
 	}
 
 	public static void main(String[] args) {

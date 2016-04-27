@@ -11,7 +11,8 @@ import sun.misc.SignalHandler;
 
 public abstract class FixedNumThreadPool implements Runnable{
 	private Logger logger = Logger.getLogger(FixedNumThreadPool.class);
-	public static final String STOP_SIGNAL = "USR2";
+	public static final String STOP_SIGNAL = "TERM";//USR2
+	protected static final long HEART_BEAT_INTERVAL = 20 * 1000;
 
     protected abstract void setup() throws BeaverFatalException;
 	protected abstract void doTask(Object taskObject);
@@ -19,6 +20,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 	protected abstract Object getTaskObject(int index);
 	protected abstract long getSleepTimeBetweenTaskInnerLoop();
 	protected abstract String getTaskDescription();
+	protected abstract void doHeartBeat();
 
 	protected void shutdown() {
 //		as default, do nothing
@@ -72,6 +74,16 @@ public abstract class FixedNumThreadPool implements Runnable{
 				}
 			});
 		}
+
+		executor.submit(new Runnable() {
+			@Override
+			public void run() {
+				while (isRunning()) {
+					doHeartBeat();
+					BeaverUtils.sleep(HEART_BEAT_INTERVAL);
+				}
+			}
+		});
 
 		while (KEEP_RUNNING) {
 			BeaverUtils.sleep(1 * 1000);

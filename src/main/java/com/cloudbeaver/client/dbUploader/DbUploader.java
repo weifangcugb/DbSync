@@ -1,6 +1,7 @@
 package com.cloudbeaver.client.dbUploader;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
 
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.Map;
 
 public class DbUploader extends FixedNumThreadPool{
@@ -22,9 +24,9 @@ public class DbUploader extends FixedNumThreadPool{
 	private final static String CONF_FILE_NAME = "SyncClient.properties";
 	private final static String CONF_FLUME_SERVER_URL = "flume-server.url";
     private final static String CONF_TASK_SERVER_URL = "tasks-server.url";
-	private static final String TASK_DB_NAME = "DocumentDB";
+//	private static final String TASK_DB_NAME = "DocumentDB";
 	private static final String TASK_FILE_NAME = "DocumentFiles";
-
+	private static final String TYPE_HEARTBEAT = "HeartBeat";
     private final static int sqlLimitNum = 1;
     
     private static Logger logger = Logger.getLogger(DbUploader.class);
@@ -86,7 +88,6 @@ public class DbUploader extends FixedNumThreadPool{
 		return dbBeans.getDatabases().size();
 	}
 
-
 	@Override
 	public Object getTaskObject(int threadIndex) {
 		DatabaseBean dbBean = dbBeans.getDatabases().get(threadIndex);
@@ -104,10 +105,14 @@ public class DbUploader extends FixedNumThreadPool{
 	@Override
 	public void doTask(Object taskObject) {
 		DatabaseBean dbBean = (DatabaseBean)taskObject;
+		dbBean.setQueryTime((new Date()).toString());
 
         for (TableBean tableBean : dbBean.getTables()) {
-//        	keep trying until get some data from table
+//        	keep trying until get all data from this table
         	while (true) {
+        		Date date = new Date();
+        		dbBean.setQueryTime(date.toString());
+        		tableBean.setQueryTime(date.toString());
 //                logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum));
                 JSONArray jArray = new JSONArray();
                 String maxXgsj = null;
@@ -155,9 +160,42 @@ public class DbUploader extends FixedNumThreadPool{
     			} catch (IOException e) {
     				BeaverUtils.PrintStackTrace(e);
     				logger.error("post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL) + " json:" + flumeJson);
+    				BeaverUtils.sleep(1000);
     			}
+
+                BeaverUtils.sleep(500);
 			}
         }
+	}
+
+	@Override
+	protected void doHeartBeat() {
+		JSONArray dbsReport = new JSONArray();
+		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
+			JSONObject db = new JSONObject();
+			db.put("client.id", "1");
+			db.put("hdfs_prison", clientId);
+			db.put("hdfs_db", dbBean.getDb());
+			db.put("dataType", TYPE_HEARTBEAT);
+			db.put("queryTime", dbBean.getQueryTime());
+			JSONArray tables = new JSONArray();
+			for (TableBean tBean : dbBean.getTables()) {
+				JSONObject table= new JSONObject();
+				table.put("table", tBean.getTable());
+				table.put("xgsj", tBean.getXgsj());
+				table.put("queryTime", tBean.getQueryTime());
+				tables.add(table);
+			}
+			db.put("tables", tables);
+			dbsReport.add(db);
+		}
+
+		try {
+			BeaverUtils.doPost(conf.get(CONF_FLUME_SERVER_URL), BeaverUtils.compressAndFormatFlumeHttp(dbsReport.toString()));
+		} catch (IOException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("send heart beat error. msg:" + e.getMessage());
+		}
 	}
 
 	@Override
@@ -171,18 +209,19 @@ public class DbUploader extends FixedNumThreadPool{
 	}
 
 	public static void startDbUploader(){
-    	Thread dbUploader = new Thread(new DbUploader());
-    	dbUploader.start();
+		DbUploader dbUploader = new DbUploader();
+    	Thread dbUploaderThread = new Thread(dbUploader);
+    	dbUploaderThread.start();
 
     	try {
-			dbUploader.join();
+    		dbUploaderThread.join();
 		} catch (InterruptedException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("dbuploader join failed, msg:" + e.getMessage());
 		}
 	}
 
-    private void loadTasks() throws IOException {
+	private void loadTasks() throws IOException {
         String json = BeaverUtils.doGet(conf.get(CONF_TASK_SERVER_URL) + clientId);
         logger.debug("fetch tasks, tasks:" + json);
 

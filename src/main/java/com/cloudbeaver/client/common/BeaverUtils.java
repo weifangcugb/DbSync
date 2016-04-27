@@ -47,7 +47,7 @@ public class BeaverUtils {
 	        urlConnection.setRequestMethod("GET");
 	        urlConnection.connect();
 
-	        br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+	        br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), "utf-8"));
 	        StringBuilder sb = new StringBuilder();
 	        String tmp = "";
 	        while((tmp = br.readLine()) != null){
@@ -99,13 +99,15 @@ public class BeaverUtils {
 	        
 	        urlConnection = (HttpURLConnection) url.openConnection();
 	        urlConnection.setRequestMethod("POST");
-	        urlConnection.setRequestProperty("Content-Type", contentType + " charset=utf-8");//text/plain
-	        urlConnection.setRequestProperty("Content-Length", ""+flumeJson.length());
+	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
+	        urlConnection.setRequestProperty("Content-Length", "" + flumeJson.length());
 	        urlConnection.setConnectTimeout(20000);
 
+//	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
 	        urlConnection.setDoOutput(true);
 	        PrintWriter pWriter = new PrintWriter((urlConnection.getOutputStream()));
 	        pWriter.write(flumeJson);
+	        pWriter.flush();
 	        pWriter.close();
 
 	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
@@ -181,5 +183,13 @@ public class BeaverUtils {
 
 	public static boolean isHttpServerInternalError(String message) {
 		return message.indexOf("Server returned HTTP response code: 500") != -1;
+	}
+
+	public static long hexTolong(String miniChangeTime) {
+		return Long.parseLong(miniChangeTime, 16);
+	}
+
+	public static String longToHex(long miniChangeTime) {
+		return Long.toHexString(miniChangeTime);
 	}
 }
