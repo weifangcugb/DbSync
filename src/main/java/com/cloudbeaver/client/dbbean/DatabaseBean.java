@@ -3,6 +3,7 @@ package com.cloudbeaver.client.dbbean;
 import org.apache.log4j.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * bean for one database
@@ -14,6 +15,8 @@ public class DatabaseBean {
     String rowversion = null;
     String prison = null;
     String db = null;
+
+    String queryTime = null;
 
 //    db configs
     String dbUrl = null;
@@ -79,4 +82,12 @@ public class DatabaseBean {
     public void setDb(String db) {
         this.db = db;
     }
+
+    public void setQueryTime(String touchTime){
+    	this.queryTime = touchTime;
+    }
+
+	public String getQueryTime() {
+		return queryTime;
+	}
 }

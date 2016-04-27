@@ -1,6 +1,7 @@
 package com.cloudbeaver.client.common;
 
 import java.sql.*;
+import java.util.Hashtable;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -9,7 +10,6 @@ import org.apache.log4j.*;
 
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
 
 public class SqlHelper {
     private static Logger logger = Logger.getLogger(SqlHelper.class);

@@ -10,13 +10,11 @@ import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.http.HttpStatus;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
-import com.cloudbeaver.client.common.HttpResponseMsg;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,7 +48,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static final String TASK_HEART_BEAT = "HeartBeat";
 	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
 	private static final boolean STOR_IN_LOCAL = true;
-	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = false;
+	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
 
 	private static final int MAX_POST_RETRY_TIME = 20;
 
@@ -140,6 +138,19 @@ public class SyncConsumer extends FixedNumThreadPool{
 			try {
 				root = oMapper.readTree(msgBody);
 				if (root.isArray() && root.get(0) != null && root.get(0).has(JSON_FILED_HDFS_DB) && root.get(0).has(JSON_FILED_HDFS_PRISON)) {
+					if (root.get(0).has("dataType") && root.get(0).get("dataType").asText().equals(TASK_HEART_BEAT)) {
+						logger.debug("heart beat data, msg:" + msgBody);
+						try {
+							BeaverUtils.doPost(heartBeatUrl + "/" + root.get(0).get("client.id").asText(), msgBody);
+						} catch (IOException e) {
+							BeaverUtils.PrintStackTrace(e);
+							logger.error("send heart beat to web server error, msg:" + e.getMessage());
+						}
+
+//						heartbeat message can be lost, so do next message
+						continue;
+					}
+
 					String dbName = root.get(0).get(JSON_FILED_HDFS_DB).asText();
 					int tryTime = 0;
 					for (; tryTime < MAX_POST_RETRY_TIME; tryTime++) {
@@ -149,20 +160,19 @@ public class SyncConsumer extends FixedNumThreadPool{
 								BeaverUtils.doPost(dbUploadUrl, msgBody);
 							}else if (dbName.equals(TASK_FILE_NAME)) {
 								if (UPLOAD_FILE_TO_WEB_SERVER) {
+									logger.debug("posturl:" + fileUploadUrl);
 									BeaverUtils.doPost(fileUploadUrl, msgBody);
 								}
 
 								if (STOR_IN_LOCAL) {
 									for (int i = 0; i < root.size(); i++) {
 										JsonNode item = root.get(i);
-										if (item.get("hdfs_db").asText().equals("DocumentFiles")) {
+										if (item.get(JSON_FILED_HDFS_DB).asText().equals(TASK_FILE_NAME)) {
 											System.out.println(item.get("file_name").asText());
 											writeToFile(Base64.decodeBase64(item.get("file_data").asText()));
 										}
 									}
 								}
-							}else if (dbName.equals(TASK_HEART_BEAT)) {
-								BeaverUtils.doPost(heartBeatUrl + root.get(0).get(JSON_FILED_HDFS_PRISON), msgBody);
 							}else {
 								logger.error("unknow db type," + " dbName:" + dbName + " msg:" + msgBody);
 							}
@@ -246,5 +256,10 @@ public class SyncConsumer extends FixedNumThreadPool{
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("dbuploader join failed, msg:" + e.getMessage());
 		}
+	}
+
+	@Override
+	protected void doHeartBeat() {
+//		TODO: send heart beat to server
 	}
 }

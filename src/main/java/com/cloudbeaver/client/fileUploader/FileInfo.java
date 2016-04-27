@@ -42,13 +42,13 @@ public class FileInfo implements Comparable<FileInfo>{
 		this.modifyTime = modifyTime;
 	}
 
-	public void uploadFileData(String fileName, String fileData, long lastModified) throws IOException {
+	public void uploadFileData(String fileName, String fileData, long lastModified, String dirPath) throws IOException {
 		/*
 		 * e.g.
 		 * [[{\"hdfs_prison\":\"1\",\"hdfs_db\":\"DocumentDB\",\"hdfs_table\":\"da_jbxx\",\"id\":\"337178\"
 		 */
 		String uploadData = "[{\"hdfs_prison\":\"" + FileUploader.getClientId() + "\",\"hdfs_db\":\"" + FileUploader.TASK_FILE_NAME
-				+ "\",\"hdfs_table\":\"pics\",\"file_name\":\"" + fileName + "\", \"file_data\":\"" + fileData 
+				+ "\",\"hdfs_table\":\"" + dirPath + "\",\"file_name\":\"" + fileName + "\", \"file_data\":\"" + fileData 
 				+ "\", \"xgsj\":\"" +  lastModified + "\"}]";
 
         String flumeJson;
