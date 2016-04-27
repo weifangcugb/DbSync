@@ -18,7 +18,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.HttpStatus;
 import org.apache.log4j.Logger;
 
 public class BeaverUtils {
@@ -53,7 +52,7 @@ public class BeaverUtils {
 	        while((tmp = br.readLine()) != null){
 	        	sb.append(tmp);
 	        }
-	        if (urlConnection.getResponseCode() == HttpStatus.SC_OK) {
+	        if (urlConnection.getResponseCode() == 200) {
 				return sb.toString();
 			}else {
 				throw new IOException("http server return not SC_OK, responseCode:" + urlConnection.getResponseCode());
