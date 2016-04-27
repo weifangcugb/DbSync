@@ -220,7 +220,7 @@ public class FileUploader extends FixedNumThreadPool {
 		JSONObject fileDb = new JSONObject();
 		fileDb.put("client.id", "1");
 		fileDb.put("hdfs_prison", clientId);
-		fileDb.put("hdfs_db", conf.get(TASK_FILE_NAME));
+		fileDb.put("hdfs_db", TASK_FILE_NAME);
 		fileDb.put(TYPE_NAME, TYPE_HEARTBEAT);
 		JSONArray tables = new JSONArray();
 		for (DirInfo dirInfo: dirInfos) {

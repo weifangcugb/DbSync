@@ -24,7 +24,7 @@ public class DbUploader extends FixedNumThreadPool{
 	private final static String CONF_FILE_NAME = "SyncClient.properties";
 	private final static String CONF_FLUME_SERVER_URL = "flume-server.url";
     private final static String CONF_TASK_SERVER_URL = "tasks-server.url";
-//	private static final String TASK_DB_NAME = "DocumentDB";
+	private static final String TASK_DB_NAME = "DocumentDB";
 	private static final String TASK_FILE_NAME = "DocumentFiles";
 	private static final String TYPE_HEARTBEAT = "HeartBeat";
     private final static int sqlLimitNum = 1;
@@ -172,7 +172,11 @@ public class DbUploader extends FixedNumThreadPool{
 	protected void doHeartBeat() {
 		JSONArray dbsReport = new JSONArray();
 		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
-			JSONObject db = new JSONObject();
+			if (shouldSkipDb(dbBean)) {
+				continue;
+			}
+
+			JSONObject db= new JSONObject();
 			db.put("client.id", "1");
 			db.put("hdfs_prison", clientId);
 			db.put("hdfs_db", dbBean.getDb());
