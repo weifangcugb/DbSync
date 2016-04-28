@@ -113,7 +113,7 @@ public class DbUploader extends FixedNumThreadPool{
         		Date date = new Date();
         		dbBean.setQueryTime(date.toString());
         		tableBean.setQueryTime(date.toString());
-//                logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum));
+                logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum));
                 JSONArray jArray = new JSONArray();
                 String maxXgsj = null;
 				try {
@@ -149,22 +149,23 @@ public class DbUploader extends FixedNumThreadPool{
 					continue;
 				}
 
-                logger.debug("upload db data, data:" + flumeJson);
+//                logger.debug("upload db data, data:" + flumeJson);
 
                 try {
     				BeaverUtils.doPost(conf.get(CONF_FLUME_SERVER_URL), flumeJson);
     				if (maxXgsj != null) {
     					tableBean.setXgsj(maxXgsj);
 					}
-    				logger.info("send db data to flume server, json:" + flumeJson);
+//    				logger.info("send db data to flume server, json:" + flumeJson);
     			} catch (IOException e) {
     				BeaverUtils.PrintStackTrace(e);
     				logger.error("post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL) + " json:" + flumeJson);
     				BeaverUtils.sleep(1000);
     			}
 
-                BeaverUtils.sleep(500);
+                BeaverUtils.sleep(5000);
 			}
+        	BeaverUtils.sleep(1000);
         }
 	}
 

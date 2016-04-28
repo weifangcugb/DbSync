@@ -55,6 +55,7 @@ public class SqlHelper {
 		String sqlQuery = tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum);
 		Connection con = getConn(dbBean, threadPool);
 		if (!threadPool.isRunning() || con == null) {
+//			may be an exception is better
 			return null;
 		}
 
@@ -62,7 +63,7 @@ public class SqlHelper {
         //s.setQueryTimeout(10);
         ResultSet rs = pStatement.executeQuery();
 
-        String maxXgsj = null;
+        String maxXgsjUtilNow = tableBean.getXgsj();
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
         while (rs.next()) {
@@ -78,10 +79,10 @@ public class SqlHelper {
             jArray.add(jsonObj);
             String ts = rs.getString(dbBean.getRowversion());
 
-            maxXgsj = ts;
+            maxXgsjUtilNow = ts;
         }
 
-        return maxXgsj;
+        return maxXgsjUtilNow;
 	}
 
 	public static void removeConnection(DatabaseBean dbBean) {

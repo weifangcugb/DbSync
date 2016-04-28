@@ -19,6 +19,15 @@ public class DirInfo {
 	List<FileInfo> finfos = new ArrayList<FileInfo>();
 	private String queryTime = null;
 	private FileInfo UploadingFile = null;
+	private String dirName = null;//this name is get from task server, don't change it
+	
+	public String getDirName() {
+		return dirName;
+	}
+
+	public void setDirName(String dirName) {
+		this.dirName = dirName;
+	}
 
 	public void setQueryTime(String touchTime){
 		this.queryTime = touchTime;
@@ -41,11 +50,12 @@ public class DirInfo {
 	}
 
 	public DirInfo(String dirName, String miniChangeTime) throws Exception {
-		this(new File(dirName), BeaverUtils.hexTolong(miniChangeTime));
+		this(dirName, new File(dirName), BeaverUtils.hexTolong(miniChangeTime));
 	}
 
-	public DirInfo(File dir, long miniChangeTime) throws Exception {
+	public DirInfo(String dirName, File dir, long miniChangeTime) throws Exception {
 		if (dir.exists() && dir.isDirectory()) {
+			this.dirName = dirName;
 			this.dir = dir;
 			this.miniChangeTime = miniChangeTime;
 		}else {
@@ -101,7 +111,7 @@ public class DirInfo {
 //			TODO: resend logic
 			try {
 				logger.info("start to upload file, file:" + fileInfo.getFile().getAbsolutePath());
-				fileInfo.uploadFileData(fileInfo.getFile().getName(), fileData, fileInfo.getModifyTime(), getDir().getAbsolutePath());
+				fileInfo.uploadFileData(fileInfo.getFile().getName(), fileData, BeaverUtils.longToHex(fileInfo.getModifyTime()), dirName);
 				setMiniChangeTime(fileInfo.getModifyTime());
 				logger.info("finish upload file, file:" + fileInfo.getFile().getAbsolutePath());
 			} catch (IOException e) {
