@@ -189,6 +189,11 @@ public class BeaverUtils {
 	}
 
 	public static String longToHex(long miniChangeTime) {
-		return Long.toHexString(miniChangeTime);
+		String hex = Long.toHexString(miniChangeTime);
+		int len = hex.length();
+		for (int i = 0; i < 16 - len; i++) {
+			hex = '0' + hex;
+		}
+		return hex;
 	}
 }

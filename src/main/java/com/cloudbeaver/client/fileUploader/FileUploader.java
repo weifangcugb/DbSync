@@ -225,7 +225,7 @@ public class FileUploader extends FixedNumThreadPool {
 		JSONArray tables = new JSONArray();
 		for (DirInfo dirInfo: dirInfos) {
 			JSONObject table = new JSONObject();
-			table.put("table", dirInfo.getDir().getAbsolutePath());
+			table.put("table", dirInfo.getDirName());
 			table.put("xgsj", "" + dirInfo.getMiniChangeTimeAsHexString());
 			table.put("queryTime", dirInfo.getQueryTime());
 			table.put("uploadingFile", dirInfo.getUploadingFile());

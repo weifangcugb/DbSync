@@ -156,7 +156,7 @@ public class DbUploader extends FixedNumThreadPool{
     				if (maxXgsj != null) {
     					tableBean.setXgsj(maxXgsj);
 					}
-    				logger.info("send db data to flume server, json:" + flumeJson);
+//    				logger.info("send db data to flume server, json:" + flumeJson);
     			} catch (IOException e) {
     				BeaverUtils.PrintStackTrace(e);
     				logger.error("post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL) + " json:" + flumeJson);
@@ -165,6 +165,7 @@ public class DbUploader extends FixedNumThreadPool{
 
                 BeaverUtils.sleep(500);
 			}
+        	BeaverUtils.sleep(1000);
         }
 	}
 
