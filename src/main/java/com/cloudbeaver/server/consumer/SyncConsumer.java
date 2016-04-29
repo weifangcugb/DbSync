@@ -126,7 +126,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 			String msgBody = "";
 			try {
 				msgBody = new String(BeaverUtils.decompress(ArrayUtils.subarray(msg, 4 + keyLen, msg.length)), BeaverUtils.DEFAULT_CHARSET);
-				logger.info("msgKey:" + msgKey + " msgLen:" + msg.length + " msgBody:");
+				logger.info("msgKey:" + msgKey + " msgLen:" + msg.length + " msgBody:" + msgBody.substring(0, 150));
 			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
 				logger.error("unzip error, this is an invalid message. msg:" + e.getMessage());

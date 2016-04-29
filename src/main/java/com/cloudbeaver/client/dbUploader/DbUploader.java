@@ -136,7 +136,7 @@ public class DbUploader extends FixedNumThreadPool{
     				break;
     			}
 
-                logger.debug("get db data, json:" + jArray.toString());
+                logger.info("get db data, json:" + jArray.toString());
 
                 String flumeJson = null;
 				try {
@@ -165,7 +165,7 @@ public class DbUploader extends FixedNumThreadPool{
 
                 BeaverUtils.sleep(500);
 			}
-        	BeaverUtils.sleep(1000);
+        	BeaverUtils.sleep(500);
         }
 	}
 
