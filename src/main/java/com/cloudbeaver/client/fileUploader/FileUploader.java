@@ -15,13 +15,15 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
+import com.cloudbeaver.client.common.configs;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FileUploader extends FixedNumThreadPool {
     private static Logger logger = Logger.getLogger(FileUploader.class);
 
-    public final static String CONF_FILE_NAME = "SyncClient.properties";
+    public final static String CONF_FILE_NAME = configs.CONF_PREFIX + "SyncClient.properties";
+
     public final static String CONF_TASK_SERVER = "tasks-server.url";
 	public static final String PIC_DIRECTORY_NAME = "db.DocumentFiles.url";
 	public static final String CONF_FLUME_SERVER_URL = "flume-server.url";

@@ -3,6 +3,8 @@ package com.cloudbeaver.client.common;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -137,7 +139,8 @@ public class BeaverUtils {
     	Map<String, String> conf = new HashMap<String, String>();
 
         Properties pps = new Properties();
-        pps.load(BeaverUtils.class.getClassLoader().getResourceAsStream(confFileName));
+//        pps.load(BeaverUtils.class.getClassLoader().getResourceAsStream(confFileName));
+        pps.load(new FileInputStream(new File(confFileName)));
         Enumeration<?> enum1 = pps.propertyNames();
         while(enum1.hasMoreElements()) {
             String strKey = (String) enum1.nextElement();

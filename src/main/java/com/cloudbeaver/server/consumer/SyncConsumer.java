@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
+import com.cloudbeaver.client.common.configs;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,7 +32,7 @@ import kafka.message.MessageAndMetadata;
 public class SyncConsumer extends FixedNumThreadPool{
 	private static Logger logger = Logger.getLogger(SyncConsumer.class);
 
-	private static final String CONF_FILE_NAME = "SyncConsumer.properties";
+	private static final String CONF_FILE_NAME = configs.CONF_PREFIX + "SyncConsumer.properties";
 
 	private static final String CONF_UPLOAD_FILE_URL = "upload.file.url";
 	private static final String CONF_UPLOAD_DB_URL = "upload.db.url";

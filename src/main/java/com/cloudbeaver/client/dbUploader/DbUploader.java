@@ -9,6 +9,7 @@ import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
 import com.cloudbeaver.client.common.SqlHelper;
+import com.cloudbeaver.client.common.configs;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
@@ -20,8 +21,9 @@ import java.util.Date;
 import java.util.Map;
 
 public class DbUploader extends FixedNumThreadPool{
+	private final static String CONF_FILE_NAME = configs.CONF_PREFIX + "SyncClient.properties";
+
 	private final static String CONF_CLIENT_ID = "client.id";
-	private final static String CONF_FILE_NAME = "SyncClient.properties";
 	private final static String CONF_FLUME_SERVER_URL = "flume-server.url";
     private final static String CONF_TASK_SERVER_URL = "tasks-server.url";
 	private static final String TASK_DB_NAME = "DocumentDB";
