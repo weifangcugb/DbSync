@@ -190,7 +190,7 @@ public class FileUploader extends FixedNumThreadPool {
 					if (table != null && table.has("table") && table.has("xgsj")) {
 						DirInfo dirInfo;
 						try {
-							dirInfo = new DirInfo(table.get("table").asText(), table.get("xgsj").asText());
+							dirInfo = new DirInfo(table.get("table").asText(), "" + BeaverUtils.hexTolong(table.get("xgsj").asText()));
 							remoteSetDirs.add(dirInfo);
 							logger.info("get one dir from remote server, dir:" + table.toString());
 						} catch (Exception e) {

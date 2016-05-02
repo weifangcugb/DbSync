@@ -29,7 +29,7 @@ public class DbUploader extends FixedNumThreadPool{
 	private static final String TASK_DB_NAME = "DocumentDB";
 	private static final String TASK_FILE_NAME = "DocumentFiles";
 	private static final String TYPE_HEARTBEAT = "HeartBeat";
-    private final static int sqlLimitNum = 1;
+    private final static int sqlLimitNum = 10;
     
     private static Logger logger = Logger.getLogger(DbUploader.class);
 

@@ -189,15 +189,15 @@
                 <configuration>
                     <archive>
                         <manifest>
-
+<!--
                             <mainClass>com.cloudbeaver.client.fileUploader.FileUploader</mainClass>
-
-						<!--
+-->
+						
 							<mainClass>com.cloudbeaver.client.dbUploader.DbUploader</mainClass>
-						-->
-                        <!--
-	                        <mainClass>com.cloudbeaver.server.consumer</mainClass>
-	                    -->
+						
+<!--                        
+	                        <mainClass>com.cloudbeaver.server.consumer.SyncConsumer</mainClass>
+-->	                    
                         </manifest>
                     </archive>
                     <descriptorRefs>
