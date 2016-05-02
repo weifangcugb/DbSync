@@ -31,11 +31,12 @@ import kafka.message.MessageAndMetadata;
 public class SyncConsumer extends FixedNumThreadPool{
 	private static Logger logger = Logger.getLogger(SyncConsumer.class);
 
+	private static final String CONF_FILE_NAME = "SyncConsumer.properties";
+
 	private static final String CONF_UPLOAD_FILE_URL = "upload.file.url";
 	private static final String CONF_UPLOAD_DB_URL = "upload.db.url";
 	private static final String CONF_HEARTBEAT_URL = "upload.heartbeat.url";
 	private static final String LOCAL_FILE_STORED_PATH = "/tmp/";
-	private static final String CONF_FILE_NAME = "SyncConsumer.properties";
 	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
 	private static final String JSON_FILED_HDFS_PRISON = "hdfs_prison";
 	private static final String KAFKA_TOPIC = "hdfs_upload";
