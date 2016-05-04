@@ -131,7 +131,7 @@ public class FileUploader extends FixedNumThreadPool {
 				break;
 			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("update task list error, msg:" + e.getMessage());
+				logger.error("get task error, server: " + taskServer + " msg:" + e.getMessage());
 				BeaverUtils.sleep(10 * 1000);
 			}
 		}
@@ -242,7 +242,7 @@ public class FileUploader extends FixedNumThreadPool {
 		}		
 	}
 
-	public static void main(String[] args) {
+	public static void startFileUploader(){
 		Thread fileUploaderThread = new Thread(new FileUploader("FileUploader"));
 		fileUploaderThread.start();
 
@@ -252,5 +252,9 @@ public class FileUploader extends FixedNumThreadPool {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("join failed");
 		}
+	}
+
+	public static void main(String[] args) {
+		startFileUploader();
 	}
 }

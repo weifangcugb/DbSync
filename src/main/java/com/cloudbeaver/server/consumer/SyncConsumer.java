@@ -38,22 +38,27 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static final String LOCAL_FILE_STORED_PATH = "/tmp/";
 	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
 	private static final String JSON_FILED_HDFS_PRISON = "hdfs_prison";
+
+//	kafka configs
 	private static final String KAFKA_TOPIC = "hdfs_upload";
 	private static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
+	private static final String ZOOKEEPER_OFFSET_RESET = "auto.offset.reset";
 	private static final String KAFKA_GROUP_ID = "group.id";
 	private static final String KAFKA_AUTO_COMMIT_INTERVALS = "auto.commit.interval.ms";
-	private static final String DEFAULT_CONSUMER_GROUP_ID = "g1";
+	private static final String DEFAULT_CONSUMER_GROUP_ID = "g2";
+	private static int TOPIC_PARTITION_NUM = 10;
+	private static String TOPIC_NAME = "hdfs_upload";
+	private static final Object KAFKA_OFFSET_SMALLEST = "smallest";
+	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
+
 	private static final String TASK_DB_NAME = "DocumentDB";
 	private static final String TASK_FILE_NAME = "DocumentFiles";
 	private static final String TASK_HEART_BEAT = "HeartBeat";
-	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
-	private static final boolean STOR_IN_LOCAL = true;
+
+	private static final boolean STOR_IN_LOCAL = false;
 	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
 
 	private static final int MAX_POST_RETRY_TIME = 20;
-
-	private static int TOPIC_PARTITION_NUM = 10;
-	private static String TOPIC_NAME = "hdfs_upload";
 
 	List<KafkaStream<byte[], byte[]>> streams = null;
 	ConsumerConnector consumer = null;
@@ -97,6 +102,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 
 		Properties props = new Properties();
 		props.put(ZOOKEEPER_CONNECT, conf.get(ZOOKEEPER_CONNECT));
+		props.put(ZOOKEEPER_OFFSET_RESET, KAFKA_OFFSET_SMALLEST); 
 		props.put(KAFKA_GROUP_ID, conf.get(KAFKA_GROUP_ID) == null? DEFAULT_CONSUMER_GROUP_ID: conf.get(KAFKA_GROUP_ID));
 		props.put(KAFKA_AUTO_COMMIT_INTERVALS, conf.get(KAFKA_AUTO_COMMIT_INTERVALS) == null ? DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS : conf.get(KAFKA_AUTO_COMMIT_INTERVALS));
 
@@ -117,6 +123,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 		KafkaStream<byte[], byte[]> stream = (KafkaStream<byte[], byte[]>) taskObject;
 		ConsumerIterator<byte[], byte[]> iter = stream.iterator();
 		while ( iter.hasNext() ) {
+			try {
 			MessageAndMetadata<byte[] , byte[]> mam = iter.next();
 			byte[] key = mam.key();
 			byte[] msg = mam.message();
@@ -135,7 +142,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 
 			ObjectMapper oMapper = new ObjectMapper();
 			JsonNode root;
-			try {
+			
 				root = oMapper.readTree(msgBody);
 				if (root.isArray() && root.get(0) != null && root.get(0).has(JSON_FILED_HDFS_DB) && root.get(0).has(JSON_FILED_HDFS_PRISON)) {
 					if (root.get(0).has("dataType") && root.get(0).get("dataType").asText().equals(TASK_HEART_BEAT)) {
@@ -198,7 +205,8 @@ public class SyncConsumer extends FixedNumThreadPool{
 				}
 			} catch (Exception e) {
 				BeaverUtils.PrintStackTrace(e);
-				logger.error("invalid json message, errMsg:" + e.getMessage() + " key:" + msgKey + " msg:" + msgBody);
+//				logger.error("invalid json message, errMsg:" + e.getMessage() + " key:" + msgKey + " msg:" + msgBody);
+				logger.error("invalid json message, errMsg:" + e.getMessage() );
 			}
 		}
 	}
