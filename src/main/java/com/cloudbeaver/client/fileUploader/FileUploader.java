@@ -15,14 +15,12 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
-import com.cloudbeaver.client.common.configs;
+import com.cloudbeaver.client.common.CommonValues;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FileUploader extends FixedNumThreadPool {
     private static Logger logger = Logger.getLogger(FileUploader.class);
-
-    public final static String CONF_FILE_NAME = configs.CONF_PREFIX + "SyncClient.properties";
 
     public final static String CONF_TASK_SERVER = "tasks-server.url";
 	public static final String PIC_DIRECTORY_NAME = "db.DocumentFiles.url";
@@ -86,7 +84,7 @@ public class FileUploader extends FixedNumThreadPool {
 	}
 
 	private void loadFileConfig () throws IOException {
-		conf = BeaverUtils.loadConfig(CONF_FILE_NAME);
+		conf = BeaverUtils.loadConfig(CommonValues.CONF_DBSYNC_FILE_NAME);
 		Set<String> keys = conf.keySet();
 		for (String key : keys) {
         	switch (key) {
@@ -117,13 +115,13 @@ public class FileUploader extends FixedNumThreadPool {
 		try {
 			loadFileConfig();
 			if (clientId == null || taskServer == null || flumeServer == null) {
-				logger.fatal("no client.id in conf file, confName:" + CONF_FILE_NAME);
+				logger.fatal("no client.id in conf file, confName:" + CommonValues.CONF_DBSYNC_FILE_NAME);
 				throw new BeaverFatalException("no client.id in config file");
 			}
 		} catch (IOException e){
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("load config file error, msg:" + e.getMessage());
-			throw new BeaverFatalException("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage(), e);
+			throw new BeaverFatalException("load config failed, please restart process. confName:" + CommonValues.CONF_DBSYNC_FILE_NAME + " msg:" + e.getMessage(), e);
 		}
 
 //		load file dirs from remote server

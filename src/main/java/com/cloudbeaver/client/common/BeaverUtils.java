@@ -139,7 +139,9 @@ public class BeaverUtils {
     	Map<String, String> conf = new HashMap<String, String>();
 
         Properties pps = new Properties();
+
 //        pps.load(BeaverUtils.class.getClassLoader().getResourceAsStream(confFileName));
+        logger.info("conf_name:" + new File(confFileName).getAbsolutePath());
         pps.load(new FileInputStream(new File(confFileName)));
         Enumeration<?> enum1 = pps.propertyNames();
         while(enum1.hasMoreElements()) {

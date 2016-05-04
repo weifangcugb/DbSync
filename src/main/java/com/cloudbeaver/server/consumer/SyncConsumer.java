@@ -15,7 +15,7 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
-import com.cloudbeaver.client.common.configs;
+import com.cloudbeaver.client.common.CommonValues;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,8 +31,6 @@ import kafka.message.MessageAndMetadata;
  */
 public class SyncConsumer extends FixedNumThreadPool{
 	private static Logger logger = Logger.getLogger(SyncConsumer.class);
-
-	private static final String CONF_FILE_NAME = configs.CONF_PREFIX + "SyncConsumer.properties";
 
 	private static final String CONF_UPLOAD_FILE_URL = "upload.file.url";
 	private static final String CONF_UPLOAD_DB_URL = "upload.db.url";
@@ -69,32 +67,32 @@ public class SyncConsumer extends FixedNumThreadPool{
 	@Override
 	protected void setup() throws BeaverFatalException {
         try {
-			conf = BeaverUtils.loadConfig(CONF_FILE_NAME);
+			conf = BeaverUtils.loadConfig(CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
 			if (conf.containsKey(CONF_UPLOAD_DB_URL)) {
 				dbUploadUrl = conf.get(CONF_UPLOAD_DB_URL);
 			}else {
-				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_DB_URL + " confFile:" + CONF_FILE_NAME);
+				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_DB_URL + " confFile:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 
 			if (conf.containsKey(CONF_UPLOAD_FILE_URL)) {
 				fileUploadUrl = conf.get(CONF_UPLOAD_FILE_URL);
 			}else {
-				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_FILE_URL + " confFile:" + CONF_FILE_NAME);
+				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_FILE_URL + " confFile:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 
 			if (conf.containsKey(CONF_HEARTBEAT_URL)) {
 				heartBeatUrl = conf.get(CONF_HEARTBEAT_URL);
 			}else {
-				throw new BeaverFatalException("FATAL: no conf " + CONF_HEARTBEAT_URL + " confFile:" + CONF_FILE_NAME);
+				throw new BeaverFatalException("FATAL: no conf " + CONF_HEARTBEAT_URL + " confFile:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 
 			if (!conf.containsKey(ZOOKEEPER_CONNECT)) {
-				throw new BeaverFatalException("FATAL: no conf " + ZOOKEEPER_CONNECT + " confFile:" + CONF_FILE_NAME);
+				throw new BeaverFatalException("FATAL: no conf " + ZOOKEEPER_CONNECT + " confFile:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
-			logger.fatal("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage());
-			throw new BeaverFatalException("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage(), e);
+			logger.fatal("load config failed, please restart process. confName:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME + " msg:" + e.getMessage());
+			throw new BeaverFatalException("load config failed, please restart process. confName:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME + " msg:" + e.getMessage(), e);
 		}
 
 		Properties props = new Properties();

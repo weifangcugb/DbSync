@@ -9,7 +9,7 @@ import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
 import com.cloudbeaver.client.common.SqlHelper;
-import com.cloudbeaver.client.common.configs;
+import com.cloudbeaver.client.common.CommonValues;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
@@ -21,15 +21,12 @@ import java.util.Date;
 import java.util.Map;
 
 public class DbUploader extends FixedNumThreadPool{
-	private final static String CONF_FILE_NAME = configs.CONF_PREFIX + "SyncClient.properties";
-
 	private final static String CONF_CLIENT_ID = "client.id";
 	private final static String CONF_FLUME_SERVER_URL = "flume-server.url";
     private final static String CONF_TASK_SERVER_URL = "tasks-server.url";
 	private static final String TASK_DB_NAME = "DocumentDB";
 	private static final String TASK_FILE_NAME = "DocumentFiles";
 	private static final String TYPE_HEARTBEAT = "HeartBeat";
-    private final static int sqlLimitNum = 10;
     
     private static Logger logger = Logger.getLogger(DbUploader.class);
 
@@ -58,7 +55,7 @@ public class DbUploader extends FixedNumThreadPool{
 	@Override
 	public void setup() throws BeaverFatalException {
         try {
-			conf = BeaverUtils.loadConfig(CONF_FILE_NAME);
+			conf = BeaverUtils.loadConfig(CommonValues.CONF_DBSYNC_FILE_NAME);
 	        if (conf.containsKey(CONF_CLIENT_ID)) {
 				setClientId(conf.get(CONF_CLIENT_ID));
 			}else {
@@ -67,8 +64,8 @@ public class DbUploader extends FixedNumThreadPool{
 			}
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
-			logger.fatal("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage());
-			throw new BeaverFatalException("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage(), e);
+			logger.fatal("load config failed, please restart process. confName:" + CommonValues.CONF_DBSYNC_FILE_NAME + " msg:" + e.getMessage());
+			throw new BeaverFatalException("load config failed, please restart process. confName:" + CommonValues.CONF_DBSYNC_FILE_NAME + " msg:" + e.getMessage(), e);
 		}
 
 //      get tasks from web server
@@ -115,11 +112,11 @@ public class DbUploader extends FixedNumThreadPool{
         		Date date = new Date();
         		dbBean.setQueryTime(date.toString());
         		tableBean.setQueryTime(date.toString());
-                logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum));
+                logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), CommonValues.DB_QEURY_LIMIT));
                 JSONArray jArray = new JSONArray();
                 String maxXgsj = null;
 				try {
-					maxXgsj = SqlHelper.execSqlQuery(dbBean, tableBean, this, sqlLimitNum, jArray);
+					maxXgsj = SqlHelper.execSqlQuery(dbBean, tableBean, this, CommonValues.DB_QEURY_LIMIT, jArray);
 				} catch (SQLException e) {
 					BeaverUtils.PrintStackTrace(e);
 					logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));
@@ -165,9 +162,9 @@ public class DbUploader extends FixedNumThreadPool{
     				BeaverUtils.sleep(1000);
     			}
 
-                BeaverUtils.sleep(500);
+                BeaverUtils.sleep(100);
 			}
-        	BeaverUtils.sleep(500);
+        	BeaverUtils.sleep(100);
         }
 	}
 
