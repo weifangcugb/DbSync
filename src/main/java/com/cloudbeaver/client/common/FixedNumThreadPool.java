@@ -26,7 +26,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 //		as default, do nothing
 	}
 
-	private boolean KEEP_RUNNING = true;
+	private volatile boolean KEEP_RUNNING = true;
 
 	@Override
 	public void run() {
