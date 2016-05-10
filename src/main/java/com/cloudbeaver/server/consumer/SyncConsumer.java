@@ -3,19 +3,19 @@ package com.cloudbeaver.server.consumer;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
-import com.cloudbeaver.client.common.CommonValues;
+import com.cloudbeaver.client.common.CommonUploader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,7 +37,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static final String CONF_HEARTBEAT_URL = "upload.heartbeat.url";
 	private static final String LOCAL_FILE_STORED_PATH = "/tmp/";
 	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
-	private static final String JSON_FILED_HDFS_PRISON = "hdfs_prison";
+	private static final String JSON_FILED_HDFS_CLIENT = "hdfs_client";
 
 //	kafka configs
 	private static final String KAFKA_TOPIC = "hdfs_upload";
@@ -50,10 +50,6 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static String TOPIC_NAME = "hdfs_upload";
 	private static final Object KAFKA_OFFSET_SMALLEST = "smallest";
 	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
-
-	private static final String TASK_DB_NAME = "DocumentDB";
-	private static final String TASK_FILE_NAME = "DocumentFiles";
-	private static final String TASK_HEART_BEAT = "HeartBeat";
 
 	private static final boolean STOR_IN_LOCAL = false;
 	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
@@ -72,32 +68,32 @@ public class SyncConsumer extends FixedNumThreadPool{
 	@Override
 	protected void setup() throws BeaverFatalException {
         try {
-			conf = BeaverUtils.loadConfig(CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
+			conf = BeaverUtils.loadConfig(CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
 			if (conf.containsKey(CONF_UPLOAD_DB_URL)) {
 				dbUploadUrl = conf.get(CONF_UPLOAD_DB_URL);
 			}else {
-				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_DB_URL + " confFile:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
+				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_DB_URL + " confFile:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 
 			if (conf.containsKey(CONF_UPLOAD_FILE_URL)) {
 				fileUploadUrl = conf.get(CONF_UPLOAD_FILE_URL);
 			}else {
-				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_FILE_URL + " confFile:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
+				throw new BeaverFatalException("FATAL: no conf " + CONF_UPLOAD_FILE_URL + " confFile:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 
 			if (conf.containsKey(CONF_HEARTBEAT_URL)) {
 				heartBeatUrl = conf.get(CONF_HEARTBEAT_URL);
 			}else {
-				throw new BeaverFatalException("FATAL: no conf " + CONF_HEARTBEAT_URL + " confFile:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
+				throw new BeaverFatalException("FATAL: no conf " + CONF_HEARTBEAT_URL + " confFile:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 
 			if (!conf.containsKey(ZOOKEEPER_CONNECT)) {
-				throw new BeaverFatalException("FATAL: no conf " + ZOOKEEPER_CONNECT + " confFile:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME);
+				throw new BeaverFatalException("FATAL: no conf " + ZOOKEEPER_CONNECT + " confFile:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
-			logger.fatal("load config failed, please restart process. confName:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME + " msg:" + e.getMessage());
-			throw new BeaverFatalException("load config failed, please restart process. confName:" + CommonValues.CONF_KAFKA_CONSUMER_FILE_NAME + " msg:" + e.getMessage(), e);
+			logger.fatal("load config failed, please restart process. confName:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME + " msg:" + e.getMessage());
+			throw new BeaverFatalException("load config failed, please restart process. confName:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME + " msg:" + e.getMessage(), e);
 		}
 
 		Properties props = new Properties();
@@ -124,31 +120,29 @@ public class SyncConsumer extends FixedNumThreadPool{
 		ConsumerIterator<byte[], byte[]> iter = stream.iterator();
 		while ( iter.hasNext() ) {
 			try {
-			MessageAndMetadata<byte[] , byte[]> mam = iter.next();
-			byte[] key = mam.key();
-			byte[] msg = mam.message();
-
-			int keyLen = ByteBuffer.wrap(msg, 0, 4).getInt();
-			String msgKey = new String(msg, 4, keyLen);
-			String msgBody = "";
-			try {
-				msgBody = new String(BeaverUtils.decompress(ArrayUtils.subarray(msg, 4 + keyLen, msg.length)), BeaverUtils.DEFAULT_CHARSET);
-				logger.info("msgKey:" + msgKey + " msgLen:" + msg.length + " msgBody:" + msgBody.substring(0, 150));
-			} catch (IOException e) {
-				BeaverUtils.PrintStackTrace(e);
-				logger.error("unzip error, this is an invalid message. msg:" + e.getMessage());
-				continue;
-			}
-
-			ObjectMapper oMapper = new ObjectMapper();
-			JsonNode root;
-			
-				root = oMapper.readTree(msgBody);
-				if (root.isArray() && root.get(0) != null && root.get(0).has(JSON_FILED_HDFS_DB) && root.get(0).has(JSON_FILED_HDFS_PRISON)) {
-					if (root.get(0).has("dataType") && root.get(0).get("dataType").asText().equals(TASK_HEART_BEAT)) {
+    			MessageAndMetadata<byte[] , byte[]> mam = iter.next();
+    			byte[] key = mam.key();
+    			byte[] msg = mam.message();
+    
+    			int keyLen = ByteBuffer.wrap(msg, 0, 4).getInt();
+    			String msgKey = new String(msg, 4, keyLen);
+    			String msgBody = "";
+    			try {
+    				msgBody = new String(BeaverUtils.decompress(Arrays.copyOfRange(msg, 4+keyLen, msg.length)), BeaverUtils.DEFAULT_CHARSET);//ArrayUtils.subarray(msg, 4 + keyLen, msg.length)
+    				logger.info("msgKey:" + msgKey + " msgLen:" + msg.length + " msgBody:" + msgBody.substring(0, 150));
+    			} catch (IOException e) {
+    				BeaverUtils.PrintStackTrace(e);
+    				logger.error("unzip error, this is an invalid message. msg:" + e.getMessage());
+    				continue;
+    			}
+    
+    			ObjectMapper oMapper = new ObjectMapper();
+    			JsonNode root= oMapper.readTree(msgBody);
+				if (root.isArray() && root.get(0) != null && root.get(0).has(JSON_FILED_HDFS_DB) && root.get(0).has(JSON_FILED_HDFS_CLIENT)) {
+					if (root.get(0).has(CommonUploader.REPORT_TYPE) && root.get(0).get(CommonUploader.REPORT_TYPE).asText().equals(CommonUploader.REPORT_TYPE_HEARTBEAT)) {
 						logger.debug("heart beat data, msg:" + msgBody);
 						try {
-							BeaverUtils.doPost(heartBeatUrl + "/" + root.get(0).get("client.id").asText(), msgBody);
+							BeaverUtils.doPost(heartBeatUrl + "/" + root.get(0).get(JSON_FILED_HDFS_CLIENT).asText(), msgBody);
 						} catch (IOException e) {
 							BeaverUtils.PrintStackTrace(e);
 							logger.error("send heart beat to web server error, msg:" + e.getMessage());
@@ -162,10 +156,10 @@ public class SyncConsumer extends FixedNumThreadPool{
 					int tryTime = 0;
 					for (; tryTime < MAX_POST_RETRY_TIME; tryTime++) {
 						try {
-							if (dbName.equals(TASK_DB_NAME)) {
+							if (dbName.equals(CommonUploader.TASK_DB_NAME)) {
 //								upload db data to web server
 								BeaverUtils.doPost(dbUploadUrl, msgBody);
-							}else if (dbName.equals(TASK_FILE_NAME)) {
+							}else if (dbName.equals(CommonUploader.TASK_FILEDB_NAME)) {
 								if (UPLOAD_FILE_TO_WEB_SERVER) {
 									logger.debug("posturl:" + fileUploadUrl);
 									BeaverUtils.doPost(fileUploadUrl, msgBody);
@@ -174,7 +168,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 								if (STOR_IN_LOCAL) {
 									for (int i = 0; i < root.size(); i++) {
 										JsonNode item = root.get(i);
-										if (item.get(JSON_FILED_HDFS_DB).asText().equals(TASK_FILE_NAME)) {
+										if (item.get(JSON_FILED_HDFS_DB).asText().equals(CommonUploader.TASK_FILEDB_NAME)) {
 											System.out.println(item.get("file_name").asText());
 											writeToFile(Base64.decodeBase64(item.get("file_data").asText()));
 										}
