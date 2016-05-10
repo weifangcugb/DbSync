@@ -27,7 +27,7 @@ public class AppTest extends TestCase {
 
 			for (TableBean tBean : dbBean.getTables()) {
 				JSONArray jArray = new JSONArray();
-				String maxVersion = SqlHelper.execSqlQuery(dbUploader.getPrisonId(), dbUploader.getClientId(), dbBean, tBean, dbUploader, 1, jArray);
+				String maxVersion = SqlHelper.execSqlQuery(dbUploader.getPrisonId(), dbBean, tBean, dbUploader, 1, jArray);
 
 //				jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
 				ObjectMapper oMapper = new ObjectMapper();

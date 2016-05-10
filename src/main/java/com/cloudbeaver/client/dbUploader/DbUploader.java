@@ -95,11 +95,11 @@ public class DbUploader extends CommonUploader{
         		Date date = new Date();
         		dbBean.setQueryTime(date.toString());
         		tableBean.setQueryTime(date.toString());
-                logger.debug("Executing query : " + tableBean.getSqlString(prisonId , clientId, dbBean.getDb(), dbBean.getRowversion(), DB_QEURY_LIMIT));
+                logger.debug("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), DB_QEURY_LIMIT));
                 JSONArray jArray = new JSONArray();
                 String maxXgsj = null;
 				try {
-					maxXgsj = SqlHelper.execSqlQuery(prisonId, clientId, dbBean, tableBean, this, DB_QEURY_LIMIT, jArray);
+					maxXgsj = SqlHelper.execSqlQuery(prisonId, dbBean, tableBean, this, DB_QEURY_LIMIT, jArray);
 				} catch (SQLException e) {
 					BeaverUtils.PrintStackTrace(e);
 					logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));

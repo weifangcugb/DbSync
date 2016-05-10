@@ -48,7 +48,7 @@ public class FileInfo implements Comparable<FileInfo>{
 		 * e.g.
 		 * [[{\"hdfs_client\":\"1\",\"hdfs_db\":\"DocumentDB\",\"hdfs_table\":\"da_jbxx\",\"id\":\"337178\"
 		 */
-		String uploadData = "[{\"hdfs_prison\":\"" + FileUploader.getPrisonId() + "\", \"hdfs_client\":\"" + FileUploader.getClientId()
+		String uploadData = "[{\"hdfs_prison\":\"" + FileUploader.getPrisonId()
 				+ "\", \"hdfs_db\":\"" + CommonUploader.TASK_FILEDB_NAME + "\",\"hdfs_table\":\"" + dirPath + "\",\"file_name\":\"" + fileName 
 				+ "\", \"file_data\":\"" + fileData + "\", \"xgsj\":\"" +  changeTime + "\"}]";
 
