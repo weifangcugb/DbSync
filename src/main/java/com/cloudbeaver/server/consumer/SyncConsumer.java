@@ -138,7 +138,7 @@ public class SyncConsumer extends FixedNumThreadPool{
     
     			ObjectMapper oMapper = new ObjectMapper();
     			JsonNode root= oMapper.readTree(msgBody);
-				if (root.isArray() && root.get(0) != null && root.get(0).has(JSON_FILED_HDFS_DB) && root.get(0).has(JSON_FILED_HDFS_CLIENT)) {
+				if (root.isArray() && root.get(0) != null && root.get(0).has(JSON_FILED_HDFS_DB)) {
 					if (root.get(0).has(CommonUploader.REPORT_TYPE) && root.get(0).get(CommonUploader.REPORT_TYPE).asText().equals(CommonUploader.REPORT_TYPE_HEARTBEAT)) {
 						logger.debug("heart beat data, msg:" + msgBody);
 						try {

@@ -34,7 +34,6 @@ public class AppTest extends TestCase {
 				JsonNode root = oMapper.readTree(jArray.toString());
 				for (int i = 0; i < root.size(); i++) {
 					JsonNode item = root.get(i);
-					assertEquals(item.get("hdfs_client").asText(), dbUploader.getClientId());
 					assertEquals(item.get("hdfs_prison").asText(), dbUploader.getPrisonId());
 					assertEquals(item.get("hdfs_db").asText(), "DocumentDB");
 				}
