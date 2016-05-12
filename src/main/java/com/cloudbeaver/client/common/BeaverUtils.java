@@ -97,7 +97,7 @@ public class BeaverUtils {
 			}
 
 	        URL url = new URL(urlString);
-	        
+
 	        urlConnection = (HttpURLConnection) url.openConnection();
 	        urlConnection.setRequestMethod("POST");
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
@@ -186,7 +186,7 @@ public class BeaverUtils {
 	}
 
 	public static boolean isHttpServerInternalError(String message) {
-		return message.indexOf("Server returned HTTP response code: 500") != -1;
+		return message.indexOf("HTTP response code: 500") != -1;
 	}
 
 	public static long hexTolong(String miniChangeTime) {

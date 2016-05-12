@@ -2,6 +2,7 @@ package com.cloudbeaver.server.consumer;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -182,9 +183,11 @@ public class SyncConsumer extends FixedNumThreadPool{
 						}catch(IOException e){
 							BeaverUtils.PrintStackTrace(e);
 							logger.error("invalid json message, errMsg:" + e.getMessage() + " key:" + msgKey + " msg:" + msgBody);
-							if (BeaverUtils.isHttpServerInternalError(e.getMessage())) {
-								BeaverUtils.sleep(1 * 1000);
+							if (e instanceof ConnectException || BeaverUtils.isHttpServerInternalError(e.getMessage())) {
+//								can't connect to server, or server return internal error, retry again
+								BeaverUtils.sleep(300);
 							}else {
+//								other response code, don't retry
 								break;
 							}
 						}
