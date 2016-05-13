@@ -51,8 +51,8 @@ public class SqlHelper {
         }
     }
 
-	public static String execSqlQuery(DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException {
-		String sqlQuery = tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum);
+	public static String execSqlQuery(String prisonId, DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException {
+		String sqlQuery = tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum);
 		Connection con = getConn(dbBean, threadPool);
 		if (!threadPool.isRunning() || con == null) {
 //			may be an exception is better

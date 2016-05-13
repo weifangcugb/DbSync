@@ -7,8 +7,8 @@ import org.apache.log4j.*;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.client.common.FixedNumThreadPool;
 import com.cloudbeaver.client.common.SqlHelper;
+import com.cloudbeaver.client.common.CommonUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
@@ -19,31 +19,12 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
 
-public class DbUploader extends FixedNumThreadPool{
-	private final static String CONF_CLIENT_ID = "client.id";
-	private final static String CONF_FILE_NAME = "SyncClient.properties";
-	private final static String CONF_FLUME_SERVER_URL = "flume-server.url";
-    private final static String CONF_TASK_SERVER_URL = "tasks-server.url";
-	private static final String TASK_DB_NAME = "DocumentDB";
-	private static final String TASK_FILE_NAME = "DocumentFiles";
-	private static final String TYPE_HEARTBEAT = "HeartBeat";
-    private final static int sqlLimitNum = 1;
-    
+public class DbUploader extends CommonUploader{
     private static Logger logger = Logger.getLogger(DbUploader.class);
 
-    private Map<String, String> conf = null;
-    private String taskJson = null;
-    private MultiDatabaseBean dbBeans = null;
-
-    private String clientId = null;
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
+    private Map<String, String> conf;
+    private String taskJson;
+    private MultiDatabaseBean dbBeans;
 
     public String getTaskJson() {
 		return taskJson;
@@ -56,17 +37,18 @@ public class DbUploader extends FixedNumThreadPool{
 	@Override
 	public void setup() throws BeaverFatalException {
         try {
-			conf = BeaverUtils.loadConfig(CONF_FILE_NAME);
-	        if (conf.containsKey(CONF_CLIENT_ID)) {
+			conf = BeaverUtils.loadConfig(CONF_DBSYNC_DB_FILENAME);
+	        if (conf.containsKey(CONF_CLIENT_ID) && conf.get(CONF_CLIENT_ID).contains("_")) {
 				setClientId(conf.get(CONF_CLIENT_ID));
+				setPrisonIdByClientId(conf.get(CONF_CLIENT_ID));
 			}else {
-				logger.fatal("no client.id in config file");
-				throw new BeaverFatalException("no client.id in config file");
+				logger.fatal("no client.id or client.id has no '_', in config file");
+				throw new BeaverFatalException("no client.id or client.id has no '_' in config file");
 			}
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
-			logger.fatal("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage());
-			throw new BeaverFatalException("load config failed, please restart process. confName:" + CONF_FILE_NAME + " msg:" + e.getMessage(), e);
+			logger.fatal("load config failed, please restart process. confName:" + CONF_DBSYNC_DB_FILENAME + " msg:" + e.getMessage());
+			throw new BeaverFatalException("load config failed, please restart process. confName:" + CONF_DBSYNC_DB_FILENAME + " msg:" + e.getMessage(), e);
 		}
 
 //      get tasks from web server
@@ -99,7 +81,7 @@ public class DbUploader extends FixedNumThreadPool{
 	}
 
 	public boolean shouldSkipDb(DatabaseBean dbBean) {
-		return dbBean.getDb().equals(TASK_FILE_NAME);
+		return dbBean.getDb().equals(TASK_FILEDB_NAME);
 	}
 
 	@Override
@@ -113,11 +95,11 @@ public class DbUploader extends FixedNumThreadPool{
         		Date date = new Date();
         		dbBean.setQueryTime(date.toString());
         		tableBean.setQueryTime(date.toString());
-//                logger.debug("Executing query : " + tableBean.getSqlString(dbBean.getPrison(), dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum));
+                logger.debug("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), DB_QEURY_LIMIT));
                 JSONArray jArray = new JSONArray();
                 String maxXgsj = null;
 				try {
-					maxXgsj = SqlHelper.execSqlQuery(dbBean, tableBean, this, sqlLimitNum, jArray);
+					maxXgsj = SqlHelper.execSqlQuery(prisonId, dbBean, tableBean, this, DB_QEURY_LIMIT, jArray);
 				} catch (SQLException e) {
 					BeaverUtils.PrintStackTrace(e);
 					logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));
@@ -163,9 +145,9 @@ public class DbUploader extends FixedNumThreadPool{
     				BeaverUtils.sleep(1000);
     			}
 
-                BeaverUtils.sleep(500);
+                BeaverUtils.sleep(100);
 			}
-        	BeaverUtils.sleep(500);
+        	BeaverUtils.sleep(100);
         }
 	}
 
@@ -178,10 +160,10 @@ public class DbUploader extends FixedNumThreadPool{
 			}
 
 			JSONObject db= new JSONObject();
-			db.put("client.id", "1");
-			db.put("hdfs_prison", clientId);
+			db.put("hdfs_client", clientId);
+			db.put("hdfs_prison", prisonId);
 			db.put("hdfs_db", dbBean.getDb());
-			db.put("dataType", TYPE_HEARTBEAT);
+			db.put(REPORT_TYPE, REPORT_TYPE_HEARTBEAT);
 			db.put("queryTime", dbBean.getQueryTime());
 			JSONArray tables = new JSONArray();
 			for (TableBean tBean : dbBean.getTables()) {

@@ -9,6 +9,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.common.CommonUploader;
 
 public class FileInfo implements Comparable<FileInfo>{
 	private static Logger logger = Logger.getLogger(DirInfo.class);
@@ -45,11 +46,11 @@ public class FileInfo implements Comparable<FileInfo>{
 	public void uploadFileData(String fileName, String fileData, String changeTime, String dirPath) throws IOException {
 		/*
 		 * e.g.
-		 * [[{\"hdfs_prison\":\"1\",\"hdfs_db\":\"DocumentDB\",\"hdfs_table\":\"da_jbxx\",\"id\":\"337178\"
+		 * [[{\"hdfs_client\":\"1\",\"hdfs_db\":\"DocumentDB\",\"hdfs_table\":\"da_jbxx\",\"id\":\"337178\"
 		 */
-		String uploadData = "[{\"hdfs_prison\":\"" + FileUploader.getClientId() + "\",\"hdfs_db\":\"" + FileUploader.TASK_FILE_NAME
-				+ "\",\"hdfs_table\":\"" + dirPath + "\",\"file_name\":\"" + fileName + "\", \"file_data\":\"" + fileData 
-				+ "\", \"xgsj\":\"" +  changeTime + "\"}]";
+		String uploadData = "[{\"hdfs_prison\":\"" + FileUploader.getPrisonId()
+				+ "\", \"hdfs_db\":\"" + CommonUploader.TASK_FILEDB_NAME + "\",\"hdfs_table\":\"" + dirPath + "\",\"file_name\":\"" + fileName 
+				+ "\", \"file_data\":\"" + fileData + "\", \"xgsj\":\"" +  changeTime + "\"}]";
 
         String flumeJson;
 		try {

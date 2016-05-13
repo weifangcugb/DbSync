@@ -27,14 +27,14 @@ public class AppTest extends TestCase {
 
 			for (TableBean tBean : dbBean.getTables()) {
 				JSONArray jArray = new JSONArray();
-				String maxVersion = SqlHelper.execSqlQuery(dbBean, tBean, dbUploader, 1, jArray);
+				String maxVersion = SqlHelper.execSqlQuery(dbUploader.getPrisonId(), dbBean, tBean, dbUploader, 1, jArray);
 
-//				jArray : [{"hdfs_prison":"1","hdfs_db":"DocumentDB", xxx}]
+//				jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
 				ObjectMapper oMapper = new ObjectMapper();
 				JsonNode root = oMapper.readTree(jArray.toString());
 				for (int i = 0; i < root.size(); i++) {
 					JsonNode item = root.get(i);
-					assertEquals(item.get("hdfs_prison").asText(), dbBean.getPrison());
+					assertEquals(item.get("hdfs_prison").asText(), dbUploader.getPrisonId());
 					assertEquals(item.get("hdfs_db").asText(), "DocumentDB");
 				}
 			}

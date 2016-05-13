@@ -3,6 +3,8 @@ package com.cloudbeaver.client.common;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -95,7 +97,7 @@ public class BeaverUtils {
 			}
 
 	        URL url = new URL(urlString);
-	        
+
 	        urlConnection = (HttpURLConnection) url.openConnection();
 	        urlConnection.setRequestMethod("POST");
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
@@ -137,7 +139,10 @@ public class BeaverUtils {
     	Map<String, String> conf = new HashMap<String, String>();
 
         Properties pps = new Properties();
-        pps.load(BeaverUtils.class.getClassLoader().getResourceAsStream(confFileName));
+
+//        pps.load(BeaverUtils.class.getClassLoader().getResourceAsStream(confFileName));
+        logger.info("conf_name:" + new File(confFileName).getAbsolutePath());
+        pps.load(new FileInputStream(new File(confFileName)));
         Enumeration<?> enum1 = pps.propertyNames();
         while(enum1.hasMoreElements()) {
             String strKey = (String) enum1.nextElement();
@@ -181,7 +186,7 @@ public class BeaverUtils {
 	}
 
 	public static boolean isHttpServerInternalError(String message) {
-		return message.indexOf("Server returned HTTP response code: 500") != -1;
+		return message.indexOf("HTTP response code: 500") != -1;
 	}
 
 	public static long hexTolong(String miniChangeTime) {

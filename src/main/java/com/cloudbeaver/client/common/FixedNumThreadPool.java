@@ -12,7 +12,7 @@ import sun.misc.SignalHandler;
 public abstract class FixedNumThreadPool implements Runnable{
 	private Logger logger = Logger.getLogger(FixedNumThreadPool.class);
 	public static final String STOP_SIGNAL = "TERM";//USR2
-	protected static final long HEART_BEAT_INTERVAL = 90 * 1000;
+	protected static final long HEART_BEAT_INTERVAL = 180 * 1000;
 
     protected abstract void setup() throws BeaverFatalException;
 	protected abstract void doTask(Object taskObject);
@@ -26,7 +26,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 //		as default, do nothing
 	}
 
-	private boolean KEEP_RUNNING = true;
+	private volatile boolean KEEP_RUNNING = true;
 
 	@Override
 	public void run() {
