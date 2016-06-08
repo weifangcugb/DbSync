@@ -45,8 +45,10 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>sqljdbc4</artifactId>
-            <version>3.0</version>
-        </dependency>
+	    <version>3.0</version>
+	    <scope>system</scope>
+    	    <systemPath>${project.basedir}/src/resources/sqljdbc4-3.0.jar</systemPath>
+    	</dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

@@ -55,6 +55,8 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static final boolean STOR_IN_LOCAL = false;
 	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
 
+	private static final boolean USE_BEAVER_KAFKA = true;
+
 	private static final int MAX_POST_RETRY_TIME = 20;
 
 	List<KafkaStream<byte[], byte[]>> streams = null;
@@ -124,12 +126,18 @@ public class SyncConsumer extends FixedNumThreadPool{
     			MessageAndMetadata<byte[] , byte[]> mam = iter.next();
     			byte[] key = mam.key();
     			byte[] msg = mam.message();
-    
-    			int keyLen = ByteBuffer.wrap(msg, 0, 4).getInt();
-    			String msgKey = new String(msg, 4, keyLen);
+    			
+    			int keyStartIndex = 0;
+    			if (USE_BEAVER_KAFKA) {
+					int tokenLen = msg[0];
+					keyStartIndex += tokenLen + 1;
+				}
+    			
+    			int keyLen = ByteBuffer.wrap(msg, keyStartIndex, 4).getInt();
+    			String msgKey = new String(msg, keyStartIndex + 4, keyLen);
     			String msgBody = "";
     			try {
-    				msgBody = new String(BeaverUtils.decompress(Arrays.copyOfRange(msg, 4+keyLen, msg.length)), BeaverUtils.DEFAULT_CHARSET);//ArrayUtils.subarray(msg, 4 + keyLen, msg.length)
+    				msgBody = new String(BeaverUtils.decompress(Arrays.copyOfRange(msg, keyStartIndex + 4 +keyLen, msg.length)), BeaverUtils.DEFAULT_CHARSET);//ArrayUtils.subarray(msg, 4 + keyLen, msg.length)
     				logger.info("msgKey:" + msgKey + " msgLen:" + msg.length + " msgBody:" + msgBody.substring(0, 150));
     			} catch (IOException e) {
     				BeaverUtils.PrintStackTrace(e);

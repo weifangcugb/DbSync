@@ -158,12 +158,18 @@ public class BeaverUtils {
     }
 
 	public static String gzipAndbase64(String data) throws IOException {
+//		version 1: just replase "
 //		data = data.replaceAll("\"", "\\\\\"");
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		GZIPOutputStream gout = new GZIPOutputStream(bout);
-		gout.write(data.getBytes(Charset.forName(DEFAULT_CHARSET)));
-		gout.close();
-		return Base64.encodeBase64String(bout.toByteArray());
+
+//		version 2: gzip and base64 encode
+//		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+//		GZIPOutputStream gout = new GZIPOutputStream(bout);
+//		gout.write(data.getBytes(Charset.forName(DEFAULT_CHARSET)));
+//		gout.close();
+//		return Base64.encodeBase64String(bout.toByteArray());
+
+//		version 3: base64 encode only
+		return Base64.encodeBase64String(data.getBytes(DEFAULT_CHARSET));
 	}
 
 	public static String compressAndFormatFlumeHttp(String data) throws IOException {
@@ -171,7 +177,14 @@ public class BeaverUtils {
 	}
 
 	public static byte[] decompress(byte[] base64) throws IOException {
-		return UnGzip(Base64.decodeBase64(base64));
+//		version 1:
+//		return new String(base64, DEFAULT_CHARSET);
+
+//		version 2: base64 decode and gunzip
+//		return UnGzip(Base64.decodeBase64(base64));
+
+//		version 3: base64 decode only
+		return Base64.decodeBase64(base64);
 	}
 
 	private static byte[] UnGzip(byte[] data) throws IOException {
