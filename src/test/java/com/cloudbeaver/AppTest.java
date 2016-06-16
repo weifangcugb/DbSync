@@ -27,7 +27,7 @@ public class AppTest{
 	}
 
 	@Test
-//	@Ignore
+	@Ignore
 	public void testGetMsg() throws Exception {
 		DbUploader dbUploader = new DbUploader();
 		dbUploader.setup();
