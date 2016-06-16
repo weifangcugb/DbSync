@@ -2,6 +2,10 @@ package com.cloudbeaver;
 
 import net.sf.json.JSONArray;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.cloudbeaver.client.common.SqlHelper;
@@ -11,10 +15,19 @@ import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import junit.framework.TestCase;
+public class AppTest{
+	@Before
+	public void setUpServers(){
+//	start the mocked web server
+	}
 
-public class AppTest extends TestCase {
+	@After
+	public void tearDownServers(){
+
+	}
+
 	@Test
+//	@Ignore
 	public void testGetMsg() throws Exception {
 		DbUploader dbUploader = new DbUploader();
 		dbUploader.setup();
@@ -34,8 +47,8 @@ public class AppTest extends TestCase {
 				JsonNode root = oMapper.readTree(jArray.toString());
 				for (int i = 0; i < root.size(); i++) {
 					JsonNode item = root.get(i);
-					assertEquals(item.get("hdfs_prison").asText(), dbUploader.getPrisonId());
-					assertEquals(item.get("hdfs_db").asText(), "DocumentDB");
+					Assert.assertEquals(item.get("hdfs_prison").asText(),dbUploader.getPrisonId());
+					Assert.assertEquals(item.get("hdfs_db").asText(),"DocumentDB");
 				}
 			}
 		}
@@ -44,6 +57,6 @@ public class AppTest extends TestCase {
 	@Test
 	public void testJsonArrayEmpty(){
 		JSONArray jArray = new JSONArray();
-		assertEquals(jArray.toString(), "[]");
+		Assert.assertEquals(jArray.toString(),"[]");
 	}
 }
