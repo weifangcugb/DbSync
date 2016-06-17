@@ -22,7 +22,7 @@ public class AppTest{
 	@Before
 	public void setUpServers(){
 //	start the mocked web server
-		mockServer.start();
+		mockServer.start(false);
 	}
 
 	@After

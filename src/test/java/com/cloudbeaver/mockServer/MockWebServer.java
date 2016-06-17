@@ -17,7 +17,7 @@ public class MockWebServer {
 
 	private Server server;
 
-	public void start(){
+	public void start(boolean shouldJoin){
         server = new Server();
 
         ServerConnector connector = new ServerConnector(server);
@@ -34,7 +34,9 @@ public class MockWebServer {
 
         try {
 			server.start();
-			server.join();
+			if (shouldJoin) {
+				server.join();
+			}
 		} catch (Exception e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.fatal("mock server can't start");
@@ -54,7 +56,7 @@ public class MockWebServer {
 
 	public static void main(String[] args){
 		MockWebServer mockWebServer = new MockWebServer();
-		mockWebServer.start();
+		mockWebServer.start(true);
 	}
 
 }
