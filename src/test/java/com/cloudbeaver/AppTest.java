@@ -35,13 +35,11 @@ public class AppTest{
 	public void testGetMsg() throws Exception {
 		DbUploader dbUploader = new DbUploader();
 		dbUploader.setup();
-
 		for (int index = 0; index < dbUploader.getThreadNum(); index++) {
 			DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
 			if (dbBean == null) {
 				continue;
 			}
-
 			for (TableBean tBean : dbBean.getTables()) {
 				JSONArray jArray = new JSONArray();
 				String maxVersion = SqlHelper.execSqlQuery(dbUploader.getPrisonId(), dbBean, tBean, dbUploader, 1, jArray);
