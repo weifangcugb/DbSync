@@ -26,12 +26,12 @@ public class AppTest{
 	}
 
 	@AfterClass
-	public void tearDownServers(){
+	public static void tearDownServers(){
 		mockServer.stop();
 	}
 
 	@Test
-	@Ignore
+//	@Ignore
 	public void testGetMsg() throws Exception {
 		DbUploader dbUploader = new DbUploader();
 		dbUploader.setup();
