@@ -13,8 +13,8 @@ import org.apache.log4j.Logger;
 
 
 @WebServlet("/")
-public class GetFlumeServlet extends HttpServlet{
-	private static Logger logger = Logger.getLogger(GetFlumeServlet.class);
+public class postTaskServlet extends HttpServlet{
+	private static Logger logger = Logger.getLogger(postTaskServlet.class);
 	private static String getTaskApi = "/";
 
     @Override
