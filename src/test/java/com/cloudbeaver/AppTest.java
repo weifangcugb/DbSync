@@ -12,18 +12,22 @@ import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
+import com.cloudbeaver.mockServer.MockWebServer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AppTest{
+	MockWebServer mockServer = new MockWebServer();
+
 	@Before
 	public void setUpServers(){
 //	start the mocked web server
+		mockServer.start();
 	}
 
 	@After
 	public void tearDownServers(){
-
+		mockServer.stop();
 	}
 
 	@Test

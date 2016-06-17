@@ -1,9 +1,9 @@
 package com.cloudbeaver.mockServer;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -27,11 +27,13 @@ public class GetTaskServlet extends HttpServlet{
 		}
 
     	String tableId = url.substring(tableIdIndex + 1);
-    	ServletOutputStream out = resp.getOutputStream();
-    	out.write(tableId.getBytes());
-//        out.write("Beaver欢迎您".getBytes());
-        out.flush();
-//        out.close();
+
+    	resp.setCharacterEncoding("utf-8");
+    	PrintWriter pw = resp.getWriter();
+    	pw.write(tableId);
+        pw.write("Beaver欢迎您");
+        pw.flush();
+        pw.close();
     }
 
     @Override

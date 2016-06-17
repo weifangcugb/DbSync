@@ -15,8 +15,10 @@ public class MockWebServer {
 	private static Logger logger = Logger.getLogger(MockWebServer.class);
 	private static final int HTTP_PORT = 8877;
 
+	private Server server;
+
 	public void start(){
-        Server server = new Server();
+        server = new Server();
 
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(HTTP_PORT);
@@ -36,6 +38,17 @@ public class MockWebServer {
 		} catch (Exception e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.fatal("mock server can't start");
+		}
+	}
+
+	public void stop(){
+		if (server != null) {
+			try {
+				server.stop();
+			} catch (Exception e) {
+				BeaverUtils.PrintStackTrace(e);
+				logger.error("mock server can't stop");
+			}
 		}
 	}
 
