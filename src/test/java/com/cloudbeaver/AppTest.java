@@ -2,9 +2,9 @@ package com.cloudbeaver;
 
 import net.sf.json.JSONArray;
 
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -17,15 +17,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AppTest{
-	MockWebServer mockServer = new MockWebServer();
+	private static MockWebServer mockServer = new MockWebServer();
 
-	@Before
-	public void setUpServers(){
+	@BeforeClass
+	public static void setUpServers(){
 //	start the mocked web server
 		mockServer.start(false);
 	}
 
-	@After
+	@AfterClass
 	public void tearDownServers(){
 		mockServer.stop();
 	}
