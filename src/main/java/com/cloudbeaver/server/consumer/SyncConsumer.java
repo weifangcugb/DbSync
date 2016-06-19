@@ -55,7 +55,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static final boolean STOR_IN_LOCAL = false;
 	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
 
-	private static final boolean USE_BEAVER_KAFKA = true;
+	private static final boolean USE_BEAVER_KAFKA = false;
 
 	private static final int MAX_POST_RETRY_TIME = 20;
 

@@ -69,19 +69,22 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-        <dependency>    
-            <groupId>com.oracle</groupId>    
-            <artifactId>ojdbc14</artifactId>    
+<!--
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc14</artifactId>
             <version>10.2.0.4.0</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/src/resources/ojdbc14.jar</systemPath>
-        </dependency>       
+        </dependency>
+-->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>sqljdbc4</artifactId>
 	       <version>3.0</version>
-	       <scope>system</scope>
+<!--	   <scope>system</scope>
     	   <systemPath>${project.basedir}/src/resources/sqljdbc4-3.0.jar</systemPath>
+-->
     	</dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -184,6 +187,11 @@
 	                        <mainClass>com.cloudbeaver.server.consumer.SyncConsumer</mainClass>
 -->
                         </manifest>
+<!-- 
+                        <manifestEntries>
+      						<Class-Path>lib/sqljdbc4-3.0.jar lib/ojdbc14.jar</Class-Path>
+    					</manifestEntries>
+ -->
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
