@@ -1,7 +1,8 @@
 package com.cloudbeaver.mockServer;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStreamReader;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -28,13 +29,16 @@ public class postTaskServlet extends HttpServlet{
     	if (!url.equals(getTaskApi)) {
 			throw new ServletException("invalid url, format: " + getTaskApi);
 		}
-    	System.out.println("get flume succeed!");
-    	//resp.setHeader(\"Content-type\", \"text/html;charset=UTF-8\");
-//    	resp.setCharacterEncoding("utf-8");
-//    	PrintWriter pw = resp.getWriter();
-//    	
-//      pw.flush();
-//      pw.close();
+
+    	BufferedReader br = new BufferedReader(new InputStreamReader(req.getInputStream()));
+    	StringBuilder sb = new StringBuilder();
+    	String tmp;
+    	while ((tmp = br.readLine()) != null) {
+			sb.append(tmp);
+		}
+
+    	int debugLen = sb.length() > 300 ? 300 : sb.length();
+    	System.out.println("get post data, data:" + sb.toString().substring(0, debugLen));
     }
 
     @Override

@@ -20,9 +20,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FileUploader extends CommonUploader {
-    private static Logger logger = Logger.getLogger(FileUploader.class);
+	public static boolean USE_REMOTE_DIRS = false;
 
-	private static final boolean USE_REMOTE_DIRS = true;
+    private static Logger logger = Logger.getLogger(FileUploader.class);
 
 	private static String taskServer = null;
 	private static String flumeServer = null;
@@ -102,7 +102,7 @@ public class FileUploader extends CommonUploader {
 		}
 
 //		load file dirs from remote server
-		while (isRunning()) {
+		while (isRunning() && USE_REMOTE_DIRS) {
 			try {
 				getFileTask();
 				break;
@@ -181,13 +181,13 @@ public class FileUploader extends CommonUploader {
 			}
 		}
 
-		if (remoteSetDirs.size() > 0) {
-			if (USE_REMOTE_DIRS) {
-				dirInfos = remoteSetDirs;
-			}
-		}else {
-			logger.fatal("all dirs got from server are not exist, task:" + json);
-			throw new IOException("dir are all not exist, will try again");
+		if (USE_REMOTE_DIRS) {
+        	if (remoteSetDirs.size() > 0) {
+        			dirInfos = remoteSetDirs;
+        	}else {
+        		logger.fatal("all dirs got from server are not exist, task:" + json);
+        		throw new IOException("dir are all not exist, will try again");
+        	}
 		}
 	}
 

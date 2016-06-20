@@ -81,7 +81,7 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>sqljdbc4</artifactId>
-	       <version>3.0</version>
+	    <version>3.0</version>
 <!--	   <scope>system</scope>
     	   <systemPath>${project.basedir}/src/resources/sqljdbc4-3.0.jar</systemPath>
 -->
