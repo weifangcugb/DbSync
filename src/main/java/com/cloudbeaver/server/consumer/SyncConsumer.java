@@ -43,16 +43,15 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static final String JSON_FILED_HDFS_CLIENT = "hdfs_client";
 
 //	kafka configs
-	private static final String KAFKA_TOPIC = "hdfs_upload";
 	private static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
 	private static final String ZOOKEEPER_OFFSET_RESET = "auto.offset.reset";
 	private static final String KAFKA_GROUP_ID = "group.id";
 	private static final String KAFKA_AUTO_COMMIT_INTERVALS = "auto.commit.interval.ms";
 	private static final String DEFAULT_CONSUMER_GROUP_ID = "g2";
+	private static final String KAFKA_OFFSET_SMALLEST = "smallest";
+	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
 	private static int TOPIC_PARTITION_NUM = 10;
 	private static String TOPIC_NAME = "hdfs_upload";
-	private static final Object KAFKA_OFFSET_SMALLEST = "smallest";
-	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
 
 	private static final boolean STOR_IN_LOCAL = false;
 	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
@@ -108,13 +107,11 @@ public class SyncConsumer extends FixedNumThreadPool{
 		ConsumerConfig consumerConfig = new ConsumerConfig(props);
 		consumer = (ConsumerConnector) Consumer.createJavaConsumerConnector(consumerConfig);
 
-		String topic = KAFKA_TOPIC;
-
 		Map<String, Integer> topicCountMap = new HashMap<String, Integer>();
 		topicCountMap.put(TOPIC_NAME, TOPIC_PARTITION_NUM);
 		Map<String, List<KafkaStream<byte[], byte[]>>> consumerMap = consumer.createMessageStreams(topicCountMap);
 
-		streams = consumerMap.get(topic);
+		streams = consumerMap.get(TOPIC_NAME);
 	}
 
 	@Override
