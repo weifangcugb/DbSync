@@ -11,9 +11,9 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import com.cloudbeaver.client.common.BeaverUtils;
 
-public class MockWebServer {
-	private static Logger logger = Logger.getLogger(MockWebServer.class);
-	private static final int HTTP_PORT = 8877;
+public class BrokerMonitorWebServer {
+	private static Logger logger = Logger.getLogger(BrokerMonitorWebServer.class);
+	private static final int HTTP_PORT = 8028;
 
 	private Server server;
 
@@ -26,7 +26,7 @@ public class MockWebServer {
 
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
-        context.addServlet(BrokerMonitor.class, "/zkwatch/");
+        context.addServlet(BrokerMonitorServlet.class, "/getBrokerList");
 
         HandlerCollection handlers = new HandlerCollection();
         handlers.setHandlers(new Handler[] { context, new DefaultHandler() });
@@ -55,8 +55,8 @@ public class MockWebServer {
 	}
 
 	public static void main(String[] args){
-		MockWebServer mockWebServer = new MockWebServer();
-		mockWebServer.start(true);
+		BrokerMonitorWebServer bmWebServer = new BrokerMonitorWebServer();
+		bmWebServer.start(true);
 	}
 
 }
