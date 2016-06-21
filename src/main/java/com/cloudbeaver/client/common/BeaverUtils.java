@@ -1,5 +1,7 @@
 package com.cloudbeaver.client.common;
 
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -11,16 +13,19 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+
+//import com.sun.image.codec.jpeg.JPEGCodec;
+//import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
 public class BeaverUtils {
 	private static Logger logger = Logger.getLogger(BeaverUtils.class);
@@ -213,5 +218,23 @@ public class BeaverUtils {
 			hex = '0' + hex;
 		}
 		return hex;
+	}
+
+	public static byte[] resizePic(File file, int oriFileSize, int newFileSize) throws IOException {
+		double radio = newFileSize * 1.0 / oriFileSize;
+		logger.info("resize pic, radio:" + radio);
+
+		Image img = ImageIO.read(file);
+		int width = (int)(img.getWidth(null) * radio);
+		int height = (int)(img.getHeight(null) * radio);
+
+		BufferedImage bImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		bImage.getGraphics().drawImage(img, 0, 0, width, height, null);
+
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		ImageIO.write(bImage, "jpeg", bout);
+//		JPEGImageEncoder jpegEncoder = JPEGCodec.createJPEGEncoder(bout);
+//		jpegEncoder.encode(bImage);
+		return bout.toByteArray();
 	}
 }

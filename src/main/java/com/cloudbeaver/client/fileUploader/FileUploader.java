@@ -14,13 +14,14 @@ import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.client.common.FixedNumThreadPool;
 import com.cloudbeaver.client.common.CommonUploader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FileUploader extends CommonUploader {
 	public static boolean USE_REMOTE_DIRS = false;
+	public static boolean RESIZE_LARGE_PIC = true;
+	public static int LARGE_PIC_SIZE_BARRIER = 600 * 1024;
 
     private static Logger logger = Logger.getLogger(FileUploader.class);
 
@@ -216,7 +217,7 @@ public class FileUploader extends CommonUploader {
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("send heart beat error. msg:" + e.getMessage());
-		}		
+		}
 	}
 
 	public static void startFileUploader(){
