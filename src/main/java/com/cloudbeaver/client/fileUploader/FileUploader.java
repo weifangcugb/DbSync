@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FileUploader extends CommonUploader {
 	public static boolean USE_REMOTE_DIRS = false;
-	public static boolean RESIZE_LARGE_PIC = true;
 	public static int LARGE_PIC_SIZE_BARRIER = 600 * 1024;
 
     private static Logger logger = Logger.getLogger(FileUploader.class);

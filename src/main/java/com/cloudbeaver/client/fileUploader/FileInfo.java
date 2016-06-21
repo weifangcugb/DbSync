@@ -87,15 +87,17 @@ public class FileInfo implements Comparable<FileInfo>{
 			}
 
 			datas = bout.toByteArray();
-		}else if (FileUploader.RESIZE_LARGE_PIC && file.getName().toLowerCase().endsWith("jpg")) {
-//				resize a big jpg picture
-			datas = BeaverUtils.resizePic(file, (int)fileSize, FileUploader.LARGE_PIC_SIZE_BARRIER);
-
-			FileOutputStream fout = new FileOutputStream(new File(file.getAbsolutePath() + ".small"));
-			fout.write(datas);
-			fout.close();
 		}else {
-			throw new IOException("this file is too large to be upload, fileSize:" + fileSize + " file:" + file.getAbsolutePath());
+			if (BeaverUtils.fileIsPics(file.getName().toLowerCase())) {
+//				resize a big jpg picture
+				datas = BeaverUtils.resizePic(file, (int)fileSize, FileUploader.LARGE_PIC_SIZE_BARRIER);
+
+//				FileOutputStream fout = new FileOutputStream(new File(file.getAbsolutePath() + ".small"));
+//				fout.write(datas);
+//				fout.close();
+    		}else {
+    			throw new IOException("this non-pic file is too large to be upload, fileSize:" + fileSize + " file:" + file.getAbsolutePath());
+    		}
 		}
 
 		return new String(Base64.encodeBase64(datas));

@@ -237,4 +237,8 @@ public class BeaverUtils {
 //		jpegEncoder.encode(bImage);
 		return bout.toByteArray();
 	}
+
+	public static boolean fileIsPics(String fileName) {
+		return fileName.endsWith("jpg") || fileName.endsWith("jpeg") || fileName.endsWith("bmp");
+	}
 }

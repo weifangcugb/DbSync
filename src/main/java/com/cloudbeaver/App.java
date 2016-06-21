@@ -33,11 +33,15 @@ public class App {
         option.setRequired(false);
         options.addOption(option);
 
-        option = new Option("k", "kafka-version", true, "which kafka version will be used, 'origin': use the origin git kafka, 'beaver': use the beaver authentication kafka");
+        option = new Option("k", "kafka-version", true, "which kafka version will be used,\n'origin': use the origin git kafka,\n'beaver': use the beaver authentication kafka");
         option.setRequired(false);
         options.addOption(option);
 
-        option = new Option("d", "dir-conf", true, "which dir will be used in FileUploader, 'remote': use dir set by web sync api, 'local': use dir set by conf/SyncClient_File.properties");
+        option = new Option("d", "dir-conf", true, "which dir will be used in FileUploader,\n'remote': use dir set by web sync api,\n'local': use dir set by conf/SyncClient_File.properties");
+        option.setRequired(false);
+        options.addOption(option);
+
+        option = new Option("l", "large file size", true, "set how large a file is large file,\n should be larger than 100K");
         option.setRequired(false);
         options.addOption(option);
 
@@ -48,24 +52,6 @@ public class App {
 	            new HelpFormatter().printHelp("java -jar dbsync ", options, true);
 	            return;
             }
-
-            if (commandLine.hasOption('m')) {
-            	String moduleName = commandLine.getOptionValue('m');
-                switch (moduleName) {
-                    case "dbUploader":
-                    	DbUploader.startDbUploader();
-                    	break;
-                    case "fileUploader":
-                    	FileUploader.startFileUploader();
-                    	break;
-                    case "syncConsumer":
-                    	SyncConsumer.startSyncConsumer();
-                    	break;
-                    
-                    default:
-                    	throw new ParseException("module name is wrong");
-                }
-	  		}
 
             if (commandLine.hasOption('k')) {
             	String kafkaVersion = commandLine.getOptionValue('k');
@@ -94,6 +80,32 @@ public class App {
 						throw new ParseException("dir location is wrong, only 'local' or 'remote' allowed.");
 				}
 			}
+
+            if (commandLine.hasOption('l')) {
+            	String largeFileSize = commandLine.getOptionValue('l');
+				FileUploader.LARGE_PIC_SIZE_BARRIER = Integer.parseInt(largeFileSize);
+				if (FileUploader.LARGE_PIC_SIZE_BARRIER <= 102400) {
+					throw new ParseException("large file size should be larger than 102400");
+				}
+			}
+
+            if (commandLine.hasOption('m')) {
+            	String moduleName = commandLine.getOptionValue('m');
+                switch (moduleName) {
+                    case "dbUploader":
+                    	DbUploader.startDbUploader();
+                    	break;
+                    case "fileUploader":
+                    	FileUploader.startFileUploader();
+                    	break;
+                    case "syncConsumer":
+                    	SyncConsumer.startSyncConsumer();
+                    	break;
+                    
+                    default:
+                    	throw new ParseException("module name is wrong");
+                }
+	  		}
 		} catch (ParseException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.fatal("command line is wrong, msg:" + e.getMessage());
