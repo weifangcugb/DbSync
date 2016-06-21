@@ -47,9 +47,11 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static final String ZOOKEEPER_OFFSET_RESET = "auto.offset.reset";
 	private static final String KAFKA_GROUP_ID = "group.id";
 	private static final String KAFKA_AUTO_COMMIT_INTERVALS = "auto.commit.interval.ms";
+	private static final String KAFKA_FETCH_MAX_SIZE = "fetch.message.max.bytes";
 	private static final String DEFAULT_CONSUMER_GROUP_ID = "g2";
 	private static final String KAFKA_OFFSET_SMALLEST = "smallest";
 	private static final int DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS = 1000;
+	private static final int DEFAULT_MAX_FETCH_SIZE = 10 * 1024 * 1024;
 	private static int TOPIC_PARTITION_NUM = 10;
 	private static String TOPIC_NAME = "hdfs_upload";
 
@@ -103,7 +105,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 		props.put(ZOOKEEPER_OFFSET_RESET, KAFKA_OFFSET_SMALLEST); 
 		props.put(KAFKA_GROUP_ID, conf.get(KAFKA_GROUP_ID) == null? DEFAULT_CONSUMER_GROUP_ID: conf.get(KAFKA_GROUP_ID));
 		props.put(KAFKA_AUTO_COMMIT_INTERVALS, conf.get(KAFKA_AUTO_COMMIT_INTERVALS) == null ? DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS : conf.get(KAFKA_AUTO_COMMIT_INTERVALS));
-		props.put("fetch.message.max.bytes", 10000000);
+		props.put(KAFKA_FETCH_MAX_SIZE , DEFAULT_MAX_FETCH_SIZE);
 
 		ConsumerConfig consumerConfig = new ConsumerConfig(props);
 		consumer = (ConsumerConnector) Consumer.createJavaConsumerConnector(consumerConfig);
