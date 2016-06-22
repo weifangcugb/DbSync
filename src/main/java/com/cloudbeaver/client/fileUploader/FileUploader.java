@@ -1,6 +1,8 @@
 package com.cloudbeaver.client.fileUploader;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -19,7 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FileUploader extends CommonUploader {
-	public static boolean USE_REMOTE_DIRS = false;
+	public static boolean USE_REMOTE_DIRS = true;
 	public static int LARGE_PIC_SIZE_BARRIER = 600 * 1024;
 
     private static Logger logger = Logger.getLogger(FileUploader.class);
@@ -48,24 +50,41 @@ public class FileUploader extends CommonUploader {
 	}
 
 	public void setFilePath(String filePathes) {
-		String[] dirs = filePathes.split(",");
-		for (String dir : dirs) {
+		String[] dirConfs = filePathes.split(",");
+		for (String dirConf : dirConfs) {
 			try {
-				DirInfo dirInfo = new DirInfo(dir, "" + 0);
+				DirInfo dirInfo;
+				int index = dirConf.indexOf('?');
+				if (index != -1 && dirConf.length() > index + 1) {
+					String dir = dirConf.substring(0, index);
+					String time = dirConf.substring(index + 1);
+					if (time.indexOf('-') != -1) {
+						SimpleDateFormat sdf = new SimpleDateFormat(CONF_DIR_DATA_FORMAT);
+						Date date = sdf.parse(time);
+						dirInfo = new DirInfo(dir, date.getTime());
+					}else{
+						dirInfo = new DirInfo(dir, time);
+					}
+				}else {
+					dirInfo = new DirInfo(dirConf, "" + 0);
+				}
+
 				dirInfos.add(dirInfo);
-			} catch (Exception e) {
-				logger.error("dir is not exist or not a directory, skip it. dir:" + dir);
+			} catch (ParseException | IOException e) {
+				logger.error("dir is not exist or not a directory, skip it. dir:" + dirConf);
 			}
 		}
 	}
 
-	private void loadFileConfig () throws IOException {
+	private void loadFileConfig () throws IOException, ParseException {
 		conf = BeaverUtils.loadConfig(CONF_DBSYNC_FILE_FILENAME);
 		Set<String> keys = conf.keySet();
 		for (String key : keys) {
         	switch (key) {
 			case CONF_PIC_DIRECTORY_NAME:
-				setFilePath(conf.get(key));
+				if (!USE_REMOTE_DIRS) {
+					setFilePath(conf.get(key));
+				}
 				break;
 			case CONF_TASK_SERVER_URL:
 				setTaskServer(conf.get(key));
@@ -95,7 +114,7 @@ public class FileUploader extends CommonUploader {
 				logger.fatal("no client.id in conf file, confName:" + CommonUploader.CONF_DBSYNC_FILE_FILENAME);
 				throw new BeaverFatalException("no client.id in config file");
 			}
-		} catch (IOException e){
+		} catch (IOException | ParseException e){
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("load config file error, msg:" + e.getMessage());
 			throw new BeaverFatalException("load config failed, please restart process. confName:" + CommonUploader.CONF_DBSYNC_FILE_FILENAME + " msg:" + e.getMessage(), e);
@@ -177,13 +196,13 @@ public class FileUploader extends CommonUploader {
 					}
 				}
 			}else {
-//				do nothing for now
+//				other dbs, do nothing
 			}
 		}
 
 		if (USE_REMOTE_DIRS) {
         	if (remoteSetDirs.size() > 0) {
-        			dirInfos = remoteSetDirs;
+        		dirInfos = remoteSetDirs;
         	}else {
         		logger.fatal("all dirs got from server are not exist, task:" + json);
         		throw new IOException("dir are all not exist, will try again");

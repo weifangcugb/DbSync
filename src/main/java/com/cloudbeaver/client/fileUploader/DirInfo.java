@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.common.CommonUploader;
 
 public class DirInfo {
 	private static Logger logger = Logger.getLogger(DirInfo.class);
@@ -20,7 +21,11 @@ public class DirInfo {
 	private String queryTime = null;
 	private FileInfo UploadingFile = null;
 	private String dirName = null;//this name is get from task server, don't change it
-	
+
+	private int FILE_UPLOAD_RETRY_TIMES = 16;
+
+	private long FILE_UPLOAD_ERROR_SLEEP_TIME = 5000;
+
 	public String getDirName() {
 		return dirName;
 	}
@@ -49,17 +54,21 @@ public class DirInfo {
 		return UploadingFile == null ? "" : UploadingFile.getFile().getName();
 	}
 
-	public DirInfo(String dirName, String miniChangeTime) throws Exception {
+	public DirInfo(String dirName, long miniChangeTime) throws IOException {
+		this(dirName, new File(dirName), miniChangeTime);
+	}
+
+	public DirInfo(String dirName, String miniChangeTime) throws IOException {
 		this(dirName, new File(dirName), BeaverUtils.hexTolong(miniChangeTime));
 	}
 
-	public DirInfo(String dirName, File dir, long miniChangeTime) throws Exception {
+	public DirInfo(String dirName, File dir, long miniChangeTime) throws IOException {
 		if (dir.exists() && dir.isDirectory()) {
 			this.dirName = dirName;
 			this.dir = dir;
 			this.miniChangeTime = miniChangeTime;
 		}else {
-			throw new Exception("dir is not exist or is not directory, dir:" + dir.getAbsolutePath());
+			throw new IOException("dir is not exist or is not directory, dir:" + dir.getAbsolutePath());
 		}
 	}
 
@@ -109,14 +118,20 @@ public class DirInfo {
 			}
 
 //			TODO: resend logic
-			try {
-				logger.info("start to upload file, file:" + fileInfo.getFile().getAbsolutePath());
-				fileInfo.uploadFileData(fileInfo.getFile().getName(), fileData, BeaverUtils.longToHex(fileInfo.getModifyTime()), dirName);
-				setMiniChangeTime(fileInfo.getModifyTime());
-				logger.info("finish upload file, file:" + fileInfo.getFile().getAbsolutePath());
-			} catch (IOException e) {
-				BeaverUtils.PrintStackTrace(e);
-				logger.error("upload file data error, will jump this error file. file: " + fileInfo.getFile().getAbsolutePath() + "msg:" + e.getMessage());
+			for (int i = 0; i < FILE_UPLOAD_RETRY_TIMES ; i++) {
+				try {
+					logger.info("start to upload file, file:" + fileInfo.getFile().getAbsolutePath());
+					fileInfo.uploadFileData(fileInfo.getFile().getName(), fileData, BeaverUtils.longToHex(fileInfo.getModifyTime()), dirName);
+					setMiniChangeTime(fileInfo.getModifyTime());
+					logger.info("finish upload file, file:" + fileInfo.getFile().getAbsolutePath());
+					
+					break;
+				} catch (IOException e) {
+					BeaverUtils.PrintStackTrace(e);
+					logger.error("upload file data error, will jump this error file. file: " + fileInfo.getFile().getAbsolutePath() + "msg:" + e.getMessage());
+
+					BeaverUtils.sleep(FILE_UPLOAD_ERROR_SLEEP_TIME );
+				}	
 			}
 
 			UploadingFile = null;

@@ -19,6 +19,7 @@ public abstract class CommonUploader extends FixedNumThreadPool{
 	public static final String REPORT_TYPE_HEARTBEAT = "HeartBeat";
 
 	public static final String CONF_PIC_DIRECTORY_NAME = "db.DocumentFiles.url";
+	public static final String CONF_DIR_DATA_FORMAT = "yyyy-MM-dd-hh-mm-ss";
 
     protected static String clientId;
 	protected static String prisonId;
