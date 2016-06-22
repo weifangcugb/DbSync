@@ -3,13 +3,14 @@ package com.cloudbeaver.server.brokermonitor.zkbean;
 import java.util.ArrayList;
 
 public class BrokerListBean {
-    private int error_code;
-    private ArrayList<BrokerZkNodeBean> zkd;
-    
-    public BrokerListBean () {
-    	error_code = 0;
-    	zkd = new ArrayList<BrokerZkNodeBean> ();
-    }
+    /*
+     * error_code:
+     * 0, ok
+     * 1, ioexception
+     * 2, no kafka node
+     */
+    private int error_code = 0;
+    private ArrayList<BrokerZkNodeBean> zkd = new ArrayList<BrokerZkNodeBean>();
     
     public int getError_code () {
     	return error_code;
