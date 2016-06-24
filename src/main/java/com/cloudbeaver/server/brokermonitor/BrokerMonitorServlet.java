@@ -34,13 +34,13 @@ public class BrokerMonitorServlet extends HttpServlet {
 	public static final boolean USE_MONITOR_THREAD = true;
 	public static final String ZK_CONN_STRING = "localhost:2181";
 
-	private static String brokerJsonString;
+	private static volatile String brokerJsonString;
 
 	public BrokerMonitorServlet() throws Exception {
         super();
 
         if (USE_MONITOR_THREAD) {
-        	startZKMonitorThread();
+        	new ZKWatcher().start();
 		}
 	}
 
@@ -52,14 +52,20 @@ public class BrokerMonitorServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	for (int i = 0; i < ZK_RETRY_TIMES ; i++) {
+    		ZooKeeper zkClient = null;
     		try {
     			if (!USE_MONITOR_THREAD) {
-    				brokerJsonString = getBrokerList(null, false);
+    				zkClient = new ZooKeeper(ZK_CONN_STRING, 50000, getEmptyWatcher());
+    				brokerJsonString = getBrokerList(zkClient, false);
+				}else if (brokerJsonString == null) {
+					throw new ServletException("can't get brokers from zookeeper, wait zkWather thread start");
 				}
 
     			PrintWriter pw = resp.getWriter();
     	    	pw.print(brokerJsonString);
     	        pw.flush();
+
+    	        break;
     		} catch (KeeperException e) {
     			BeaverUtils.PrintStackTrace(e);
     			throw new IOException(e.getMessage());
@@ -67,65 +73,86 @@ public class BrokerMonitorServlet extends HttpServlet {
     			if (i == ZK_RETRY_TIMES -1) {
 					throw new IOException("retry many times, but allways interrupted, msg:" + e.getMessage());
 				}
+    		}finally{
+    			if (zkClient != null) {
+					try {
+						zkClient.close();
+					} catch (InterruptedException e) {
+						BeaverUtils.printLogExceptionAndSleep(e, "close zkClient error, msg:", 1000);
+					}
+				}
     		}
 		}
     }
 
-    private void startZKMonitorThread() {
-        Thread monitorThread = new Thread(new Runnable() {
+	private Watcher getEmptyWatcher() {
+		return new Watcher(){
 			@Override
-			public void run() {
-			    Watcher wc = new Watcher() {
-					@Override
-					public void process (WatchedEvent event) {
-						getBrokerListInWather(this);
-					}
-				};
-
-				getBrokerListInWather(wc);
-			}
-		});
-
-        monitorThread.start();
+			public void process(WatchedEvent event) {}
+		};
 	}
 
-    public void getBrokerListInWather(Watcher watcher){
-		try {
-			brokerJsonString = getBrokerList(watcher, true);
-		} catch (IOException | KeeperException | InterruptedException e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.error("broker watcher added failed, msg:" + e.getMessage());
-		}
-    }
+	private class ZKWatcher extends Thread implements Watcher {
+		ZooKeeper zkClient;
 
-	public String getBrokerList(Watcher watcher, boolean watch) throws IOException, KeeperException, InterruptedException {
-		ZooKeeper zk = null;
-		try {
-			zk = new ZooKeeper(ZK_CONN_STRING, 500000, watcher);
-			List<String> brokerIds = zk.getChildren(BrokerMonitorServlet.ZK_CONN_STRING, watch);
-			return getBrokerListJson(brokerIds, zk);
-		} finally{
-			if (zk != null) {
+		private void initZKClient(){
+			if (zkClient != null) {
 				try {
-					zk.close();
+					zkClient.close();
 				} catch (InterruptedException e) {
+					BeaverUtils.printLogExceptionAndSleep(e, "close zkClient error, msg:", 3 * 1000);
+				}
+			}
+
+			while (true) {
+				try {
+					zkClient = new ZooKeeper(ZK_CONN_STRING, 50000, this);
+					break;
+				} catch (IOException e) {
+					BeaverUtils.printLogExceptionAndSleep(e, "can't init zookeeper client, msg:", 3 * 1000);
 				}
 			}
 		}
-	}
 
-	private String getBrokerListJson(List<String> brokerLists, ZooKeeper zk) throws KeeperException, InterruptedException, JsonParseException, JsonMappingException, IOException {
+		private void getBrokerListFromZK(){
+			while(true){
+				try {
+					brokerJsonString = getBrokerList(zkClient, true);
+					break;
+				} catch (KeeperException | InterruptedException | IOException e) {
+					BeaverUtils.printLogExceptionAndSleep(e, "get brokerlist info error, msg:" + e.getMessage(), 3 * 1000);
+
+					initZKClient();
+				}
+			}
+		}
+
+		@Override
+		public void process (WatchedEvent event) {
+			getBrokerListFromZK();
+		}
+
+		@Override
+		public void run() {
+			initZKClient();
+			getBrokerListFromZK();
+		}
+	};
+
+	public String getBrokerList(ZooKeeper zkClient, boolean watch) throws IOException, KeeperException, InterruptedException {
+		List<String> brokerInfos = zkClient.getChildren(ZNODE, watch);
+
 		ObjectMapper mapper = new ObjectMapper();
 		BrokerListBean brokerList = new BrokerListBean();
 
-		if (brokerLists.size() == 0) {
+		if (brokerInfos.size() == 0) {
 			brokerList.setError_code(ERROR_NO_KAFKA_NODE);
 		}else {
-			Iterator<String> it_wn = brokerLists.iterator();
-			while (it_wn.hasNext()) {
-				String b_id = it_wn.next();
+			Iterator<String> brokerInfo = brokerInfos.iterator();
+			while (brokerInfo.hasNext()) {
+				String b_id = brokerInfo.next();
 				String wn_path = ZNODE + "/" + b_id;
-				String zkDataString = new String(zk.getData(wn_path, true, null));
+				String zkDataString = new String(zkClient.getData(wn_path, true, null));
 
 				//String testJson = "{\"jmx_port\":-1,\"timestamp\":\"1466058881070\",\"endpoints\":[\"PLAINTEXT://localhost:9092\"],\"host\":\"localhost\",\"version\":3,\"port\":9093}\"";
 				//Ob_res = mapper.readValue(testJson, ResType.class);

@@ -241,4 +241,10 @@ public class BeaverUtils {
 	public static boolean fileIsPics(String fileName) {
 		return fileName.endsWith("jpg") || fileName.endsWith("jpeg") || fileName.endsWith("bmp");
 	}
+
+	public static void printLogExceptionAndSleep(Exception e, String msgPrefix, int sleepTime) {
+		BeaverUtils.PrintStackTrace(e);
+		logger.error(msgPrefix + e.getMessage());
+		BeaverUtils.sleep(3 * 1000);
+	}
 }

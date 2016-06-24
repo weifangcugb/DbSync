@@ -54,9 +54,8 @@ public class BrokerMonitorWebServer {
 		}
 	}
 
-	public static void main(String[] args){
+	public static void main(String[] args) {
 		BrokerMonitorWebServer bmWebServer = new BrokerMonitorWebServer();
 		bmWebServer.start(true);
 	}
-
 }
