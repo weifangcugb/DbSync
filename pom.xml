@@ -13,7 +13,13 @@
     <prerequisites>
         <maven>2.0.6</maven>
     </prerequisites>
-
+    <repositories>
+	<repository>
+	    <id>in-project</id>
+	    <name>In Project Repo</name>
+	    <url>file://${project.basedir}/src/resources</url>
+    	</repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.eclipse.jetty.aggregate</groupId>
@@ -69,19 +75,17 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-        <dependency>    
-            <groupId>com.oracle</groupId>    
-            <artifactId>ojdbc14</artifactId>    
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc14</artifactId>
             <version>10.2.0.4.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/resources/ojdbc14.jar</systemPath>
-        </dependency>    
+        </dependency>
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>sqljdbc4</artifactId>
-	       <version>3.0</version>
-<!--	       
-	       <scope>system</scope>
+	    <version>3.0</version>
+<!--
+	   <scope>system</scope>
     	   <systemPath>${project.basedir}/src/resources/sqljdbc4-3.0.jar</systemPath>
 -->
     	</dependency>
@@ -136,7 +140,7 @@
 
 
     <build>
-        <defaultGoal>install</defaultGoal>
+        <defaultGoal>package</defaultGoal>
 
         <plugins>
             <plugin>
@@ -146,7 +150,10 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
-                </configuration>
+		<compilerArguments>
+                   <extdirs>src/resources</extdirs>
+                </compilerArguments>
+	    </configuration>
             </plugin>
 
             <plugin>
@@ -169,39 +176,55 @@
                 </configuration>
             </plugin>
 
-
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                        	<mainClass>com.cloudbeaver.App</mainClass>
+	<plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-jar-plugin</artifactId>
+		<configuration>
+			<archive>
+				<manifest>
+				<addClasspath>true</addClasspath>
+				<classpathPrefix>lib/</classpathPrefix>
+				<mainClass>com.cloudbeaver.App</mainClass>
+				</manifest>
+			</archive>
+		</configuration>
+	</plugin>
+	<plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-dependency-plugin</artifactId>
+		<executions>
+			<execution>
+				<id>copy</id>
+				<phase>package</phase>
+				<goals>
+					<goal>copy-dependencies</goal>
+				</goals>
+				<configuration>
+					<outputDirectory>
+						${project.build.directory}/lib
+					</outputDirectory>
+				</configuration>
+			</execution>
+		</executions>
+	</plugin>
 <!--
-                            <mainClass>com.cloudbeaver.client.fileUploader.FileUploader</mainClass>
+	<plugin>
+		<artifactId>maven-source-plugin</artifactId>
+		<version>2.1</version>
+		<configuration>
+			<attach>true</attach>
+			<encoding>UTF-8</encoding>
+		</configuration>
+		<executions>
+			<execution>
+				<phase>compile</phase>
+				<goals>
+					<goal>jar</goal>
+				</goals>
+			</execution>
+		</executions>
+	</plugin>
 -->
-<!--
-							<mainClass>com.cloudbeaver.client.dbUploader.DbUploader</mainClass>
--->
-<!--
-	                        <mainClass>com.cloudbeaver.server.consumer.SyncConsumer</mainClass>
--->
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-            </plugin>
-
         </plugins>
     </build>
 
