@@ -15,7 +15,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 	protected static final long HEART_BEAT_INTERVAL = 180 * 1000;
 
     protected abstract void setup() throws BeaverFatalException;
-	protected abstract void doTask(Object taskObject);
+	protected abstract void doTask(Object taskObject) throws BeaverFatalException;
 	protected abstract int getThreadNum();
 	protected abstract Object getTaskObject(int index);
 	protected abstract long getSleepTimeBetweenTaskInnerLoop();
@@ -67,7 +67,12 @@ public abstract class FixedNumThreadPool implements Runnable{
 
 					logger.info("start thread to " + getTaskDescription() + ", threadId:" + thisThreadId);
 					while(KEEP_RUNNING){
-						doTask(taskObject);
+						try {
+							doTask(taskObject);
+						} catch (BeaverFatalException e) {
+							BeaverUtils.PrintStackTrace(e);
+							logger.fatal("got fatal error, exit. msg:" + e.getMessage());
+						}
 						BeaverUtils.sleep(getSleepTimeBetweenTaskInnerLoop());
 					}
 					logger.info("exit thread to " + getTaskDescription() + ", threadId:" + thisThreadId);

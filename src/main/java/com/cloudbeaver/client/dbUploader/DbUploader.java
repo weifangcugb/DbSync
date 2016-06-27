@@ -26,6 +26,9 @@ public class DbUploader extends CommonUploader{
     private String taskJson;
     private MultiDatabaseBean dbBeans;
 
+	private static final String DB_TYPE_SQL = "sqldb";
+	private static final String DB_TYPE_URL = "urldb";
+
     public String getTaskJson() {
 		return taskJson;
 	}
@@ -85,7 +88,7 @@ public class DbUploader extends CommonUploader{
 	}
 
 	@Override
-	public void doTask(Object taskObject) {
+	public void doTask(Object taskObject) throws BeaverFatalException{
 		DatabaseBean dbBean = (DatabaseBean)taskObject;
 		dbBean.setQueryTime((new Date()).toString());
 
@@ -95,34 +98,40 @@ public class DbUploader extends CommonUploader{
         		Date date = new Date();
         		dbBean.setQueryTime(date.toString());
         		tableBean.setQueryTime(date.toString());
-                logger.debug("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), DB_QEURY_LIMIT));
-                JSONArray jArray = new JSONArray();
-                String maxXgsj = null;
-				try {
-					maxXgsj = SqlHelper.execSqlQuery(prisonId, dbBean, tableBean, this, DB_QEURY_LIMIT, jArray);
-				} catch (SQLException e) {
-					BeaverUtils.PrintStackTrace(e);
-					logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("flume-server.url"));
-					SqlHelper.removeConnection(dbBean);
-					BeaverUtils.sleep(1000);
-					continue;
+
+        		String dbData = null;
+        		String maxXgsj = null;
+        		if (dbBean.getType().equals(DB_TYPE_SQL)) {
+        	        logger.debug("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), DB_QEURY_LIMIT));
+
+        	        JSONArray jArray = new JSONArray();
+        			try {
+        				maxXgsj = SqlHelper.execSqlQuery(prisonId, dbBean, tableBean, this, DB_QEURY_LIMIT, jArray);
+        			} catch (SQLException e) {
+        				BeaverUtils.PrintStackTrace(e);
+        				logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("db." + dbBean.getDb() + ".url"));
+
+        				SqlHelper.removeConnection(dbBean);
+        				BeaverUtils.sleep(1000);
+        				continue;
+        			}
+
+        	        logger.debug("get db data, json:" + jArray.toString());
+					if (jArray.isEmpty()) {
+//						start to query next table
+						break;
+					}
+
+					dbData = jArray.toString();
+				}else if (dbBean.getType().equals(DB_TYPE_URL)) {
+					
+				}else {
+					throw new BeaverFatalException("db type is wrong, type can only be 'sqldb' or 'urldb'");
 				}
-
-				if (maxXgsj == null) {
-//					time to exit, user ask to exist
-					return;
-				}
-
-                if (jArray.isEmpty()) {
-//	                no new record, next table
-    				break;
-    			}
-
-                logger.info("get db data, json:" + jArray.toString());
 
                 String flumeJson = null;
 				try {
-					flumeJson = BeaverUtils.compressAndFormatFlumeHttp(jArray.toString());
+					flumeJson = BeaverUtils.compressAndFormatFlumeHttp(dbData);
 				} catch (IOException e) {
 //					this is impossible unless system memory has some error, as I think
 					BeaverUtils.PrintStackTrace(e);
@@ -208,7 +217,7 @@ public class DbUploader extends CommonUploader{
 		}
 	}
 
-	private void loadTasks() throws IOException {
+	private void loadTasks() throws IOException, BeaverFatalException {
         String json = BeaverUtils.doGet(conf.get(CONF_TASK_SERVER_URL) + clientId);
         logger.debug("fetch tasks, tasks:" + json);
 
@@ -220,6 +229,12 @@ public class DbUploader extends CommonUploader{
         	dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
         	dbBean.setDbUserName(conf.get("db." + dbBean.getDb() + ".username"));
         	dbBean.setDbPassword(conf.get("db." + dbBean.getDb() + ".password"));
+        	String dbType = conf.get("db." + dbBean.getDb() + ".type");
+        	if (dbType.equals(DB_TYPE_SQL) || dbType.equals(DB_TYPE_URL)) {
+        		dbBean.setType(dbType);
+			}else {
+				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
+			}
         }
     }
 

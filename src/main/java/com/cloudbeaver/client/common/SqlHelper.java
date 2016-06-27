@@ -20,7 +20,7 @@ public class SqlHelper {
      */
     private static Hashtable conMap = new Hashtable();
 
-    public static Connection getConn(DatabaseBean dbBean, FixedNumThreadPool threadPool) {
+    public static Connection getConn(DatabaseBean dbBean, FixedNumThreadPool threadPool) throws BeaverFatalException {
         if (conMap.containsKey(dbBean.getDb())) {
             return (Connection) conMap.get(dbBean.getDb());
         } else {
@@ -47,17 +47,13 @@ public class SqlHelper {
     			}
 			}
 
-            return null;
+            throw new BeaverFatalException("program get stop request from user, exit now");
         }
     }
 
-	public static String execSqlQuery(String prisonId, DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException {
+	public static String execSqlQuery(String prisonId, DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
 		String sqlQuery = tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum);
 		Connection con = getConn(dbBean, threadPool);
-		if (!threadPool.isRunning() || con == null) {
-//			may be an exception is better
-			return null;
-		}
 
 		PreparedStatement pStatement = con.prepareStatement(sqlQuery);
         //s.setQueryTimeout(10);

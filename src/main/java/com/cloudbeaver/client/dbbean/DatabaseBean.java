@@ -22,8 +22,18 @@ public class DatabaseBean {
     String dbUrl = null;
     String dbUserName = null;
     String dbPassword = null;
+//  there are two types now, 'sqlDb' and 'urlDb'
+    String type = null;
 
-    public String getDbUrl() {
+    public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getDbUrl() {
 		return dbUrl;
 	}
 
