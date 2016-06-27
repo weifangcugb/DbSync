@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.fileUploader.FileUploader;
+import com.cloudbeaver.server.brokermonitor.BrokerMonitorWebServer;
 import com.cloudbeaver.server.consumer.SyncConsumer;
 
 public class App {
@@ -101,7 +102,9 @@ public class App {
                     case "syncConsumer":
                     	SyncConsumer.startSyncConsumer();
                     	break;
-                    
+                    case "brokerMonitor":
+                    	BrokerMonitorWebServer.startBrokerMonitor();
+                    	break;
                     default:
                     	throw new ParseException("module name is wrong");
                 }
