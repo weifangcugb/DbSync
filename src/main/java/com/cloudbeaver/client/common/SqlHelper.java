@@ -29,13 +29,19 @@ public class SqlHelper {
                 driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
             } else if (dbBean.getDbUrl().startsWith("jdbc:oracle")) {
                 driverClassName = "oracle.jdbc.driver.OracleDriver";
+            } else if (dbBean.getDbUrl().startsWith("jdbc:sqlite")){
+            	driverClassName = "org.sqlite.JDBC";
             }
 
             logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
             while (threadPool.isRunning()) {
                 try {
     				Class.forName(driverClassName);
-                    Connection conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
+    				Connection conn = null;
+    				if(dbBean.getDbUrl().startsWith("jdbc:sqlite"))
+    					conn = DriverManager.getConnection(dbBean.getDbUrl());
+    				else
+    					conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
                     conMap.put(dbBean.getDb(), conn);
                     return conn;
     			} catch (ClassNotFoundException | SQLException e) {

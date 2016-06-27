@@ -12,17 +12,21 @@ import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
+import com.cloudbeaver.mockServer.MockSqlServer;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@Ignore
+//@Ignore
 public class AppTest{
 	private static MockWebServer mockServer = new MockWebServer();
+	private static MockSqlServer mockSqlServer = new MockSqlServer();
 
 	@BeforeClass
 	public static void setUpServers(){
-//	start the mocked web server
+		//start the mocked SqlServer
+//		mocksqlserver.
+		//start the mocked web server
 		mockServer.start(false);
 	}
 

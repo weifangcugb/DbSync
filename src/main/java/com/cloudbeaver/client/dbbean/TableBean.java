@@ -52,9 +52,12 @@ public class TableBean {
     }
 
     public String getSqlString(String prisonId, String dbName, String rowVersionColumn, int sqlLimitNum) {
-        return "SELECT top " + sqlLimitNum + " '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-                table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
-                + " order by " + table + "." + rowVersionColumn;
+//        return "SELECT top " + sqlLimitNum + " '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
+//                table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+//                + " order by " + table + "." + rowVersionColumn;
+        return "SELECT " + " '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
+        table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+        + " order by " + table + "." + rowVersionColumn + " limit " + sqlLimitNum;
     }
 
     private String fromClause() {
