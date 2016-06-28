@@ -26,6 +26,10 @@ public class DbUploader extends CommonUploader{
     private String taskJson;
     private MultiDatabaseBean dbBeans;
 
+    public Map<String, String> getConf() {
+		return conf;
+	}
+    
     public String getTaskJson() {
 		return taskJson;
 	}

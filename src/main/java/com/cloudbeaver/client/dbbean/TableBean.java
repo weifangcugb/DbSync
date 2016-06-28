@@ -29,9 +29,9 @@ public class TableBean {
     }
 
     public void setXgsj(String maxXgsj) {
-    	if (!maxXgsj.startsWith("0x")) {
-			maxXgsj = "0x" + maxXgsj;
-		}
+//    	if (!maxXgsj.startsWith("0x")) {
+//			maxXgsj = "0x" + maxXgsj;
+//		}
         this.xgsj = maxXgsj;
     }
 
