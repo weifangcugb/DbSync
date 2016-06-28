@@ -13,16 +13,23 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+
+import scala.annotation.meta.param;
 
 //import com.sun.image.codec.jpeg.JPEGCodec;
 //import com.sun.image.codec.jpeg.JPEGImageEncoder;
@@ -33,6 +40,8 @@ public class BeaverUtils {
 	public static String DEFAULT_CHARSET = "utf-8";
 
 	public static boolean DEBUG_MODE = true;
+
+	private static SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
 
 	public static void PrintStackTrace(Exception e) {
 		if (DEBUG_MODE) {
@@ -89,11 +98,20 @@ public class BeaverUtils {
         }
 	}
 
+	public static StringBuilder doPost(String webUrl, Map<String, String> paraMap, String contentType) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		Set<String> keySet = paraMap.keySet();
+		for (String key : keySet) {
+			sb.append(key).append('=').append(paraMap.get(key)).append('&');
+		}
+		return doPost(webUrl, sb.toString(), contentType);
+	}
+
 	public static String doPost(String urlString, String flumeJson) throws IOException {
-		return doPost(urlString, flumeJson, "application/json");
+		return doPost(urlString, flumeJson, "application/json").toString();
 	}
 	
-	public static String doPost(String urlString, String flumeJson, String contentType) throws IOException {
+	private static StringBuilder doPost(String urlString, String flumeJson, String contentType) throws IOException {
 		BufferedReader br = null;
 		HttpURLConnection urlConnection = null;
 		try {
@@ -108,23 +126,25 @@ public class BeaverUtils {
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
 	        urlConnection.setRequestProperty("Content-Length", "" + flumeJson.length());
 	        urlConnection.setConnectTimeout(20000);
+	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
 
-//	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
-	        urlConnection.setDoOutput(true);
-	        PrintWriter pWriter = new PrintWriter((urlConnection.getOutputStream()));
-	        pWriter.write(flumeJson);
-	        pWriter.flush();
-	        pWriter.close();
+	        if (flumeJson != null) {
+		        urlConnection.setDoOutput(true);
+		        PrintWriter pWriter = new PrintWriter((urlConnection.getOutputStream()));
+		        pWriter.write(flumeJson);
+		        pWriter.flush();
+		        pWriter.close();				
+			}
 
 	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 	        String line = "";
-	        StringBuffer sb = new StringBuffer();
+	        StringBuilder sb = new StringBuilder();
 	        while ((line = in.readLine()) != null) {
 	            sb.append(line);
 	        }
 
 	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + urlConnection.getResponseCode() + " reply:" + sb.toString());
-	        return sb.toString();
+	        return sb;
 		}finally {
 			if (br != null) {
 				try {
@@ -246,5 +266,63 @@ public class BeaverUtils {
 		BeaverUtils.PrintStackTrace(e);
 		logger.error(msgPrefix + e.getMessage());
 		BeaverUtils.sleep(3 * 1000);
+	}
+
+	public static String getRequestSign(Map<String, String> paraMap, String appSecret) throws NoSuchAlgorithmException {
+//		the keys in the paraMap should be ordered
+		StringBuilder sb = new StringBuilder();
+		sb.append(appSecret);
+		Set<String> keySet = paraMap.keySet();
+		for (String key : keySet) {
+			sb.append(key).append(paraMap.get(key));
+		}
+		sb.append(appSecret);
+
+		MessageDigest md = MessageDigest.getInstance("md5");
+		return toHexString(md.digest(sb.toString().getBytes()));
+	}
+
+	private static String toHexString(byte bytes[]) {
+        StringBuilder hs = new StringBuilder();
+        String stmp = "";
+        for (int n = 0; n < bytes.length; n++) {
+            stmp = Integer.toHexString(bytes[n] & 0xff);
+            if (stmp.length() == 1)
+                hs.append("0").append(stmp);
+            else
+                hs.append(stmp);
+        }
+ 
+        return hs.toString();
+    }
+
+	public static String timestampToDateString(String timestamp) {
+		Date date = new Date(hexTolong(timestamp));
+		return sdf.format(date);
+	}
+
+	public static boolean charIsNumber(char tmpChar) {
+		return tmpChar >= '0' && tmpChar <= '9';
+	}
+
+	public static int getNumberFromStringBuilder(StringBuilder sb, String prefix) throws NumberFormatException {
+		int startIndex = sb.indexOf(prefix) + 1;
+		if (startIndex != -1) {
+			while(!BeaverUtils.charIsNumber(sb.charAt(startIndex)) && startIndex < sb.length()){
+				startIndex ++;
+			}
+
+			if (startIndex < sb.length()) {
+				int endIndex = startIndex;
+				for (; endIndex < sb.length(); endIndex++) {
+					if (!BeaverUtils.charIsNumber(sb.charAt(endIndex))) {
+						return Integer.parseInt(sb.substring(startIndex, endIndex));
+					}
+				}
+			}
+		}
+
+//		got an error, TODO: maybe should jump this day
+		return -1;
 	}
 }

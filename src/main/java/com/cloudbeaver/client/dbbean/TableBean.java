@@ -2,6 +2,8 @@ package com.cloudbeaver.client.dbbean;
 
 import org.apache.log4j.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.ArrayList;
 
 /**
@@ -15,8 +17,29 @@ public class TableBean {
     private ArrayList<String> join = null;
     private String key = null;
     private String queryTime= null;
-    
-    public String getTable() {
+
+    @JsonIgnore
+    private int currentPageNum = 1;
+    @JsonIgnore
+    private int totalPageNum = 1;
+
+    public int getTotalPageNum() {
+		return totalPageNum;
+	}
+
+	public void setTotalPageNum(int totalPageNum) {
+		this.totalPageNum = totalPageNum;
+	}
+
+	public int getCurrentPageNum() {
+		return currentPageNum;
+	}
+
+	public void setCurrentPageNum(int currentPageNum) {
+		this.currentPageNum = currentPageNum;
+	}
+
+	public String getTable() {
         return table;
     }
 

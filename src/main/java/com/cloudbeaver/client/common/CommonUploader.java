@@ -1,13 +1,15 @@
 package com.cloudbeaver.client.common;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class CommonUploader extends FixedNumThreadPool{
 //	private final static String CONF_FILE_PREFIX = "/opt/dbsync/";
 	private static final String CONF_FILE_PREFIX = "conf/";
-
 	public static final String CONF_DBSYNC_DB_FILENAME = CONF_FILE_PREFIX + "SyncClient_DB.properties";
 	public static final String CONF_DBSYNC_FILE_FILENAME = CONF_FILE_PREFIX + "SyncClient_File.properties";
 	public static final String CONF_KAFKA_CONSUMER_FILE_NAME = CONF_FILE_PREFIX + "SyncConsumer.properties";
-	public static final int DB_QEURY_LIMIT = 15;
+	public static final int DB_QEURY_LIMIT = 30;
 
 	public static final String CONF_CLIENT_ID = "client.id";
 	public static final String CONF_FLUME_SERVER_URL = "flume-server.url";

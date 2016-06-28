@@ -3,7 +3,6 @@ package com.cloudbeaver.client.dbbean;
 import org.apache.log4j.*;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * bean for one database
@@ -12,20 +11,40 @@ public class DatabaseBean {
     private static Logger logger = Logger.getLogger(DatabaseBean.class);
 
     ArrayList<TableBean> tables = new ArrayList<TableBean>();
-    String rowversion = null;
-    String prison = null;
-    String db = null;
+    String rowversion;
+    String prison;
+    String db;
 
-    String queryTime = null;
+    String queryTime;
 
 //    db configs
-    String dbUrl = null;
-    String dbUserName = null;
-    String dbPassword = null;
-//  there are two types now, 'sqlDb' and 'urlDb'
-    String type = null;
+    String dbUrl;
+    String dbUserName;
+    String dbPassword;
 
-    public String getType() {
+    String appKey;
+    String appSecret;
+    
+//  there are two types now, 'sqlDb' and 'urlDb'
+    String type;
+
+    public String getAppKey() {
+		return appKey;
+	}
+
+	public void setAppKey(String appKey) {
+		this.appKey = appKey;
+	}
+
+	public String getAppSecret() {
+		return appSecret;
+	}
+
+	public void setAppSecret(String appSecret) {
+		this.appSecret = appSecret;
+	}
+
+	public String getType() {
 		return type;
 	}
 

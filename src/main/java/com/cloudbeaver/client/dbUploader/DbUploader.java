@@ -15,8 +15,10 @@ import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 public class DbUploader extends CommonUploader{
@@ -25,6 +27,10 @@ public class DbUploader extends CommonUploader{
     private Map<String, String> conf;
     private String taskJson;
     private MultiDatabaseBean dbBeans;
+
+    private static Map<String, String> appKeySecret = new HashMap<String, String>();
+    private static String appPreDefKey = "tmpKey";
+    private static String appPreDefSecret = "tmpSecret";
 
 	private static final String DB_TYPE_SQL = "sqldb";
 	private static final String DB_TYPE_URL = "urldb";
@@ -39,6 +45,8 @@ public class DbUploader extends CommonUploader{
 
 	@Override
 	public void setup() throws BeaverFatalException {
+		appKeySecret.put(appPreDefKey, appPreDefSecret);
+
         try {
 			conf = BeaverUtils.loadConfig(CONF_DBSYNC_DB_FILENAME);
 	        if (conf.containsKey(CONF_CLIENT_ID) && conf.get(CONF_CLIENT_ID).contains("_")) {
@@ -108,11 +116,8 @@ public class DbUploader extends CommonUploader{
         			try {
         				maxXgsj = SqlHelper.execSqlQuery(prisonId, dbBean, tableBean, this, DB_QEURY_LIMIT, jArray);
         			} catch (SQLException e) {
-        				BeaverUtils.PrintStackTrace(e);
-        				logger.error("sql query faild, msg:" + e.getMessage() + " url:" + conf.get("db." + dbBean.getDb() + ".url"));
-
+        				BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
         				SqlHelper.removeConnection(dbBean);
-        				BeaverUtils.sleep(1000);
         				continue;
         			}
 
@@ -124,7 +129,34 @@ public class DbUploader extends CommonUploader{
 
 					dbData = jArray.toString();
 				}else if (dbBean.getType().equals(DB_TYPE_URL)) {
-					
+					String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
+					logger.debug("requet one weburl, webUrl:" + webUrl);
+					Map<String, String> paraMap = new HashMap<String, String>();
+					paraMap.put("appkey", dbBean.getAppKey());
+					paraMap.put("pageno", "" + tableBean.getCurrentPageNum() + 1);
+					paraMap.put("pagesize", "" + DB_QEURY_LIMIT);
+					paraMap.put("starttime", BeaverUtils.timestampToDateString(tableBean.getXgsj()));
+					paraMap.put("endtime", BeaverUtils.timestampToDateString(tableBean.getXgsj() + 24 * 3600 * 1000));
+
+					try {
+						String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
+						paraMap.put("sign", sign);
+						StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "text/plain");
+						tableBean.setTotalPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":"));
+						tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"pageNo\":"));
+						if (tableBean.getTotalPageNum() == tableBean.getCurrentPageNum()) {
+//							move to next day
+							maxXgsj = tableBean.getXgsj() + 24 * 3600 * 1000;
+//							TODO: fetch data until yestoday
+						}
+						dbData = sb.toString();
+					} catch (NoSuchAlgorithmException e) {
+						BeaverUtils.PrintStackTrace(e);
+						throw new BeaverFatalException("no md5 algorithm, exit. msg:" + e.getMessage());
+					}catch (IOException | NumberFormatException e) {
+						BeaverUtils.printLogExceptionAndSleep(e, "get ioexception when request data, url:" + webUrl + " msg:", 500);
+						continue;
+					}
 				}else {
 					throw new BeaverFatalException("db type is wrong, type can only be 'sqldb' or 'urldb'");
 				}
@@ -134,9 +166,7 @@ public class DbUploader extends CommonUploader{
 					flumeJson = BeaverUtils.compressAndFormatFlumeHttp(dbData);
 				} catch (IOException e) {
 //					this is impossible unless system memory has some error, as I think
-					BeaverUtils.PrintStackTrace(e);
-					logger.error("write gzip stream to memory error, msg:" + e.getMessage());
-					BeaverUtils.sleep(1000);
+					BeaverUtils.printLogExceptionAndSleep(e, "write gzip stream to memory error, msg:", 1000);
 					continue;
 				}
 
@@ -149,15 +179,17 @@ public class DbUploader extends CommonUploader{
 					}
 //    				logger.info("send db data to flume server, json:" + flumeJson);
     			} catch (IOException e) {
-    				BeaverUtils.PrintStackTrace(e);
-    				logger.error("post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL) + " json:" + flumeJson);
-    				BeaverUtils.sleep(1000);
+    				BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL) + " json:" + flumeJson, 1000);
     			}
 
                 BeaverUtils.sleep(100);
 			}
         	BeaverUtils.sleep(100);
         }
+	}
+
+	private String getDBDataServerUrl(String dbUrl, String table) {
+		return dbUrl.replaceAll("\\{tableName\\}", table);
 	}
 
 	@Override
@@ -234,6 +266,12 @@ public class DbUploader extends CommonUploader{
         		dbBean.setType(dbType);
 			}else {
 				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
+			}
+
+			String appKey = conf.get("db." + dbBean.getDb() + ".appKey");
+			if (appKey != null) {
+				dbBean.setAppKey(appKey);
+				dbBean.setAppSecret(appKey);
 			}
         }
     }
