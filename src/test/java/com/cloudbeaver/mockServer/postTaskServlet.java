@@ -85,7 +85,7 @@ public class postTaskServlet extends HttpServlet{
 			if(dbBean.getDb().equals(database)){
 				for (TableBean tBean : dbBean.getTables()) {
 					if(tBean.getTable().equals(table)){
-						if(maxxgsj > Long.parseLong(tBean.getXgsj())){
+						if(maxxgsj > Long.parseLong(tBean.getXgsj().substring("0x".length()))){
 							tBean.setXgsj(String.valueOf(maxxgsj));
 							System.out.println("update table："+tBean.getTable()+" "+tBean.getXgsj());
 							return;

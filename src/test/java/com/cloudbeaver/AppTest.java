@@ -16,6 +16,7 @@ import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
+import com.cloudbeaver.mockServer.MockSqlHelper;
 import com.cloudbeaver.mockServer.MockSqlServer;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -58,7 +59,7 @@ public class AppTest{
 				for (TableBean tBean : dbBean.getTables()) {
 					JSONArray jArray = new JSONArray();
 					String maxVersion = null;
-					maxVersion = SqlHelper.execSqlQuery(DbUploader.getPrisonId(), dbBean, tBean, dbUploader, 1, jArray);
+					maxVersion = MockSqlHelper.execSqlQuery(DbUploader.getPrisonId(), dbBean, tBean, dbUploader, 2, jArray);
 
 //					jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
 					ObjectMapper oMapper = new ObjectMapper();
@@ -118,7 +119,7 @@ public class AppTest{
 		for(int i = 0;i<dbBean.getTables().size();i++){
 			TableBean tableBean = dbBean.getTables().get(i);
 			if(tableBean.getTable().equals(tBean.getTable())){
-				String xgsj = tableBean.getXgsj();
+				String xgsj = tableBean.getXgsj().substring("0x".length());
 				Assert.assertTrue("max xgsj is less than old xgsj", Long.parseLong(maxVersion) > Long.parseLong(xgsj));
 				tableBean.setXgsj(maxVersion);
 				return;
