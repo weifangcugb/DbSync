@@ -28,12 +28,16 @@ public class DbUploader extends CommonUploader{
     private String taskJson;
     private MultiDatabaseBean dbBeans;
 
+	private int WEB_DB_UPDATE_INTERVAL = 24 * 3600;
+
     private static Map<String, String> appKeySecret = new HashMap<String, String>();
     private static String appPreDefKey = "tmpKey";
     private static String appPreDefSecret = "tmpSecret";
 
 	private static final String DB_TYPE_SQL = "sqldb";
 	private static final String DB_TYPE_URL = "urldb";
+
+	private static final Object DB_ROW_VERSION_START_TIME = "starttime";
 
     public String getTaskJson() {
 		return taskJson;
@@ -110,11 +114,11 @@ public class DbUploader extends CommonUploader{
         		String dbData = null;
         		String maxXgsj = null;
         		if (dbBean.getType().equals(DB_TYPE_SQL)) {
-        	        logger.debug("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), DB_QEURY_LIMIT));
+        	        logger.debug("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), SQL_DB_QEURY_LIMIT));
 
         	        JSONArray jArray = new JSONArray();
         			try {
-        				maxXgsj = SqlHelper.execSqlQuery(prisonId, dbBean, tableBean, this, DB_QEURY_LIMIT, jArray);
+        				maxXgsj = SqlHelper.execSqlQuery(prisonId, dbBean, tableBean, this, SQL_DB_QEURY_LIMIT, jArray);
         			} catch (SQLException e) {
         				BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
         				SqlHelper.removeConnection(dbBean);
@@ -128,34 +132,52 @@ public class DbUploader extends CommonUploader{
 					}
 
 					dbData = jArray.toString();
-				}else if (dbBean.getType().equals(DB_TYPE_URL)) {
-					String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
-					logger.debug("requet one weburl, webUrl:" + webUrl);
-					Map<String, String> paraMap = new HashMap<String, String>();
-					paraMap.put("appkey", dbBean.getAppKey());
-					paraMap.put("pageno", "" + tableBean.getCurrentPageNum() + 1);
-					paraMap.put("pagesize", "" + DB_QEURY_LIMIT);
-					paraMap.put("starttime", BeaverUtils.timestampToDateString(tableBean.getXgsj()));
-					paraMap.put("endtime", BeaverUtils.timestampToDateString(tableBean.getXgsj() + 24 * 3600 * 1000));
+				}else if (dbBean.getType().equals(DB_TYPE_URL) && dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)) {
+					if(System.currentTimeMillis()/1000 - Long.parseLong(tableBean.getXgsj())/1000 > WEB_DB_UPDATE_INTERVAL ){
+//					    TODO: fetch data until yesterday
+    					String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
+    					logger.debug("requet one weburl, webUrl:" + webUrl);
+    					Map<String, String> paraMap = new HashMap<String, String>();
+    					paraMap.put("appkey", dbBean.getAppKey());
 
-					try {
-						String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
-						paraMap.put("sign", sign);
-						StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "text/plain");
-						tableBean.setTotalPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":"));
-						tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"pageNo\":"));
-						if (tableBean.getTotalPageNum() == tableBean.getCurrentPageNum()) {
-//							move to next day
-							maxXgsj = tableBean.getXgsj() + 24 * 3600 * 1000;
-//							TODO: fetch data until yestoday
+    					if (tableBean.getCurrentPageNum() != 0) {
+    						paraMap.put("pageno", "" + tableBean.getCurrentPageNum() + 1);
+    					}
+
+    					if (dbBean.getDb().equals("PrasDB") && tableBean.getTable().equals("pras/getTable")) {
+    						paraMap.put("pagesize", "" + 1);
+						}else {
+	    					paraMap.put("pagesize", "" + WEB_DB_QEURY_LIMIT);
+	    					paraMap.put("starttime", BeaverUtils.timestampToDateString(tableBean.getXgsj()));
+	    					paraMap.put("endtime", BeaverUtils.timestampToDateString(tableBean.getXgsj() + WEB_DB_UPDATE_INTERVAL));
 						}
-						dbData = sb.toString();
-					} catch (NoSuchAlgorithmException e) {
-						BeaverUtils.PrintStackTrace(e);
-						throw new BeaverFatalException("no md5 algorithm, exit. msg:" + e.getMessage());
-					}catch (IOException | NumberFormatException e) {
-						BeaverUtils.printLogExceptionAndSleep(e, "get ioexception when request data, url:" + webUrl + " msg:", 500);
-						continue;
+
+    					try {
+    						String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
+    						paraMap.put("sign", sign);
+    						StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "text/plain");
+//    						TODO:check whether totalpagenum is 0
+    						tableBean.setTotalPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":"));
+    						tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"pageNo\":"));
+    						if (tableBean.getTotalPageNum() == tableBean.getCurrentPageNum()) {
+//    							move to next day
+    							maxXgsj = tableBean.getXgsj() + 24 * 3600 * 1000;
+    							tableBean.setCurrentPageNum(0);
+    							tableBean.setTotalPageNum(0);
+    						}
+    						dbData = sb.toString();
+
+    						logger.info("web query finished, time:" + tableBean.getXgsj() + " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:" + tableBean.getTotalPageNum());
+    					} catch (NoSuchAlgorithmException e) {
+    						BeaverUtils.PrintStackTrace(e);
+    						throw new BeaverFatalException("no md5 algorithm, exit. msg:" + e.getMessage());
+    					}catch (IOException | NumberFormatException e) {
+    						BeaverUtils.printLogExceptionAndSleep(e, "get ioexception when request data, url:" + webUrl + " msg:", 500);
+    						continue;
+    					}
+					}else {
+//						data within a day
+						break;
 					}
 				}else {
 					throw new BeaverFatalException("db type is wrong, type can only be 'sqldb' or 'urldb'");
@@ -184,7 +206,7 @@ public class DbUploader extends CommonUploader{
 
                 BeaverUtils.sleep(100);
 			}
-        	BeaverUtils.sleep(100);
+        	BeaverUtils.sleep(1000);
         }
 	}
 

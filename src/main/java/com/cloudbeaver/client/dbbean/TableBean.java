@@ -18,10 +18,11 @@ public class TableBean {
     private String key = null;
     private String queryTime= null;
 
+//	the following two params only for YouDi system
     @JsonIgnore
-    private int currentPageNum = 1;
+    private int currentPageNum = 0;
     @JsonIgnore
-    private int totalPageNum = 1;
+    private int totalPageNum = 0;
 
     public int getTotalPageNum() {
 		return totalPageNum;

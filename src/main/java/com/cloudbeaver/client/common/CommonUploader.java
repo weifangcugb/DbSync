@@ -9,7 +9,8 @@ public abstract class CommonUploader extends FixedNumThreadPool{
 	public static final String CONF_DBSYNC_DB_FILENAME = CONF_FILE_PREFIX + "SyncClient_DB.properties";
 	public static final String CONF_DBSYNC_FILE_FILENAME = CONF_FILE_PREFIX + "SyncClient_File.properties";
 	public static final String CONF_KAFKA_CONSUMER_FILE_NAME = CONF_FILE_PREFIX + "SyncConsumer.properties";
-	public static final int DB_QEURY_LIMIT = 30;
+	public static final int SQL_DB_QEURY_LIMIT = 30;
+	public static final int WEB_DB_QEURY_LIMIT = 30;
 
 	public static final String CONF_CLIENT_ID = "client.id";
 	public static final String CONF_FLUME_SERVER_URL = "flume-server.url";
