@@ -70,7 +70,7 @@ public class postTaskServlet extends HttpServlet{
 				table = iob.get("hdfs_table");
 				database = iob.get("hdfs_db");
 				
-				searchOriginTask(databases,database,table,maxxgsj,i);
+				searchOriginTask(databases,database,table,maxxgsj);
 				
 				//GetTaskServlet.setDodumentDBInitJson(databases);
 //				System.out.println(GetTaskServlet.getDodumentDBInitJson());
@@ -79,8 +79,8 @@ public class postTaskServlet extends HttpServlet{
 		}
     }
     
-    public static void searchOriginTask(MultiDatabaseBean databases,Object database,Object table,long maxxgsj, int i) throws IOException{
-		for(int j = 0;j<databases.getDatabases().size();j++){
+    public static void searchOriginTask(MultiDatabaseBean databases,Object database,Object table,long maxxgsj) throws IOException{
+		for(int i = 0; i < databases.getDatabases().size(); i++){
 			DatabaseBean dbBean = databases.getDatabases().get(i);
 			if(dbBean.getDb().equals(database)){
 				for (TableBean tBean : dbBean.getTables()) {

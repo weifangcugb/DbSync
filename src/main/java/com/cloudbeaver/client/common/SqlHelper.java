@@ -65,9 +65,12 @@ public class SqlHelper {
 			return null;
 		}
 
-		PreparedStatement pStatement = con.prepareStatement(sqlQuery);
-        //s.setQueryTimeout(10);
-        ResultSet rs = pStatement.executeQuery();
+		Statement statement = con.createStatement();
+		ResultSet rs = statement.executeQuery(sqlQuery);
+
+//		PreparedStatement pStatement = con.prepareStatement(sqlQuery);
+//        //s.setQueryTimeout(10);
+//        ResultSet rs = pStatement.executeQuery();
 
         String maxXgsjUtilNow = tableBean.getXgsj();
         ResultSetMetaData metaData = rs.getMetaData();

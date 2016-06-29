@@ -26,6 +26,7 @@ public class DbUploader extends CommonUploader{
     private String taskJson;
     private MultiDatabaseBean dbBeans;
 
+    //for test
     public Map<String, String> getConf() {
 		return conf;
 	}
@@ -36,6 +37,11 @@ public class DbUploader extends CommonUploader{
 
 	public void setTaskJson(String taskJson) {
 		this.taskJson = taskJson;
+	}
+	
+	//for test
+	public MultiDatabaseBean getDbBeans(){
+		return dbBeans;
 	}
 
 	@Override
@@ -99,7 +105,7 @@ public class DbUploader extends CommonUploader{
         		Date date = new Date();
         		dbBean.setQueryTime(date.toString());
         		tableBean.setQueryTime(date.toString());
-                logger.debug("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), DB_QEURY_LIMIT));
+                logger.info("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), DB_QEURY_LIMIT));
                 JSONArray jArray = new JSONArray();
                 String maxXgsj = null;
 				try {

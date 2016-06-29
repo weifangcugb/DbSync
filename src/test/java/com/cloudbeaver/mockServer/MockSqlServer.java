@@ -1,11 +1,9 @@
 package com.cloudbeaver.mockServer;
 
-
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,14 +73,15 @@ public class MockSqlServer {
 //	        		if(s.contains("[xgsj]") && s.contains("[id]")){
 //	        			sql = "alter table "+name+" add column xgsj2 NUMERIC;";
 //	        			stmt.executeUpdate(sql);
-	        			a++;
+//	        			a++;
 //	        			r.add(name);
 //	        			break;
 //	        		}else if(s.contains("[xgsj]") && !s.contains("[id]")){
 //	        			b++;
-//	        			temp = name;
+//	        			System.out.println(name);
 //	        			break;
 //	        		}else if(!s.contains("[xgsj]")){
+//	        			System.out.println(name);
 //	        			count++;
 //	        			break;
 //	        		}
@@ -95,7 +94,7 @@ public class MockSqlServer {
 	        		}
 	        	}
 	        }
-//	        System.out.println("表的总数:"+list.size());
+	        System.out.println("表的总数:"+list.size());
 //	        System.out.println("没有xgsj:"+count);
 //	        System.out.println("有xgsj，没有id:"+b);
 //	        System.out.println("有xgsj，有id:"+a);
