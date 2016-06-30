@@ -26,7 +26,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 //		as default, do nothing
 	}
 
-	private volatile boolean KEEP_RUNNING = true;
+	private static volatile boolean KEEP_RUNNING = true;
 
 	@Override
 	public void run() {
@@ -108,7 +108,7 @@ public abstract class FixedNumThreadPool implements Runnable{
 		logger.info("start thread pool, task:" + getTaskDescription());
 	}
 
-	public boolean isRunning(){
+	public static boolean isRunning(){
 		return KEEP_RUNNING;
 	}
 

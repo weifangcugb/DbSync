@@ -18,9 +18,9 @@ public class SqlHelper {
      * one connection per db
      * so this class can't used in multi-thread env
      */
-    private static Hashtable conMap = new Hashtable();
+    private static Hashtable<String, Connection> conMap = new Hashtable<String, Connection>();
 
-    public static Connection getConn(DatabaseBean dbBean, FixedNumThreadPool threadPool) throws BeaverFatalException {
+    public static Connection getConn(DatabaseBean dbBean) throws BeaverFatalException {
         if (conMap.containsKey(dbBean.getDb())) {
             return (Connection) conMap.get(dbBean.getDb());
         } else {
@@ -32,18 +32,15 @@ public class SqlHelper {
             }
 
             logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
-            while (threadPool.isRunning()) {
+            while (FixedNumThreadPool.isRunning()) {
                 try {
     				Class.forName(driverClassName);
                     Connection conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
                     conMap.put(dbBean.getDb(), conn);
                     return conn;
     			} catch (ClassNotFoundException | SQLException e) {
-    	            BeaverUtils.PrintStackTrace(e);
-    	            logger.error("get sql connection error, msg:" + e.getMessage());
-    	            conMap.remove(dbBean.getDb());
-
-    	            BeaverUtils.sleep(3 * 1000);
+    				conMap.remove(dbBean.getDb());
+    				BeaverUtils.printLogExceptionAndSleep(e, "get sql connection error, msg:", 3 * 1000);
     			}
 			}
 
@@ -51,34 +48,44 @@ public class SqlHelper {
         }
     }
 
-	public static String execSqlQuery(String prisonId, DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
-		String sqlQuery = tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum);
-		Connection con = getConn(dbBean, threadPool);
+	public static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
+		Connection con = getConn(dbBean);
 
 		PreparedStatement pStatement = con.prepareStatement(sqlQuery);
         //s.setQueryTimeout(10);
         ResultSet rs = pStatement.executeQuery();
 
-        String maxXgsjUtilNow = tableBean.getXgsj();
+        String maxXgsjUtilNow = CommonUploader.DB_EMPTY_ROW_VERSION;
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
         while (rs.next()) {
-            JSONObject jsonObj = new JSONObject();
+            if (jArray != null) {
+                JSONObject jsonObj = new JSONObject();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName =metaData.getColumnLabel(i);
+                    String value = rs.getString(columnName);
+                    if (value == null) value = "";
 
-            for (int i = 1; i <= columnCount; i++) {
-                String columnName =metaData.getColumnLabel(i);
-                String value = rs.getString(columnName);
-                if (value == null) value = "";
+                    jsonObj.put(columnName.trim(), value.trim());
+                }
 
-                jsonObj.put(columnName.trim(), value.trim());
-            }
-            jArray.add(jsonObj);
-            String ts = rs.getString(dbBean.getRowversion());
+            	jArray.add(jsonObj);
+			}
 
-            maxXgsjUtilNow = ts;
+            maxXgsjUtilNow = rs.getString(dbBean.getRowversion());
         }
 
         return maxXgsjUtilNow;
+	}
+
+	public static String getDBData(String prisonId, DatabaseBean dbBean,TableBean tableBean, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
+		String sqlQuery = tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), sqlLimitNum);
+		return execSqlQuery(sqlQuery, dbBean, jArray);
+	}
+
+	public static String getMaxRowVersion(DatabaseBean dbBean, TableBean tableBean) throws SQLException, BeaverFatalException{
+		String sqlQuery = tableBean.getMaxRowVersionSqlString(dbBean.getType(), dbBean.getRowversion());
+		return execSqlQuery(sqlQuery, dbBean, null);
 	}
 
 	public static void removeConnection(DatabaseBean dbBean) {

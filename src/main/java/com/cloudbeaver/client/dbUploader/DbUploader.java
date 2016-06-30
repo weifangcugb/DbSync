@@ -6,6 +6,8 @@ import net.sf.json.JSONObject;
 import org.apache.log4j.*;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
+import com.cloudbeaver.client.common.BeaverTableIsFullException;
+import com.cloudbeaver.client.common.BeaverTableNeedRetryException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.common.CommonUploader;
@@ -34,10 +36,7 @@ public class DbUploader extends CommonUploader{
     private static String appPreDefKey = "tmpKey";
     private static String appPreDefSecret = "tmpSecret";
 
-	private static final String DB_TYPE_SQL = "sqldb";
-	private static final String DB_TYPE_URL = "urldb";
-
-	private static final Object DB_ROW_VERSION_START_TIME = "starttime";
+	private static final String DB_ROW_VERSION_START_TIME = "starttime";
 
     public String getTaskJson() {
 		return taskJson;
@@ -112,28 +111,28 @@ public class DbUploader extends CommonUploader{
         		tableBean.setQueryTime(date.toString());
 
         		String dbData = null;
-        		String maxXgsj = null;
-        		if (dbBean.getType().equals(DB_TYPE_SQL)) {
-        	        logger.debug("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), SQL_DB_QEURY_LIMIT));
-
-        	        JSONArray jArray = new JSONArray();
-        			try {
-        				maxXgsj = SqlHelper.execSqlQuery(prisonId, dbBean, tableBean, this, SQL_DB_QEURY_LIMIT, jArray);
-        			} catch (SQLException e) {
-        				BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
-        				SqlHelper.removeConnection(dbBean);
-        				continue;
-        			}
-
-        	        logger.debug("get db data, json:" + jArray.toString());
-					if (jArray.isEmpty()) {
-//						start to query next table
+        		if (dbBean.getType().equals(DB_TYPE_SQL_SERVER)) {
+        	        try {
+						dbData = getDataFromSqlServer(dbBean, tableBean);
+					} catch (BeaverTableIsFullException e) {
+//						move next table
 						break;
+					} catch (BeaverTableNeedRetryException e) {
+//						retry this table
+						continue;
 					}
-
-					dbData = jArray.toString();
-				}else if (dbBean.getType().equals(DB_TYPE_URL) && dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)) {
-					if(System.currentTimeMillis()/1000 - Long.parseLong(tableBean.getXgsj())/1000 > WEB_DB_UPDATE_INTERVAL ){
+				}else if (dbBean.getType().equals(DB_TYPE_SQL_ORACLE)) {
+        	        try {
+						dbData = getDataFromOracle(dbBean, tableBean);
+					} catch (BeaverTableIsFullException e) {
+//						move next table
+						break;
+					} catch (BeaverTableNeedRetryException e) {
+//						retry this table
+						continue;
+					}
+				}else if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE) && dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)) {
+					if(System.currentTimeMillis()/1000 - Long.parseLong(tableBean.getXgsj())/1000 > WEB_DB_UPDATE_INTERVAL){
 //					    TODO: fetch data until yesterday
     					String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
     					logger.debug("requet one weburl, webUrl:" + webUrl);
@@ -147,7 +146,7 @@ public class DbUploader extends CommonUploader{
     					if (dbBean.getDb().equals("PrasDB") && tableBean.getTable().equals("pras/getTable")) {
     						paraMap.put("pagesize", "" + 1);
 						}else {
-	    					paraMap.put("pagesize", "" + WEB_DB_QEURY_LIMIT);
+	    					paraMap.put("pagesize", "" + DB_QEURY_LIMIT_WEB_SERVICE);
 	    					paraMap.put("starttime", BeaverUtils.timestampToDateString(tableBean.getXgsj()));
 	    					paraMap.put("endtime", BeaverUtils.timestampToDateString(tableBean.getXgsj() + WEB_DB_UPDATE_INTERVAL));
 						}
@@ -161,7 +160,7 @@ public class DbUploader extends CommonUploader{
     						tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"pageNo\":"));
     						if (tableBean.getTotalPageNum() == tableBean.getCurrentPageNum()) {
 //    							move to next day
-    							maxXgsj = tableBean.getXgsj() + 24 * 3600 * 1000;
+    							String maxXgsj = tableBean.getXgsj() + 24 * 3600 * 1000;
     							tableBean.setCurrentPageNum(0);
     							tableBean.setTotalPageNum(0);
     						}
@@ -196,11 +195,10 @@ public class DbUploader extends CommonUploader{
 
                 try {
     				BeaverUtils.doPost(conf.get(CONF_FLUME_SERVER_URL), flumeJson);
-    				if (maxXgsj != null) {
-    					tableBean.setXgsj(maxXgsj);
-					}
 //    				logger.info("send db data to flume server, json:" + flumeJson);
     			} catch (IOException e) {
+//    				change back 'xgsj'
+    				tableBean.rollBackXgsj();
     				BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL) + " json:" + flumeJson, 1000);
     			}
 
@@ -208,6 +206,67 @@ public class DbUploader extends CommonUploader{
 			}
         	BeaverUtils.sleep(1000);
         }
+	}
+
+	private String getDataFromOracle(DatabaseBean dbBean, TableBean tableBean) throws BeaverFatalException, BeaverTableIsFullException, BeaverTableNeedRetryException {
+		logger.info("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
+
+		try {
+			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION) || tableBean.getMaxXgsj().equals(tableBean.getXgsj())) {
+//				thus, table is empty, or table is full
+				String maxRowVersion = SqlHelper.getMaxRowVersion(dbBean, tableBean);
+				if (maxRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION) || tableBean.getMaxXgsj().equals(tableBean.getXgsj())) {
+//					empty table, move to next table
+					throw new BeaverTableIsFullException();
+				}
+				tableBean.setMaxXgsj(maxRowVersion);
+			}
+
+			JSONArray jArray = new JSONArray();
+			while (jArray.isEmpty()) {
+				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
+				long storedMaxXgsj = Long.parseLong(tableBean.getXgsj());
+				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) { // && storedMaxXgsj < maxRV
+					tableBean.setXgsj((storedMaxXgsj + DB_QEURY_LIMIT_DB) + "");
+				}else {
+					logger.debug("get db data, json:" + jArray.toString());
+					tableBean.setXgsj(nowMaxXgsj);
+					break;
+				}
+			}
+
+			return jArray.toString();
+		} catch (SQLException e) {
+			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
+			SqlHelper.removeConnection(dbBean);
+			throw new BeaverTableNeedRetryException();
+		}
+	}
+
+	private String getDataFromSqlServer(DatabaseBean dbBean, TableBean tableBean) throws BeaverFatalException, BeaverTableIsFullException, BeaverTableNeedRetryException {
+		logger.info("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
+
+		try {
+			JSONArray jArray = new JSONArray();
+			String maxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
+			if (jArray.isEmpty()) {
+//				move to next table
+				throw new BeaverTableIsFullException();
+			}else {
+//				timestamp is like '0x111'
+		    	if (!maxXgsj.startsWith("0x")) {
+					maxXgsj = "0x" + maxXgsj;
+				}
+				tableBean.setXgsj(maxXgsj);
+			}
+
+			logger.debug("get db data, json:" + jArray.toString()); 
+			return jArray.toString();
+		} catch (SQLException e) {
+			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
+			SqlHelper.removeConnection(dbBean);
+			throw new BeaverTableNeedRetryException();
+		}
 	}
 
 	private String getDBDataServerUrl(String dbUrl, String table) {
@@ -284,7 +343,7 @@ public class DbUploader extends CommonUploader{
         	dbBean.setDbUserName(conf.get("db." + dbBean.getDb() + ".username"));
         	dbBean.setDbPassword(conf.get("db." + dbBean.getDb() + ".password"));
         	String dbType = conf.get("db." + dbBean.getDb() + ".type");
-        	if (dbType.equals(DB_TYPE_SQL) || dbType.equals(DB_TYPE_URL)) {
+        	if (dbType.equals(DB_TYPE_SQL_ORACLE) || dbType.equals(DB_TYPE_SQL_SERVER) || dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
         		dbBean.setType(dbType);
 			}else {
 				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");

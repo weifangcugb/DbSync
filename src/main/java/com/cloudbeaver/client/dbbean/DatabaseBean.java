@@ -17,7 +17,7 @@ public class DatabaseBean {
 
     String queryTime;
 
-//    db configs
+//  db configs
     String dbUrl;
     String dbUserName;
     String dbPassword;
@@ -25,7 +25,7 @@ public class DatabaseBean {
     String appKey;
     String appSecret;
     
-//  there are two types now, 'sqlDb' and 'urlDb'
+//  there are two types now, 'sqlServerDB' and 'oracleDB' and 'urlDB'
     String type;
 
     public String getAppKey() {
