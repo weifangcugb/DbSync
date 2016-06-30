@@ -1,6 +1,7 @@
 package com.cloudbeaver;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 import java.io.IOException;
 
@@ -82,8 +83,9 @@ public class AppTest{
 		                try {
 		    				if (maxVersion != null) {
 		    					updateRefTask(maxVersion,olddbs,index,tBean);
-		    					tBean.setXgsj(maxVersion);	
+		    					tBean.setXgsj(maxVersion);
 			    				BeaverUtils.doPost(dbUploader.getConf().get(dbUploader.CONF_FLUME_SERVER_URL), flumeJson);
+			    				dbUploader.testDoHeartBeat();
 			    				break;
 							}
 		    			} catch (IOException e) {
@@ -126,7 +128,7 @@ public class AppTest{
 			}
 		}
 	}
-
+	
 	public static void main(String[] args) throws Exception {
 		AppTest appTest = new AppTest();
 		appTest.testGetMsg();

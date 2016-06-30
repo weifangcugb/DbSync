@@ -45,23 +45,27 @@ public class postTaskServlet extends HttpServlet{
 			sb.append(tmp);
 		}
     	
-    	updateTask(sb.toString());		
-
-    	int debugLen = sb.length() > 300 ? 300 : sb.length();
-    	System.out.println("get post data, data:" + sb.toString().substring(0, debugLen));
-    }
-    
-    public static void updateTask(String flumeJson) throws IOException{
-    	MultiDatabaseBean databases = GetTaskServlet.getMultiDatabaseBean();
-    	long maxxgsj;
-    	Object table = null;
-    	Object database = null;
+    	String flumeJson = sb.toString();
     	String content = null;
         byte []bs = null;
         content = flumeJson.substring(0, flumeJson.lastIndexOf("\""));
 		content = content.substring(content.lastIndexOf("\"")+1);
 		bs = BeaverUtils.decompress(content.getBytes(DEFAULT_CHARSET));
 		content = new String(bs,DEFAULT_CHARSET);
+//		System.out.println(content);
+		if(content.substring(3).startsWith("hdfs_prison")){
+	    	updateTask(content);
+		}		
+
+    	int debugLen = sb.length() > 300 ? 300 : sb.length();
+    	System.out.println("get post data, data:" + sb.toString().substring(0, debugLen));
+    }
+    
+    public static void updateTask(String content) throws IOException{
+    	MultiDatabaseBean databases = GetTaskServlet.getMultiDatabaseBean();
+    	long maxxgsj;
+    	Object table = null;
+    	Object database = null;    	
 		JSONArray newjArray = JSONArray.fromObject(content);
 		if(newjArray.size()>0){
 			for(int i=0;i<newjArray.size();i++){

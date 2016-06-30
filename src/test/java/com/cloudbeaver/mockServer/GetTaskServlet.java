@@ -86,7 +86,7 @@ public class GetTaskServlet extends HttpServlet{
     		oMapper.writeValue(str, databaseBeans);
     		json = str.toString();
     		logger.info("task from server："+json);
-    		System.out.println("task from server："+json);
+//    		System.out.println("task from server："+json);
     	}else if (tableId.endsWith("documentfile")) {
     		json = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":[{\"table\":\"c://罪犯媒体/像片\",\"xgsj\":\"0000000000000000\"}]}]}";
     	}else {
