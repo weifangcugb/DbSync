@@ -72,9 +72,7 @@ public class DbUploader extends CommonUploader{
 				loadTasks();
 				break;
 			} catch (IOException e) {
-				BeaverUtils.PrintStackTrace(e);
-				logger.error("get tasks failed, url:" + conf.get(CONF_TASK_SERVER_URL) + " msg:" + e.getMessage() + " json:" + getTaskJson());
-				BeaverUtils.sleep(60 * 1000);
+				BeaverUtils.printLogExceptionAndSleep(e, "get tasks failed, url:" + conf.get(CONF_TASK_SERVER_URL) + " json:" + getTaskJson() + " msg:", 60 * 1000);
 			}
         }
 	}
@@ -111,75 +109,22 @@ public class DbUploader extends CommonUploader{
         		tableBean.setQueryTime(date.toString());
 
         		String dbData = null;
-        		if (dbBean.getType().equals(DB_TYPE_SQL_SERVER)) {
-        	        try {
-						dbData = getDataFromSqlServer(dbBean, tableBean);
-					} catch (BeaverTableIsFullException e) {
-//						move next table
-						break;
-					} catch (BeaverTableNeedRetryException e) {
-//						retry this table
-						continue;
-					}
-				}else if (dbBean.getType().equals(DB_TYPE_SQL_ORACLE)) {
-        	        try {
-						dbData = getDataFromOracle(dbBean, tableBean);
-					} catch (BeaverTableIsFullException e) {
-//						move next table
-						break;
-					} catch (BeaverTableNeedRetryException e) {
-//						retry this table
-						continue;
-					}
-				}else if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE) && dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)) {
-					if(System.currentTimeMillis()/1000 - Long.parseLong(tableBean.getXgsj())/1000 > WEB_DB_UPDATE_INTERVAL){
-//					    TODO: fetch data until yesterday
-    					String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
-    					logger.debug("requet one weburl, webUrl:" + webUrl);
-    					Map<String, String> paraMap = new HashMap<String, String>();
-    					paraMap.put("appkey", dbBean.getAppKey());
-
-    					if (tableBean.getCurrentPageNum() != 0) {
-    						paraMap.put("pageno", "" + tableBean.getCurrentPageNum() + 1);
-    					}
-
-    					if (dbBean.getDb().equals("PrasDB") && tableBean.getTable().equals("pras/getTable")) {
-    						paraMap.put("pagesize", "" + 1);
-						}else {
-	    					paraMap.put("pagesize", "" + DB_QEURY_LIMIT_WEB_SERVICE);
-	    					paraMap.put("starttime", BeaverUtils.timestampToDateString(tableBean.getXgsj()));
-	    					paraMap.put("endtime", BeaverUtils.timestampToDateString(tableBean.getXgsj() + WEB_DB_UPDATE_INTERVAL));
-						}
-
-    					try {
-    						String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
-    						paraMap.put("sign", sign);
-    						StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "text/plain");
-//    						TODO:check whether totalpagenum is 0
-    						tableBean.setTotalPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":"));
-    						tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"pageNo\":"));
-    						if (tableBean.getTotalPageNum() == tableBean.getCurrentPageNum()) {
-//    							move to next day
-    							String maxXgsj = tableBean.getXgsj() + 24 * 3600 * 1000;
-    							tableBean.setCurrentPageNum(0);
-    							tableBean.setTotalPageNum(0);
-    						}
-    						dbData = sb.toString();
-
-    						logger.info("web query finished, time:" + tableBean.getXgsj() + " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:" + tableBean.getTotalPageNum());
-    					} catch (NoSuchAlgorithmException e) {
-    						BeaverUtils.PrintStackTrace(e);
-    						throw new BeaverFatalException("no md5 algorithm, exit. msg:" + e.getMessage());
-    					}catch (IOException | NumberFormatException e) {
-    						BeaverUtils.printLogExceptionAndSleep(e, "get ioexception when request data, url:" + webUrl + " msg:", 500);
-    						continue;
-    					}
-					}else {
-//						data within a day
-						break;
-					}
-				}else {
-					throw new BeaverFatalException("db type is wrong, type can only be 'sqldb' or 'urldb'");
+    	        try {
+    	        	if (dbBean.getType().equals(DB_TYPE_SQL_SERVER)) {
+    	        		dbData = getDataFromSqlServer(dbBean, tableBean);
+    	        	} else if (dbBean.getType().equals(DB_TYPE_SQL_ORACLE)) {
+    	        		dbData = getDataFromOracle(dbBean, tableBean);
+    	        	} else if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE) && dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)) {
+    	        		dbData = getDataFromWebService(dbBean, tableBean);
+    	        	}else {
+    					throw new BeaverFatalException("db type is wrong, type can only be 'sqldb' or 'urldb'");
+    				}
+				} catch (BeaverTableIsFullException e) {
+//					move next table
+					break;
+				} catch (BeaverTableNeedRetryException e) {
+//					retry this table
+					continue;
 				}
 
                 String flumeJson = null;
@@ -206,6 +151,55 @@ public class DbUploader extends CommonUploader{
 			}
         	BeaverUtils.sleep(1000);
         }
+	}
+
+	private String getDataFromWebService(DatabaseBean dbBean,TableBean tableBean) throws BeaverTableIsFullException, BeaverTableNeedRetryException, BeaverFatalException {
+		if(System.currentTimeMillis()/1000 - Long.parseLong(tableBean.getXgsj())/1000 > WEB_DB_UPDATE_INTERVAL){
+//		    TODO: now, fetch data until yesterday, how to handle today's data
+			String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
+			logger.debug("requet one weburl, webUrl:" + webUrl);
+			Map<String, String> paraMap = new HashMap<String, String>();
+			paraMap.put("appkey", dbBean.getAppKey());
+
+			if (tableBean.getCurrentPageNum() != 0) {
+				paraMap.put("pageno", "" + tableBean.getCurrentPageNum() + 1);
+			}
+
+			if (dbBean.getDb().equals("PrasDB") && tableBean.getTable().equals("pras/getTable")) {
+				paraMap.put("pagesize", "" + 1);
+			}else {
+				paraMap.put("pagesize", "" + DB_QEURY_LIMIT_WEB_SERVICE);
+				paraMap.put("starttime", BeaverUtils.timestampToDateString(tableBean.getXgsj()));
+				paraMap.put("endtime", BeaverUtils.timestampToDateString(tableBean.getXgsj() + WEB_DB_UPDATE_INTERVAL));
+			}
+
+			try {
+				String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
+				paraMap.put("sign", sign);
+				StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "text/plain");
+//				TODO:check whether totalpagenum is 0
+				tableBean.setTotalPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":"));
+				tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"pageNo\":"));
+				if (tableBean.getTotalPageNum() == tableBean.getCurrentPageNum()) {
+//					move to next day
+					String maxXgsj = tableBean.getXgsj() + 24 * 3600 * 1000;
+					tableBean.setCurrentPageNum(0);
+					tableBean.setTotalPageNum(0);
+				}
+
+				logger.info("web query finished, time:" + tableBean.getXgsj() + " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:" + tableBean.getTotalPageNum());
+				return sb.toString();
+			} catch (NoSuchAlgorithmException e) {
+				BeaverUtils.PrintStackTrace(e);
+				throw new BeaverFatalException("no md5 algorithm, exit. msg:" + e.getMessage());
+			}catch (IOException | NumberFormatException e) {
+				BeaverUtils.printLogExceptionAndSleep(e, "get ioexception when request data, url:" + webUrl + " msg:", 500);
+				throw new BeaverTableNeedRetryException();
+			}
+		}else {
+//			data within a day, try next table
+			throw new BeaverTableIsFullException();
+		}
 	}
 
 	private String getDataFromOracle(DatabaseBean dbBean, TableBean tableBean) throws BeaverFatalException, BeaverTableIsFullException, BeaverTableNeedRetryException {
