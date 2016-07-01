@@ -90,6 +90,16 @@ public abstract class FixedNumThreadPool implements Runnable{
 			}
 		});
 
+		executor.submit(new Runnable() {
+			@Override
+			public void run() {
+				while (isRunning()) {
+					doHeartBeat();
+					BeaverUtils.sleep(HEART_BEAT_INTERVAL);
+				}
+			}
+		});
+
 		while (KEEP_RUNNING) {
 			BeaverUtils.sleep(1 * 1000);
 		}

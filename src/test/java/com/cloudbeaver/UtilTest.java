@@ -28,8 +28,25 @@ public class UtilTest {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
 		String time = dirConf.substring(dirConf.indexOf('?') + 1);
 		Date date = sdf.parse(time);
+		System.out.println(date);
+	}
 
-		System.out.println(BeaverUtils.timestampToDateString("0"));
+	@Test
+	public void testTimeStamp() throws ParseException{
+		long now = System.currentTimeMillis();
+		String todayString = BeaverUtils.timestampToDateString(now);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		Date today = sdf.parse(todayString + " 00:00:00");
+		System.out.println("timestamp:" + now + " today:" + todayString + " todayTimeStamp:" + today.getTime());
+		System.out.println(now - now%(24 * 3600 * 1000));
+		System.out.println(BeaverUtils.timestampToDateString(now - now%(24 * 3600 * 1000)));
+		System.out.println(BeaverUtils.timestampToDateString(today.getTime() - 3 * 24 * 3600 * 1000));
+		System.out.println(BeaverUtils.timestampToDateString(48 * 3600 * 1000));
+
+		System.out.println(new Date(1467302400000l));
+		System.out.println(new Date(1467331200000l));
+		System.out.println(new Date(0l));
+		Date date = new Date();
 	}
 
 	@Test

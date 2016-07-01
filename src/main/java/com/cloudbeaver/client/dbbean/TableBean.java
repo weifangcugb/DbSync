@@ -3,6 +3,7 @@ package com.cloudbeaver.client.dbbean;
 import org.apache.log4j.*;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
+import com.cloudbeaver.client.common.BeaverTableIsFullException;
 import com.cloudbeaver.client.common.CommonUploader;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -11,11 +12,11 @@ import java.util.ArrayList;
 /**
  * bean for one table
  */
-public class TableBean {
+public class TableBean implements Cloneable{
     private static Logger logger = Logger.getLogger(TableBean.class);
 
     private String table;
-    private String xgsj;
+    private String xgsj = "0";
     private ArrayList<String> join;
     private ArrayList<String> join_subtable;
     private String key;
@@ -29,9 +30,46 @@ public class TableBean {
 
 //	the following two params only for YouDi system
     @JsonIgnore
+    private int prevPageNum = 0;
+    @JsonIgnore
     private int currentPageNum = 0;
     @JsonIgnore
+    private int prevTotalPageNum = 0;
+    @JsonIgnore
     private int totalPageNum = 0;
+
+    @JsonIgnore
+    private boolean syncTypeOnceADay = false;
+
+	public void moveToNextXgsj(int interval) throws BeaverTableIsFullException {
+		setXgsjByInterval(interval);
+	}
+
+	public void setXgsjByInterval(int interval) {
+		prevxgsj = xgsj;
+		prevPageNum = currentPageNum;
+		prevTotalPageNum = totalPageNum;
+
+		long timestamp = getXgsjAsLong() + interval;
+		xgsj = "" + timestamp;
+		currentPageNum = 0;
+		totalPageNum = 0;
+	}
+
+	public void setXgsjwithLong(long timestamp) {
+		prevxgsj = "" + timestamp;
+		xgsj = "" + timestamp;
+		prevPageNum = currentPageNum;
+		prevTotalPageNum = totalPageNum;
+		currentPageNum = 0;
+		totalPageNum = 0;
+	}
+
+	public void rollBackXgsj() {
+		currentPageNum = prevPageNum;
+		totalPageNum = prevTotalPageNum;
+		xgsj = prevxgsj;
+	}
 
     public String getMaxXgsj() {
 		return maxXgsj;
@@ -39,10 +77,6 @@ public class TableBean {
 
 	public void setMaxXgsj(String maxXgsj) {
 		this.maxXgsj = maxXgsj;
-	}
-
-	public int getTotalPageNum() {
-		return totalPageNum;
 	}
 
 	public ArrayList<String> getJoin_subtable() {
@@ -53,7 +87,48 @@ public class TableBean {
 		this.join_subtable = join_subtable;
 	}
 
+	public String getPrevxgsj() {
+		return prevxgsj;
+	}
+
+	public long getPrevxgsjAsLong() {
+		return Long.parseLong(prevxgsj);
+	}
+
+	public void setPrevxgsj(String prevxgsj) {
+		this.prevxgsj = prevxgsj;
+	}
+
+	public boolean isSyncTypeOnceADay() {
+		return syncTypeOnceADay;
+	}
+
+	public void setSyncTypeOnceADay(boolean syncTypeOnceADay) {
+		this.syncTypeOnceADay = syncTypeOnceADay;
+	}
+
+	public int getPrevPageNum() {
+		return prevPageNum;
+	}
+
+	public void setPrevPageNum(int prevPageNum) {
+		this.prevPageNum = prevPageNum;
+	}
+
+	public int getPrevTotalPageNum() {
+		return prevTotalPageNum;
+	}
+
+	public void setPrevTotalPageNum(int prevTotalPageNum) {
+		this.prevTotalPageNum = prevTotalPageNum;
+	}
+
+	public int getTotalPageNum() {
+		return totalPageNum;
+	}
+
 	public void setTotalPageNum(int totalPageNum) {
+		this.prevTotalPageNum = this.totalPageNum;
 		this.totalPageNum = totalPageNum;
 	}
 
@@ -62,6 +137,7 @@ public class TableBean {
 	}
 
 	public void setCurrentPageNum(int currentPageNum) {
+		this.prevPageNum = this.currentPageNum;
 		this.currentPageNum = currentPageNum;
 	}
 
@@ -118,7 +194,6 @@ public class TableBean {
 			default:
 				throw new BeaverFatalException("unknow sql type, " + dbType);
 		}
-        
     }
 
     private String whereClause(String rowVersionColumn, String dbType, int sqlLimitNum) {
@@ -161,8 +236,8 @@ public class TableBean {
 		return "select max(" + rowversionColumn +") from " + table;
 	}
 
-	public void rollBackXgsj() {
-		xgsj = prevxgsj;
+	public long getXgsjAsLong() {
+		return Long.parseLong(xgsj);
 	}
 }
 

@@ -30,7 +30,7 @@ public class DbUploader extends CommonUploader{
     private String taskJson;
     private MultiDatabaseBean dbBeans;
 
-	private int WEB_DB_UPDATE_INTERVAL = 24 * 3600;
+	private int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 
     private static Map<String, String> appKeySecret = new HashMap<String, String>();
     private static String appPreDefKey = "tmpKey";
@@ -79,6 +79,24 @@ public class DbUploader extends CommonUploader{
 
 	@Override
 	public int getThreadNum() {
+		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
+			if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE)) {
+				DatabaseBean newBean;
+				try {
+					newBean = BeaverUtils.cloneTo(dbBean);
+					for (TableBean tableBean : newBean.getTables()) {
+						tableBean.setSyncTypeOnceADay(true);
+						long now = System.currentTimeMillis();
+						tableBean.setXgsjwithLong((now - now % (24 * 3600 * 1000))- WEB_DB_UPDATE_INTERVAL * 3 - 8 * 3600 * 1000);
+					}
+					dbBeans.getDatabases().add(newBean);
+				} catch (ClassNotFoundException | IOException e) {
+					BeaverUtils.printLogExceptionAndSleep(e, "can't clone databaseBean,", 100);
+					break;
+				}
+			}
+		}
+
 		return dbBeans.getDatabases().size();
 	}
 
@@ -102,8 +120,23 @@ public class DbUploader extends CommonUploader{
 		dbBean.setQueryTime((new Date()).toString());
 
         for (TableBean tableBean : dbBean.getTables()) {
+//        	sleep 1s when move to a new table
+        	BeaverUtils.sleep(1000);
+
+            if (tableBean.isSyncTypeOnceADay() && !tableBean.getPrevxgsj().equals(tableBean.getXgsj())) {
+//				has moved to next day
+            	if (System.currentTimeMillis() - tableBean.getPrevxgsjAsLong() > 3 * WEB_DB_UPDATE_INTERVAL) {
+					tableBean.setPrevxgsj(tableBean.getXgsj());
+				}else {
+					BeaverUtils.sleep(60 * 1000);
+					continue;
+				}
+			}
+
 //        	keep trying until get all data from this table
         	while (true) {
+        		BeaverUtils.sleep(100);
+
         		Date date = new Date();
         		dbBean.setQueryTime(date.toString());
         		tableBean.setQueryTime(date.toString());
@@ -127,64 +160,47 @@ public class DbUploader extends CommonUploader{
 					continue;
 				}
 
-                String flumeJson = null;
-				try {
-					flumeJson = BeaverUtils.compressAndFormatFlumeHttp(dbData);
-				} catch (IOException e) {
-//					this is impossible unless system memory has some error, as I think
-					BeaverUtils.printLogExceptionAndSleep(e, "write gzip stream to memory error, msg:", 1000);
-					continue;
-				}
-
-                logger.debug("upload db data, data:" + flumeJson);
-
                 try {
+                	String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(dbData);
     				BeaverUtils.doPost(conf.get(CONF_FLUME_SERVER_URL), flumeJson);
-//    				logger.info("send db data to flume server, json:" + flumeJson);
+    				logger.debug("send db data to flume server, json:" + flumeJson);
     			} catch (IOException e) {
 //    				change back 'xgsj'
     				tableBean.rollBackXgsj();
-    				BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL) + " json:" + flumeJson, 1000);
+    				BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:" + conf.get(CONF_FLUME_SERVER_URL), 1000);
     			}
-
-                BeaverUtils.sleep(100);
 			}
-        	BeaverUtils.sleep(1000);
         }
 	}
 
 	private String getDataFromWebService(DatabaseBean dbBean,TableBean tableBean) throws BeaverTableIsFullException, BeaverTableNeedRetryException, BeaverFatalException {
-		if(System.currentTimeMillis()/1000 - Long.parseLong(tableBean.getXgsj())/1000 > WEB_DB_UPDATE_INTERVAL){
-//		    TODO: now, fetch data until yesterday, how to handle today's data
-			String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
-			logger.debug("requet one weburl, webUrl:" + webUrl);
-			Map<String, String> paraMap = new HashMap<String, String>();
-			paraMap.put("appkey", dbBean.getAppKey());
+		String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
+		logger.debug("requet one weburl, webUrl:" + webUrl);
 
-			if (tableBean.getCurrentPageNum() != 0) {
-				paraMap.put("pageno", "" + tableBean.getCurrentPageNum() + 1);
-			}
-
-			if (dbBean.getDb().equals("PrasDB") && tableBean.getTable().equals("pras/getTable")) {
-				paraMap.put("pagesize", "" + 1);
-			}else {
-				paraMap.put("pagesize", "" + DB_QEURY_LIMIT_WEB_SERVICE);
-				paraMap.put("starttime", BeaverUtils.timestampToDateString(tableBean.getXgsj()));
-				paraMap.put("endtime", BeaverUtils.timestampToDateString(tableBean.getXgsj() + WEB_DB_UPDATE_INTERVAL));
-			}
-
+		while ((System.currentTimeMillis() - Long.parseLong(tableBean.getXgsj())) > WEB_DB_UPDATE_INTERVAL) {
+//			loop until get some data from web server, or until today's 00:00:00
 			try {
-				String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
-				paraMap.put("sign", sign);
-				StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "text/plain");
-//				TODO:check whether totalpagenum is 0
-				tableBean.setTotalPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":"));
+				StringBuilder sb = getDataOfSomeDay(webUrl, dbBean, tableBean);
+
+				int totalPageThisDay = BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":");
+				if(totalPageThisDay == -1) {
+//					get error when query this page, try again
+					BeaverUtils.sleep(500);
+					continue;
+				}
+
+				if (totalPageThisDay == 0) {
+					tableBean.moveToNextXgsj(WEB_DB_UPDATE_INTERVAL);
+					BeaverUtils.sleep(500);
+					continue;
+				}
+
+				tableBean.setTotalPageNum(totalPageThisDay);
 				tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"pageNo\":"));
 				if (tableBean.getTotalPageNum() == tableBean.getCurrentPageNum()) {
-//					move to next day
-					String maxXgsj = tableBean.getXgsj() + 24 * 3600 * 1000;
-					tableBean.setCurrentPageNum(0);
-					tableBean.setTotalPageNum(0);
+//					has get all of data in this day, or there is no data in this day, move to next day
+					tableBean.moveToNextXgsj(WEB_DB_UPDATE_INTERVAL);
+					BeaverUtils.sleep(500);
 				}
 
 				logger.info("web query finished, time:" + tableBean.getXgsj() + " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:" + tableBean.getTotalPageNum());
@@ -192,14 +208,36 @@ public class DbUploader extends CommonUploader{
 			} catch (NoSuchAlgorithmException e) {
 				BeaverUtils.PrintStackTrace(e);
 				throw new BeaverFatalException("no md5 algorithm, exit. msg:" + e.getMessage());
-			}catch (IOException | NumberFormatException e) {
+			} catch (IOException | NumberFormatException e) {
 				BeaverUtils.printLogExceptionAndSleep(e, "get ioexception when request data, url:" + webUrl + " msg:", 500);
 				throw new BeaverTableNeedRetryException();
 			}
-		}else {
-//			data within a day, try next table
-			throw new BeaverTableIsFullException();
 		}
+
+//		can't get any data since some day
+		throw new BeaverTableIsFullException();
+	}
+
+	private StringBuilder getDataOfSomeDay(String webUrl, DatabaseBean dbBean,TableBean tableBean) throws NoSuchAlgorithmException, IOException {
+		Map<String, String> paraMap = new HashMap<String, String>();
+		paraMap.put("appkey", dbBean.getAppKey());
+
+		if (tableBean.getCurrentPageNum() != 0) {
+			paraMap.put("pageno", "" + tableBean.getCurrentPageNum() + 1);
+		}
+
+		if (dbBean.getDb().equals("PrasDB") && tableBean.getTable().equals("pras/getTable")) {
+			paraMap.put("pagesize", "" + 1);
+		}else {
+			paraMap.put("pagesize", "" + DB_QEURY_LIMIT_WEB_SERVICE);
+			paraMap.put("starttime", BeaverUtils.timestampToDateString(tableBean.getXgsj()));
+			paraMap.put("endtime", BeaverUtils.timestampToDateString(Long.parseLong(tableBean.getXgsj()) + WEB_DB_UPDATE_INTERVAL));
+		}
+
+		String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
+		paraMap.put("sign", sign);
+		StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "text/plain");
+		return sb;
 	}
 
 	private String getDataFromOracle(DatabaseBean dbBean, TableBean tableBean) throws BeaverFatalException, BeaverTableIsFullException, BeaverTableNeedRetryException {
@@ -209,7 +247,7 @@ public class DbUploader extends CommonUploader{
 			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION) || tableBean.getMaxXgsj().equals(tableBean.getXgsj())) {
 //				thus, table is empty, or table is full
 				String maxRowVersion = SqlHelper.getMaxRowVersion(dbBean, tableBean);
-				if (maxRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION) || tableBean.getMaxXgsj().equals(tableBean.getXgsj())) {
+				if (maxRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION) || maxRowVersion.equals(tableBean.getXgsj())) {
 //					empty table, move to next table
 					throw new BeaverTableIsFullException();
 				}
@@ -219,9 +257,8 @@ public class DbUploader extends CommonUploader{
 			JSONArray jArray = new JSONArray();
 			while (jArray.isEmpty()) {
 				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
-				long storedMaxXgsj = Long.parseLong(tableBean.getXgsj());
 				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) { // && storedMaxXgsj < maxRV
-					tableBean.setXgsj((storedMaxXgsj + DB_QEURY_LIMIT_DB) + "");
+					tableBean.setXgsj((tableBean.getXgsjAsLong() + DB_QEURY_LIMIT_DB) + "");
 				}else {
 					logger.debug("get db data, json:" + jArray.toString());
 					tableBean.setXgsj(nowMaxXgsj);

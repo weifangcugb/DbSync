@@ -10,6 +10,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -264,8 +266,8 @@ public class BeaverUtils {
 
 	public static void printLogExceptionAndSleep(Exception e, String msgPrefix, int sleepTime) {
 		BeaverUtils.PrintStackTrace(e);
-		logger.error(msgPrefix + e.getMessage());
-		BeaverUtils.sleep(3 * 1000);
+		logger.error(msgPrefix + " msg:" + e.getMessage());
+		BeaverUtils.sleep(sleepTime);
 	}
 
 	public static String getRequestSign(Map<String, String> paraMap, String appSecret) throws NoSuchAlgorithmException {
@@ -297,7 +299,11 @@ public class BeaverUtils {
     }
 
 	public static String timestampToDateString(String timestamp) {
-		Date date = new Date(hexTolong(timestamp));
+		return timestampToDateString(Long.parseLong(timestamp));
+	}
+
+	public static String timestampToDateString(long timestamp) {
+		Date date = new Date(timestamp);
 		return sdf.format(date);
 	}
 
@@ -324,5 +330,37 @@ public class BeaverUtils {
 
 //		got an error, TODO: maybe should jump this day
 		return -1;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T cloneTo(T src) throws IOException, ClassNotFoundException{
+		ByteArrayOutputStream memoryBuffer = new ByteArrayOutputStream();
+		ObjectOutputStream out = null;
+		ObjectInputStream in = null;
+		T dist = null;
+		try{
+			out = new ObjectOutputStream(memoryBuffer);
+			out.writeObject(src);
+			out.flush();
+			in = new ObjectInputStream(new ByteArrayInputStream(memoryBuffer.toByteArray()));
+			dist = (T) in.readObject();
+			return dist;
+		}finally{
+			if (out != null) {
+				try {
+					out.close();
+				} catch (IOException e) {
+					PrintStackTrace(e);
+				}
+			}
+
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+					PrintStackTrace(e);
+				}
+			}
+		}
 	}
 }

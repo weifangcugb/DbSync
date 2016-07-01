@@ -7,10 +7,11 @@ import java.util.ArrayList;
 /**
  * bean for one database
  */
-public class DatabaseBean {
+public class DatabaseBean{
     private static Logger logger = Logger.getLogger(DatabaseBean.class);
 
     ArrayList<TableBean> tables = new ArrayList<TableBean>();
+
     String rowversion;
     String prison;
     String db;
