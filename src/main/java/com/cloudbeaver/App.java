@@ -43,6 +43,7 @@ public class App {
         options.addOption(option);
 
         option = new Option("l", "large file size", true, "set how large a file is large file,\n should be larger than 100K");
+
         option.setRequired(false);
         options.addOption(option);
 
@@ -109,6 +110,34 @@ public class App {
                     	throw new ParseException("module name is wrong");
                 }
 	  		}
+
+            if (commandLine.hasOption('k')) {
+            	String kafkaVersion = commandLine.getOptionValue('k');
+            	switch (kafkaVersion) {
+					case "beaver":
+						SyncConsumer.USE_BEAVER_KAFKA = true;
+						break;
+					case "origin":
+						SyncConsumer.USE_BEAVER_KAFKA = false;
+						break;
+					default:
+						throw new ParseException("kafka version is wrong, only 'beaver' or 'origin' allowed");
+				}
+			}
+
+            if (commandLine.hasOption('d')) {
+            	String dirLocation = commandLine.getOptionValue('d');
+            	switch (dirLocation) {
+					case "local":
+						FileUploader.USE_REMOTE_DIRS = false;
+						break;
+					case "remote":
+						FileUploader.USE_REMOTE_DIRS = true;
+						break;
+					default:
+						throw new ParseException("dir location is wrong, only 'local' or 'remote' allowed.");
+				}
+			}
 		} catch (ParseException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.fatal("command line is wrong, msg:" + e.getMessage());

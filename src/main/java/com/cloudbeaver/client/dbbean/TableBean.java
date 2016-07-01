@@ -195,6 +195,12 @@ public class TableBean implements Cloneable{
 				throw new BeaverFatalException("unknow sql type, " + dbType);
 		}
     }
+    
+    public String getSqlStringForSqlite(String prisonId, String dbName, String rowVersionColumn, int sqlLimitNum) {
+      return "SELECT " + " '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
+      table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+      + " order by " + table + "." + rowVersionColumn + " limit " + sqlLimitNum;
+  }
 
     private String whereClause(String rowVersionColumn, String dbType, int sqlLimitNum) {
 		if (dbType.equals(CommonUploader.DB_TYPE_SQL_ORACLE)) {

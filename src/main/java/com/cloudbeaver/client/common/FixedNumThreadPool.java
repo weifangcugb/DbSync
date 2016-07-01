@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang.Validate;
 import org.apache.log4j.Logger;
 
 import sun.misc.Signal;
@@ -21,6 +22,10 @@ public abstract class FixedNumThreadPool implements Runnable{
 	protected abstract long getSleepTimeBetweenTaskInnerLoop();
 	protected abstract String getTaskDescription();
 	protected abstract void doHeartBeat();
+	//for test
+	public void testDoHeartBeat(){
+		doHeartBeat();
+	}
 
 	protected void shutdown() {
 //		as default, do nothing

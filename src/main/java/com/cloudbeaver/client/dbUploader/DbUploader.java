@@ -38,12 +38,22 @@ public class DbUploader extends CommonUploader{
 
 	private static final String DB_ROW_VERSION_START_TIME = "starttime";
 
+    //for test
+    public Map<String, String> getConf() {
+		return conf;
+	}
+
     public String getTaskJson() {
 		return taskJson;
 	}
 
 	public void setTaskJson(String taskJson) {
 		this.taskJson = taskJson;
+	}
+	
+	//for test
+	public MultiDatabaseBean getDbBeans(){
+		return dbBeans;
 	}
 
 	@Override

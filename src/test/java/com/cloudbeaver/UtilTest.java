@@ -15,7 +15,6 @@ import org.junit.Test;
 import com.cloudbeaver.client.common.BeaverUtils;
 
 public class UtilTest {
-
 	@Test
 	public void testJsonArrayEmpty(){
 		JSONArray jArray = new JSONArray();
@@ -55,7 +54,7 @@ public class UtilTest {
 		String sub = dirConf.substring(dirConf.length() - 1);
 		Assert.assertEquals(sub, "?");
 	}
-	
+
 	@Test
 	public void testMD5() throws NoSuchAlgorithmException{
 		Map<String, String> paraMap = new HashMap<String, String>();

@@ -29,13 +29,19 @@ public class SqlHelper {
                 driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
             } else if (dbBean.getDbUrl().startsWith("jdbc:oracle")) {
                 driverClassName = "oracle.jdbc.driver.OracleDriver";
+            } else if (dbBean.getDbUrl().startsWith("jdbc:sqlite")){
+            	driverClassName = "org.sqlite.JDBC";
             }
 
             logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
             while (FixedNumThreadPool.isRunning()) {
                 try {
     				Class.forName(driverClassName);
-                    Connection conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
+    				Connection conn = null;
+    				if(dbBean.getDbUrl().startsWith("jdbc:sqlite"))
+    					conn = DriverManager.getConnection(dbBean.getDbUrl());
+    				else
+    					conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
                     conMap.put(dbBean.getDb(), conn);
                     return conn;
     			} catch (ClassNotFoundException | SQLException e) {
@@ -51,9 +57,12 @@ public class SqlHelper {
 	public static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
 		Connection con = getConn(dbBean);
 
-		PreparedStatement pStatement = con.prepareStatement(sqlQuery);
-        //s.setQueryTimeout(10);
-        ResultSet rs = pStatement.executeQuery();
+		Statement statement = con.createStatement();
+		ResultSet rs = statement.executeQuery(sqlQuery);
+
+//		PreparedStatement pStatement = con.prepareStatement(sqlQuery);
+//        //s.setQueryTimeout(10);
+//        ResultSet rs = pStatement.executeQuery();
 
         String maxXgsjUtilNow = CommonUploader.DB_EMPTY_ROW_VERSION;
         ResultSetMetaData metaData = rs.getMetaData();
