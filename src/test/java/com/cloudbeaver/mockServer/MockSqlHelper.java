@@ -6,6 +6,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
 import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
@@ -15,7 +16,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 public class MockSqlHelper extends SqlHelper{
-	public static String execSqlQuery(String prisonId, DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException {
+	public static String execSqlQuery(String prisonId, DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
 		String sqlQuery = tableBean.getSqlStringForSqlite(prisonId, dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum);
 		
 		int startpos = sqlQuery.indexOf(dbBean.getRowversion());
@@ -23,7 +24,7 @@ public class MockSqlHelper extends SqlHelper{
 		String xgsj = sqlQuery.substring(startpos+dbBean.getRowversion().length()+3, endpos-2);
 		sqlQuery = sqlQuery.replace(xgsj, xgsj.substring("0x".length()));
 		
-		Connection con = getConn(dbBean, threadPool);
+		Connection con = getConn(dbBean);
 		if (!threadPool.isRunning() || con == null) {
 //			may be an exception is better
 			return null;
