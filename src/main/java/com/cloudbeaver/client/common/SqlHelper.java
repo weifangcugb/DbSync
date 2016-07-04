@@ -56,35 +56,44 @@ public class SqlHelper {
 
 	public static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
 		Connection con = getConn(dbBean);
+		PreparedStatement pStatement = null;
+		try {
+//			Statement statement = con.createStatement();
+//			ResultSet rs = statement.executeQuery(sqlQuery);
+			pStatement = con.prepareStatement(sqlQuery);
+	        //s.setQueryTimeout(10);
+	        ResultSet rs = pStatement.executeQuery();
 
-		Statement statement = con.createStatement();
-		ResultSet rs = statement.executeQuery(sqlQuery);
+	        String maxXgsjUtilNow = CommonUploader.DB_EMPTY_ROW_VERSION;
+	        ResultSetMetaData metaData = rs.getMetaData();
+	        int columnCount = metaData.getColumnCount();
+	        while (rs.next()) {
+	            if (jArray != null) {
+	                JSONObject jsonObj = new JSONObject();
+	                for (int i = 1; i <= columnCount; i++) {
+	                    String columnName =metaData.getColumnLabel(i);
+	                    String value = rs.getString(columnName);
+	                    if (value == null) value = "";
 
-//		PreparedStatement pStatement = con.prepareStatement(sqlQuery);
-//        //s.setQueryTimeout(10);
-//        ResultSet rs = pStatement.executeQuery();
+	                    jsonObj.put(columnName.trim(), value.trim());
+	                }
 
-        String maxXgsjUtilNow = CommonUploader.DB_EMPTY_ROW_VERSION;
-        ResultSetMetaData metaData = rs.getMetaData();
-        int columnCount = metaData.getColumnCount();
-        while (rs.next()) {
-            if (jArray != null) {
-                JSONObject jsonObj = new JSONObject();
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName =metaData.getColumnLabel(i);
-                    String value = rs.getString(columnName);
-                    if (value == null) value = "";
+	            	jArray.add(jsonObj);
+				}
 
-                    jsonObj.put(columnName.trim(), value.trim());
-                }
+	            maxXgsjUtilNow = rs.getString(dbBean.getRowversion());
+	        }
 
-            	jArray.add(jsonObj);
+	        return maxXgsjUtilNow;
+		} finally {
+			if (pStatement != null) {
+				try {
+					pStatement.close();	
+				} catch (Exception e) {
+					BeaverUtils.PrintStackTrace(e);
+				}
 			}
-
-            maxXgsjUtilNow = rs.getString(dbBean.getRowversion());
-        }
-
-        return maxXgsjUtilNow;
+		}
 	}
 
 	public static String getDBData(String prisonId, DatabaseBean dbBean,TableBean tableBean, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {

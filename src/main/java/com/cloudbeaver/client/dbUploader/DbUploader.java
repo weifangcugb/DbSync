@@ -22,7 +22,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class DbUploader extends CommonUploader{
@@ -170,6 +169,7 @@ public class DbUploader extends CommonUploader{
 					break;
 				} catch (BeaverTableNeedRetryException e) {
 //					retry this table
+					tableBean.rollBackXgsj();
 					continue;
 				}
 
