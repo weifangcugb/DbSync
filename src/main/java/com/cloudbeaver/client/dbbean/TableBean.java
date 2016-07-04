@@ -259,7 +259,7 @@ public class TableBean implements Serializable{
 	}
 
 	public String getMaxRowVersionSqlString(String type, String rowversionColumn) {
-		return "select max(" + rowversionColumn +") as " + rowversionColumn + "from " + table;
+		return "select max(" + rowversionColumn +") as " + rowversionColumn + " from " + table;
 	}
 
 	@JsonIgnore
