@@ -125,7 +125,7 @@ public class DbUploader extends CommonUploader{
 	}
 
 	@Override
-	public void doTask(Object taskObject) throws BeaverFatalException{
+	public void doTask(Object taskObject) throws BeaverFatalException {
 		DatabaseBean dbBean = (DatabaseBean)taskObject;
 		dbBean.setQueryTime((new Date()).toString());
 
@@ -395,7 +395,7 @@ public class DbUploader extends CommonUploader{
 			String appKey = conf.get("db." + dbBean.getDb() + ".appKey");
 			if (appKey != null) {
 				dbBean.setAppKey(appKey);
-				dbBean.setAppSecret(appKey);
+				dbBean.setAppSecret(appKeySecret.get(appKey));
 			}
         }
     }
