@@ -29,8 +29,8 @@ public class AppTest{
 	private static MockSqlServer mockSqlServer = new MockSqlServer();
 	public static String DEFAULT_CHARSET = "utf-8";
 
-	@BeforeClass
-//	@Ignore
+//	@BeforeClass
+	@Ignore
 	public static void setUpServers(){
 		//start the mocked SqlServer
 //		mocksqlserver.
@@ -38,8 +38,8 @@ public class AppTest{
 		mockServer.start(false);
 	}
 
-	@AfterClass
-//	@Ignore
+//	@AfterClass
+	@Ignore
 	public static void tearDownServers(){
 		mockServer.stop();
 	}
@@ -130,33 +130,67 @@ public class AppTest{
 		}
 	}
 
+	
+	@Test
+    public void testGetMsgForWeb() throws Exception {
+		DbUploader dbUploader = new DbUploader();
+        dbUploader.setup();
+        for (int index = 0; index < dbUploader.getThreadNum(); index++) {
+            DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
+            if (dbBean == null) {
+                continue;
+            }
+            if(!dbBean.getType().equals(dbUploader.DB_TYPE_WEB_SERVICE))
+            	continue;
+            for (TableBean tBean : dbBean.getTables()) {
+                String dbData = null;
+                if(dbBean.getType().equals(dbUploader.DB_TYPE_WEB_SERVICE) && tBean.getTable().equals("pias/getItlist")){
+                	dbData = dbUploader.getDataFromWebServiceForTest(dbBean, tBean);
+                	System.out.println(dbData);
+//                	return;
+                }
+//                JSONArray jArray = new JSONArray();
+//                String maxVersion = SqlHelper.getDBData(dbUploader.getPrisonId(), dbBean, tBean, 1, jArray);
+////                  jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
+//                ObjectMapper oMapper = new ObjectMapper();
+//                JsonNode root = oMapper.readTree(jArray.toString());
+//                for (int i = 0; i < root.size(); i++) {
+//                    JsonNode item = root.get(i);
+//                    Assert.assertEquals(item.get("hdfs_prison").asText(),dbUploader.getPrisonId());
+//                    Assert.assertEquals(item.get("hdfs_db").asText(),"DocumentDB");
+//                }
+            }
+        }
+	}
+	
     @Test
     public void testGetMsgProduct() throws Exception {
-            DbUploader dbUploader = new DbUploader();
-            dbUploader.setup();
-            for (int index = 0; index < dbUploader.getThreadNum(); index++) {
-                    DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
-                    if (dbBean == null) {
-                            continue;
-                    }
-                    for (TableBean tBean : dbBean.getTables()) {
-                            JSONArray jArray = new JSONArray();
-                            String maxVersion = SqlHelper.getDBData(dbUploader.getPrisonId(), dbBean, tBean, 1, jArray);
-
-//                          jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
-                            ObjectMapper oMapper = new ObjectMapper();
-                            JsonNode root = oMapper.readTree(jArray.toString());
-                            for (int i = 0; i < root.size(); i++) {
-                                    JsonNode item = root.get(i);
-                                    Assert.assertEquals(item.get("hdfs_prison").asText(),dbUploader.getPrisonId());
-                                    Assert.assertEquals(item.get("hdfs_db").asText(),"DocumentDB");
-                            }
-                    }
+        DbUploader dbUploader = new DbUploader();
+        dbUploader.setup();
+        for (int index = 0; index < dbUploader.getThreadNum(); index++) {
+            DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
+            if (dbBean == null) {
+                continue;
             }
+            for (TableBean tBean : dbBean.getTables()) {
+                JSONArray jArray = new JSONArray();
+                String maxVersion = SqlHelper.getDBData(dbUploader.getPrisonId(), dbBean, tBean, 1, jArray);
+//                  jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
+                ObjectMapper oMapper = new ObjectMapper();
+                JsonNode root = oMapper.readTree(jArray.toString());
+                for (int i = 0; i < root.size(); i++) {
+                    JsonNode item = root.get(i);
+                    Assert.assertEquals(item.get("hdfs_prison").asText(),dbUploader.getPrisonId());
+                    Assert.assertEquals(item.get("hdfs_db").asText(),"DocumentDB");
+                }
+            }
+        }
     }
 
 	public static void main(String[] args) throws Exception {
 		AppTest appTest = new AppTest();
-		appTest.testGetMsg();
+//		appTest.testGetMsg();
+//		appTest.testGetMsgProduct();
+		appTest.testGetMsgForWeb();
 	}
 }

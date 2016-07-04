@@ -103,8 +103,13 @@ public class BeaverUtils {
 	public static StringBuilder doPost(String webUrl, Map<String, String> paraMap, String contentType) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		Set<String> keySet = paraMap.keySet();
+		boolean first = true;
 		for (String key : keySet) {
-			sb.append(key).append('=').append(paraMap.get(key)).append('&');
+			if (!first) {
+				sb.append('&');
+			}
+			first = false;
+			sb.append(key).append('=').append(paraMap.get(key));
 		}
 		return doPost(webUrl, sb.toString(), contentType);
 	}
@@ -128,6 +133,7 @@ public class BeaverUtils {
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
 	        urlConnection.setRequestProperty("Content-Length", "" + flumeJson.length());
 	        urlConnection.setConnectTimeout(20000);
+	        urlConnection.setDoInput(true);
 	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
 
 	        if (flumeJson != null) {
@@ -279,7 +285,6 @@ public class BeaverUtils {
 			sb.append(key).append(paraMap.get(key));
 		}
 		sb.append(appSecret);
-
 		MessageDigest md = MessageDigest.getInstance("md5");
 		return toHexString(md.digest(sb.toString().getBytes()));
 	}

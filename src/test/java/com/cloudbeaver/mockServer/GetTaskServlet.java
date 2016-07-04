@@ -22,35 +22,36 @@ public class GetTaskServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(GetTaskServlet.class);
 	private static String getTaskApi = "/api/business/sync/";
 
-	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj2\",\"tables\":"
-			+ "[{\"table\":\"da_jbxx\",\"xgsj\":\"0000000000000000\"},{\"table\":\"da_jl\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"da_qklj\",\"xgsj\":\"0000000000000000\"},{\"table\":\"da_shgx\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"da_tzzb\",\"xgsj\":\"0000000000000000\"},{\"table\":\"da_tszb\",\"join\":[\"da_tsbc\"],\"key\":\"da_tszb.bh=da_tsbc.bh\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"da_clzl\",\"xgsj\":\"0000000000000000\"},{\"table\":\"da_crj\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"da_swdj\",\"xgsj\":\"0000000000000000\"},{\"table\":\"da_tc\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"da_zm\",\"xgsj\":\"0000000000000000\"},{\"table\":\"yzjc\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"xfzb\",\"xgsj\":\"0000000000000000\"},{\"table\":\"djbd\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"db\",\"xgsj\":\"0000000000000000\"},{\"table\":\"nwfg\",\"xgsj\":\"0000000000000000\"},{\"table\":\"hjdd\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"hjbd\",\"xgsj\":\"0000000000000000\"},{\"table\":\"jxcd\",\"xgsj\":\"0000000000000000\"},{\"table\":\"st\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"jy_rzfpbd\",\"xgsj\":\"0000000000000000\"},{\"table\":\"jwbw\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"bwxb\",\"xgsj\":\"0000000000000000\"},{\"table\":\"tt\",\"xgsj\":\"0000000000000000\"},{\"table\":\"lbc\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"ss\",\"join\":[\"ssfb\"],\"key\":\"ss.ssid=ssfb.ssid\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"ks\",\"join\":[\"ksfb\"],\"key\":\"ks.bh=ksfb.bh AND ks.ksrq=ksfb.ksrq\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"jfjjzb\",\"xgsj\":\"0000000000000000\"},{\"table\":\"tbjd\",\"xgsj\":\"0000000000000000\"},{\"table\":\"gzjs\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"qjfj\",\"xgsj\":\"0000000000000000\"},{\"table\":\"yjdj\",\"xgsj\":\"0000000000000000\"},{\"table\":\"sg\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"em_zb\",\"xgsj\":\"0000000000000000\"},{\"table\":\"em_qk\",\"join\":[\"em_zb\"],\"key\":\"em_qk.bh=em_zb.bh\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"em_jd\",\"join\":[\"em_zb\"],\"key\":\"em_jd.bh=em_zb.bh\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"em_jc\",\"join\":[\"em_zb\"],\"key\":\"em_jc.bh=em_zb.bh\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"em_sy\",\"join\":[\"em_zb\"],\"key\":\"em_sy.bh=em_zb.bh\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"fpa_zacy\",\"join\":[\"fpa_zb\",\"fpa_swry\"],\"key\":\"fpa_zacy.ah=fpa_zb.ah AND fpa_zacy.ah=fpa_swry.ah\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"yma_zacy\",\"join\":[\"yma_zb\"],\"key\":\"yma_zacy.ah=yma_zb.ah\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"wjp_bc\",\"join\":[\"wjp_zb\"],\"key\":\"wjp_bc.wjpid=wjp_zb.wjpid\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"wyld_ry\",\"join\":[\"wyld_zb\"],\"key\":\"wyld_ry.wydid=wyld_zb.wydid\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"hj\",\"join\":[\"hj_fb\"],\"key\":\"hj.hjid=hj_fb.hjid\",\"xgsj\":\"0000000000000000\"},{\"table\":\"khjf\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"khjf_sd\",\"xgsj\":\"0000000000000000\"},{\"table\":\"khf\",\"xgsj\":\"0000000000000000\"},{\"table\":\"thdj\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"wp_bgzb\",\"join\":[\"wp_bgbc\"],\"key\":\"wp_bgzb.bh=wp_bgbc.bh AND wp_bgzb.djrq=wp_bgbc.djrq\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"wwzk\",\"xgsj\":\"0000000000000000\"},{\"table\":\"wwjc\",\"xgsj\":\"0000000000000000\"},"
-			+ "{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\",\"xgsj\":\"0000000000000000\"},{\"table\":\"sndd\",\"xgsj\":\"0000000000000000\"}]}]}";
+	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj\",\"tables\":"
+			+ "[{\"table\":\"da_jbxx\",\"xgsj\":\"0\"},{\"table\":\"da_jl\",\"xgsj\":\"0\"},{\"table\":\"da_qklj\",\"xgsj\":\"0\"},{\"table\":\"da_shgx\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"da_tzzb\",\"xgsj\":\"0\"},{\"table\":\"da_tszb\",\"join\":[\"da_tsbc\"],\"key\":\"da_tszb.bh=da_tsbc.bh\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"da_clzl\",\"xgsj\":\"0\"},{\"table\":\"da_crj\",\"xgsj\":\"0\"},{\"table\":\"da_swdj\",\"xgsj\":\"0\"},{\"table\":\"da_tc\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"da_zm\",\"xgsj\":\"0\"},{\"table\":\"yzjc\",\"xgsj\":\"0\"},{\"table\":\"xfzb\",\"xgsj\":\"0\"},{\"table\":\"djbd\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"db\",\"xgsj\":\"0\"},{\"table\":\"nwfg\",\"xgsj\":\"0\"},{\"table\":\"hjdd\",\"xgsj\":\"0\"},{\"table\":\"hjbd\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"jxcd\",\"xgsj\":\"0\"},{\"table\":\"st\",\"xgsj\":\"0\"},{\"table\":\"jy_rzfpbd\",\"xgsj\":\"0\"},{\"table\":\"jwbw\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"bwxb\",\"xgsj\":\"0\"},{\"table\":\"tt\",\"xgsj\":\"0\"},{\"table\":\"lbc\",\"xgsj\":\"0\"},{\"table\":\"ss\",\"join\":[\"ssfb\"],\"key\":"
+			+ "\"ss.ssid=ssfb.ssid\",\"xgsj\":\"0\"},{\"table\":\"ks\",\"join\":[\"ksfb\"],\"key\":\"ks.bh=ksfb.bh AND ks.ksrq=ksfb.ksrq\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"jfjjzb\",\"xgsj\":\"0\"},{\"table\":\"tbjd\",\"xgsj\":\"0\"},{\"table\":\"gzjs\",\"xgsj\":\"0\"},{\"table\":\"qjfj\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"yjdj\",\"xgsj\":\"0\"},{\"table\":\"sg\",\"xgsj\":\"0\"},{\"table\":\"em_zb\",\"xgsj\":\"0\"},{\"table\":\"em_qk\",\"join\":[\"em_zb\"],\"key\":"
+			+ "\"em_qk.bh=em_zb.bh\",\"xgsj\":\"0\"},{\"table\":\"em_jd\",\"join\":[\"em_zb\"],\"key\":\"em_jd.bh=em_zb.bh\",\"xgsj\":\"0\"},{\"table\":\"em_jc\",\"join\":"
+			+ "[\"em_zb\"],\"key\":\"em_jc.bh=em_zb.bh\",\"xgsj\":\"0\"},{\"table\":\"em_sy\",\"join\":[\"em_zb\"],\"key\":\"em_sy.bh=em_zb.bh\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"fpa_zacy\",\"join\":[\"fpa_zb\",\"fpa_swry\"],\"key\":\"fpa_zacy.ah=fpa_zb.ah AND fpa_zacy.ah=fpa_swry.ah\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"yma_zacy\",\"join\":[\"yma_zb\"],\"key\":\"yma_zacy.ah=yma_zb.ah\",\"xgsj\":\"0\"},{\"table\":\"wjp_bc\",\"join\":[\"wjp_zb\"],\"key\":"
+			+ "\"wjp_bc.wjpid=wjp_zb.wjpid\",\"xgsj\":\"0\"},{\"table\":\"wyld_ry\",\"join\":[\"wyld_zb\"],\"key\":\"wyld_ry.wydid=wyld_zb.wydid\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"hj\",\"join\":[\"hj_fb\"],\"key\":\"hj.hjid=hj_fb.hjid\",\"xgsj\":\"0\"},{\"table\":\"khjf\",\"xgsj\":\"0\"},{\"table\":\"khjf_sd\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"khf\",\"xgsj\":\"0\"},{\"table\":\"thdj\",\"xgsj\":\"0\"},{\"table\":\"wp_bgzb\",\"join\":[\"wp_bgbc\"],\"key\":"
+			+ "\"wp_bgzb.bh=wp_bgbc.bh AND wp_bgzb.djrq=wp_bgbc.djrq\",\"xgsj\":\"0\"},{\"table\":\"wwzk\",\"xgsj\":\"0\"},{\"table\":\"wwjc\",\"xgsj\":\"0\"},"
+			+ "{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\",\"xgsj\":\"0\"},{\"table\":\"sndd\",\"xgsj\":\"0\"}]},"
+			+ "{\"db\":\"MeetingDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pias/getItlist\",\"starttime\":\"0\"}]},"
+			+ "{\"db\":\"TalkDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"qqdh/getTalkList\",\"starttime\":\"0\"},{\"table\":\"qqdh/getQqdh\",\"starttime\":\"0\"}]},"
+			+ "{\"db\":\"PrasDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pras/getResult\",\"starttime\":\"0\"},{\"table\":\"pras/getTable\",\"starttime\":\"0\"}]},"
+			+ "{\"db\":\"JfkhDB\",\"rowversion\":\"ID\",\"tables\":[{\"table\":\"BZ_JFKH_DRECORDSUB\",\"join_subtable\":[\"BZ_JFKH_DRECORD\"],\"key\":"
+			+ "\"BZ_JFKH_DRECORDSUB.PID=BZ_JFKH_DRECORD.ID\",\"ID\":\"0\"},{\"table\":\"BZ_JFKH_MYZKJFSPSUB\",\"join_subtable\":[\"BZ_JFKH_MYZKJFSP\"],\"key\":"
+			+ "\"BZ_JFKH_MYZKJFSPSUB.PID=BZ_JFKH_MYZKJFSP.ID\",\"ID\":\"0\"},{\"table\":\"BZ_JFKH_ZFFJQDDJL\",\"ID\":\"0\"},{\"table\":\"BZ_JFKH_ZFFYDDJL\",\"ID\":\"0\"},"
+			+ "{\"table\":\"BZ_KHBZ_DOCTOR\",\"join_subtable\":[\"BZ_KHBZ_DOCTORSUB\"],\"key\":\"BZ_KHBZ_DOCTOR.ID=BZ_KHBZ_DOCTORSUB.PID\",\"ID\":\"0\"},"
+			+ "{\"table\":\"BZ_KHBZ_JBSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_JJJSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_LJTQSP\",\"join_subtable\":[\"BZ_KHBZ_LJTQSPSUB\"],"
+			+ "\"key\":\"BZ_KHBZ_LJTQSP.ID=BZ_KHBZ_LJTQSPSUB.PID\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_TXLJTQSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZCFSP\",\"ID\":\"0\"},"
+			+ "{\"table\":\"BZ_KHBZ_XZJLSP\",\"ID\":\"0\"}]}]}";
 
 	private static MultiDatabaseBean databaseBeans;
 	
@@ -79,7 +80,7 @@ public class GetTaskServlet extends HttpServlet{
     	
     	String tableId = url.substring(tableIdIndex + 1);
     	String json;
-    	if (tableId.endsWith("documentdb")) {
+    	if (tableId.endsWith("db")) {
     		databaseBeans = getMultiDatabaseBean();
     		ObjectMapper oMapper = new ObjectMapper();
     		StringWriter str=new StringWriter();

@@ -3,8 +3,10 @@ package com.cloudbeaver.mockServer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
+
+import com.cloudbeaver.client.common.BeaverUtils;
 
 @WebServlet("/interface/*")
 public class GetResultServlet extends HttpServlet{
@@ -28,6 +32,12 @@ public class GetResultServlet extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
+    	Enumeration<String> params = req.getParameterNames();
+    	while(params.hasMoreElements()){
+    		String paramName = params.nextElement();
+    		System.out.println(paramName + " " + req.getParameter(paramName));
+    	}
+    	
     	String url = req.getRequestURI();
     	int pos = url.indexOf(getTaskApi);
     	if (pos == -1) {
@@ -36,21 +46,36 @@ public class GetResultServlet extends HttpServlet{
     	String tablename = url.substring(pos+getTaskApi.length());
     	
     	Map<String, String> map = new HashMap<String,String>();
-    	map.put("tmpAppKey", "tmpAppSecret");
+    	map.put("tmpKey", "tmpKey");
     	
     	String appkey = req.getParameter("appkey");
     	String sign = req.getParameter("sign");
+    	String pagesize = req.getParameter("pagesize");
+    	String pageno = null;   
+    	if(req.getParameter("pageno") == null){
+    		pageno = "1";
+    	}
+    	else{
+    		pageno = req.getParameter("pageno");
+    	}
+    	System.out.println("pageno = "+pageno);
     	
     	if(!map.containsKey(appkey)){
+    		System.out.println(appkey);
     		throw new ServletException("AppKey is invalid!");
     	}
-    	String originSign = createSign(appkey, map.get(appkey));
+    	String originSign = null;
+		try {
+			originSign = createSign(appkey, map.get(appkey), tablename, pageno);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	if(!sign.equals(originSign)){
     		throw new ServletException("Sign is invalid!");
-    	}
+    	}    	
     	
-    	String pagesize = req.getParameter("pagesize");
-    	String pageno = req.getParameter("pageno");     
+    	
     	int totalsize = 100;
     	int totalpages = 0;
     	if(totalsize%Integer.parseInt(pagesize) == 0){
@@ -221,12 +246,24 @@ public class GetResultServlet extends HttpServlet{
     	return json;
     }
 
-    public static String createSign(String appkey, String appsecret){
-    	Map<String, String> params = new HashMap<String, String>();
-		params.put("appkey", appkey); 
-		params.put("pfcode", "0123"); 
-		params.put("pagesize", "20"); 
-		String sign = sign(params, null, appsecret); 
+    public static String createSign(String appkey, String appsecret, String tablename, String pageno) throws NoSuchAlgorithmException{
+    	Map<String, String> paraMap = new HashMap<String, String>();
+		paraMap.put("appkey", appkey);
+
+		if (Integer.parseInt(pageno) != 1) {
+			paraMap.put("pageno", pageno);
+		}
+
+		if (tablename.equals("pras/getTable")) {
+			paraMap.put("pagesize", "" + 1);
+		}else {
+			paraMap.put("pagesize", "" + 30);
+			paraMap.put("starttime", "1970-01-01");
+			paraMap.put("endtime", "1970-01-02");
+		}
+
+		String sign = BeaverUtils.getRequestSign(paraMap, appsecret);
+		System.out.println("sign = "+sign);
 		return sign;
     }
     
@@ -279,11 +316,11 @@ public class GetResultServlet extends HttpServlet{
     	super.doPut(req, resp);
     }
     
-    public static void main(String [] args){
+    public static void main(String [] args) throws NoSuchAlgorithmException{
     	String appkey = "tmpAppKey";
     	String appsecret = "tmpAppSecret";
-    	String sign = GetResultServlet.createSign(appkey,appsecret);
-    	System.out.println(sign);
+//    	String sign = GetResultServlet.createSign(appkey,appsecret);
+//    	System.out.println(sign);
 //    	sign = "c50f87030e7904ac497cc96194c0897e";
 	}
     

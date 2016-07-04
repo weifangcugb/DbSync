@@ -62,6 +62,7 @@ public class TableBean implements Serializable{
 		setXgsjByInterval(interval);
 	}
 
+	@JsonIgnore
 	public void setXgsjByInterval(int interval) {
 		prevxgsj = xgsj;
 		prevPageNum = currentPageNum;
@@ -73,6 +74,7 @@ public class TableBean implements Serializable{
 		totalPageNum = 0;
 	}
 
+	@JsonIgnore
 	public void setXgsjwithLong(long timestamp) {
 		prevxgsj = "" + timestamp;
 		xgsj = "" + timestamp;
@@ -108,6 +110,7 @@ public class TableBean implements Serializable{
 		return prevxgsj;
 	}
 
+	@JsonIgnore
 	public long getPrevxgsjAsLong() {
 		return Long.parseLong(prevxgsj);
 	}
@@ -259,6 +262,7 @@ public class TableBean implements Serializable{
 		return "select max(" + rowversionColumn +") from " + table;
 	}
 
+	@JsonIgnore
 	public long getXgsjAsLong() {
 		return Long.parseLong(xgsj);
 	}

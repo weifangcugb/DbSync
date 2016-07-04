@@ -19,8 +19,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class DbUploader extends CommonUploader{
@@ -88,7 +90,8 @@ public class DbUploader extends CommonUploader{
 	}
 
 	@Override
-	public int getThreadNum() {
+	public int getThreadNum() {	
+		ArrayList<DatabaseBean> databases = new ArrayList<DatabaseBean>();
 		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
 			if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE)) {
 				DatabaseBean newBean;
@@ -99,14 +102,14 @@ public class DbUploader extends CommonUploader{
 						long now = System.currentTimeMillis();
 						tableBean.setXgsjwithLong((now - now % (24 * 3600 * 1000))- WEB_DB_UPDATE_INTERVAL * 3 - 8 * 3600 * 1000);
 					}
-					dbBeans.getDatabases().add(newBean);
+					databases.add(newBean);
 				} catch (ClassNotFoundException | IOException e) {
 					BeaverUtils.printLogExceptionAndSleep(e, "can't clone databaseBean,", 100);
 					break;
 				}
 			}
-		}
-
+		}		
+		dbBeans.getDatabases().addAll(databases);
 		return dbBeans.getDatabases().size();
 	}
 
@@ -183,6 +186,10 @@ public class DbUploader extends CommonUploader{
         }
 	}
 
+	public String getDataFromWebServiceForTest(DatabaseBean dbBean,TableBean tableBean) throws BeaverTableIsFullException, BeaverTableNeedRetryException, BeaverFatalException {
+		return getDataFromWebService(dbBean,tableBean);
+	}
+	
 	private String getDataFromWebService(DatabaseBean dbBean,TableBean tableBean) throws BeaverTableIsFullException, BeaverTableNeedRetryException, BeaverFatalException {
 		String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
 		logger.debug("requet one weburl, webUrl:" + webUrl);
@@ -246,7 +253,7 @@ public class DbUploader extends CommonUploader{
 
 		String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
 		paraMap.put("sign", sign);
-		StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "text/plain");
+		StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "application/x-www-form-urlencoded");
 		return sb;
 	}
 
