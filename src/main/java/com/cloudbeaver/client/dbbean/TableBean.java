@@ -6,13 +6,15 @@ import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverTableIsFullException;
 import com.cloudbeaver.client.common.CommonUploader;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * bean for one table
  */
-public class TableBean implements Cloneable{
+public class TableBean implements Serializable{
     private static Logger logger = Logger.getLogger(TableBean.class);
 
     private String table;
@@ -20,6 +22,11 @@ public class TableBean implements Cloneable{
     private ArrayList<String> join;
     private ArrayList<String> join_subtable;
     private String key;
+    private String starttime = "0";
+    @JsonProperty("ID")
+    private String ID = "0";
+
+    @JsonIgnore
     private String queryTime;
 
     @JsonIgnore
@@ -40,6 +47,16 @@ public class TableBean implements Cloneable{
 
     @JsonIgnore
     private boolean syncTypeOnceADay = false;
+
+	public void setStarttime(String starttime) {
+		this.starttime = starttime;
+		xgsj = starttime;
+	}
+
+	public void setID(String ID) {
+		this.ID = ID;
+		xgsj = ID;
+	}
 
 	public void moveToNextXgsj(int interval) throws BeaverTableIsFullException {
 		setXgsjByInterval(interval);

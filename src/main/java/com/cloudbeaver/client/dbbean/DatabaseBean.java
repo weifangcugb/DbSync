@@ -2,12 +2,13 @@ package com.cloudbeaver.client.dbbean;
 
 import org.apache.log4j.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * bean for one database
  */
-public class DatabaseBean{
+public class DatabaseBean implements Serializable{
     private static Logger logger = Logger.getLogger(DatabaseBean.class);
 
     ArrayList<TableBean> tables = new ArrayList<TableBean>();
