@@ -24,7 +24,7 @@ public class TableBean implements Serializable{
     private String key;
     private String starttime = "0";
     @JsonProperty("ID")
-    private String ID = "0";
+    private String id = "0";
 
     @JsonIgnore
     private String queryTime;
@@ -54,7 +54,7 @@ public class TableBean implements Serializable{
 	}
 
 	public void setID(String ID) {
-		this.ID = ID;
+		this.id = ID;
 		xgsj = ID;
 	}
 
@@ -205,7 +205,7 @@ public class TableBean implements Serializable{
 
 			case CommonUploader.DB_TYPE_SQL_ORACLE:
 				return "SELECT '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-		                table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn, dbType, sqlLimitNum)
+		                table + "' AS hdfs_table, " + table + ".* " + fromClause() + whereClause(rowVersionColumn, dbType, sqlLimitNum)
 		                + " order by " + table + "." + rowVersionColumn;
 
 			default:
