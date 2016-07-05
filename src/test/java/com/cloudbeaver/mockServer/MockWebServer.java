@@ -27,9 +27,9 @@ public class MockWebServer {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
         context.addServlet(GetTaskServlet.class, "/api/business/sync/*");
-        context.addServlet(postTaskServlet.class, "/");
+        context.addServlet(PostDataServlet.class, "/");
         context.addServlet(SimpleTests.class, "/simple");
-        context.addServlet(GetResultServlet.class, "/interface/*");
+        context.addServlet(GetWebServerDataServlet.class, "/interface/*");
 
         HandlerCollection handlers = new HandlerCollection();
         handlers.setHandlers(new Handler[] { context, new DefaultHandler() });

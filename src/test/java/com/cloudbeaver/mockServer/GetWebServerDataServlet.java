@@ -21,8 +21,8 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 
 @WebServlet("/interface/*")
-public class GetResultServlet extends HttpServlet{
-	private static Logger logger = Logger.getLogger(GetResultServlet.class);
+public class GetWebServerDataServlet extends HttpServlet{
+	private static Logger logger = Logger.getLogger(GetWebServerDataServlet.class);
 	private static String getTaskApi = "/interface/";
 	
 	@Override
@@ -32,11 +32,11 @@ public class GetResultServlet extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
-    	Enumeration<String> params = req.getParameterNames();
-    	while(params.hasMoreElements()){
-    		String paramName = params.nextElement();
-    		System.out.println(paramName + " " + req.getParameter(paramName));
-    	}
+//    	Enumeration<String> params = req.getParameterNames();
+//    	while(params.hasMoreElements()){
+//    		String paramName = params.nextElement();
+//    		System.out.println(paramName + " " + req.getParameter(paramName));
+//    	}
     	
     	String url = req.getRequestURI();
     	int pos = url.indexOf(getTaskApi);
@@ -46,19 +46,38 @@ public class GetResultServlet extends HttpServlet{
     	String tablename = url.substring(pos+getTaskApi.length());
     	
     	Map<String, String> map = new HashMap<String,String>();
-    	map.put("tmpKey", "tmpKey");
+    	map.put("tmpKey", "tmpSecret");
     	
     	String appkey = req.getParameter("appkey");
+    	String starttime = req.getParameter("starttime");
+    	String endtime = req.getParameter("endtime");
     	String sign = req.getParameter("sign");
     	String pagesize = req.getParameter("pagesize");
+    	
+    	int totalsize = 100;
+    	if(starttime.equals(GetTaskServlet.fourDayBeforeString)){
+    		totalsize = 0;
+    	}
+    	int totalpages = 0;
+    	if(totalsize%Integer.parseInt(pagesize) == 0){
+    		totalpages = totalsize/Integer.parseInt(pagesize);
+    	}
+    	else{
+    		totalpages = totalsize/Integer.parseInt(pagesize)+1;
+    	}
     	String pageno = null;   
     	if(req.getParameter("pageno") == null){
-    		pageno = "1";
+    		if(totalpages == 0){
+    			pageno = "0";
+    		}
+    		else{
+    			pageno = "1";
+    		}
     	}
     	else{
     		pageno = req.getParameter("pageno");
     	}
-    	System.out.println("pageno = "+pageno);
+//    	System.out.println("pageno = "+pageno);
     	
     	if(!map.containsKey(appkey)){
     		System.out.println(appkey);
@@ -66,7 +85,7 @@ public class GetResultServlet extends HttpServlet{
     	}
     	String originSign = null;
 		try {
-			originSign = createSign(appkey, map.get(appkey), tablename, pageno);
+			originSign = createSign(appkey, map.get(appkey), tablename, pageno, pagesize, starttime, endtime);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -75,15 +94,6 @@ public class GetResultServlet extends HttpServlet{
     		throw new ServletException("Sign is invalid!");
     	}    	
     	
-    	
-    	int totalsize = 100;
-    	int totalpages = 0;
-    	if(totalsize%Integer.parseInt(pagesize) == 0){
-    		totalpages = totalsize/Integer.parseInt(pagesize);
-    	}
-    	else{
-    		totalpages = totalsize/Integer.parseInt(pagesize)+1;
-    	}
     	String json = getJson(tablename,pagesize,pageno,totalsize,totalpages);
 		
     	resp.setHeader("Content-type", "text/html;charset=UTF-8");
@@ -116,7 +126,7 @@ public class GetResultServlet extends HttpServlet{
     				+ "\"qiq\":0,\"regtime\":1384738549083,\"reviewtime\":0,\"starttime\":1384739404733,\"syprisonfk\":\"615564\",\"thismonth\":0,\"thisyear\":0,\"ts\":0}],"
     				+ "\"total\":" + totalsize +",\"totalPages\":" + totalpages + "}";
     	}
-    	else if(tablename.equals("qqdh/getTalklist")){
+    	else if(tablename.equals("qqdh/getTalkList")){
     		json = "{\"pageNo\":" + pageno + ",\"pageSize\":" + pagesize + ",\"records\":[{\"caller\":\"张三\",\"enddate\":\"2015-04-15 11:11:45\",\"fee\":20.0000,\"id\":7,"
     				+ "\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\",\"startdate\":\"2015-04-15 11:11:40\",\"state\":1,\"type\":\"拨出\",\"userno\":\"9999999999\"},"
     				+ "{\"caller\":\"张三\",\"enddate\":\"2015-04-15 11:27:25\",\"fee\":0.0000,\"id\":8,\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\","
@@ -246,76 +256,27 @@ public class GetResultServlet extends HttpServlet{
     	return json;
     }
 
-    public static String createSign(String appkey, String appsecret, String tablename, String pageno) throws NoSuchAlgorithmException{
+    public static String createSign(String appkey, String appsecret, String tablename, String pageno, String pagesize, String starttime, String endtime) throws NoSuchAlgorithmException{
     	Map<String, String> paraMap = new HashMap<String, String>();
 		paraMap.put("appkey", appkey);
 
-		if (Integer.parseInt(pageno) != 1) {
+		if (Integer.parseInt(pageno) != 1 && Integer.parseInt(pageno) != 0) {
 			paraMap.put("pageno", pageno);
 		}
 
 		if (tablename.equals("pras/getTable")) {
-			paraMap.put("pagesize", "" + 1);
+			paraMap.put("pagesize", pagesize);
 		}else {
-			paraMap.put("pagesize", "" + 30);
-			paraMap.put("starttime", "1970-01-01");
-			paraMap.put("endtime", "1970-01-02");
+			paraMap.put("pagesize", pagesize);
+			paraMap.put("starttime", starttime);
+			paraMap.put("endtime", endtime);
 		}
 
 		String sign = BeaverUtils.getRequestSign(paraMap, appsecret);
-		System.out.println("sign = "+sign);
+//		System.out.println("sign = "+sign);
 		return sign;
     }
-    
-    public static String sign(Map<String, String> paramValues, List<String> ignoreParamNames,String secret) {
-        try {
-            StringBuilder sb = new StringBuilder();
-            List<String> paramNames = new ArrayList<String>(paramValues.size());
-            paramNames.addAll(paramValues.keySet());
-            if(ignoreParamNames != null && ignoreParamNames.size() > 0){
-                for (String ignoreParamName : ignoreParamNames) {
-                    paramNames.remove(ignoreParamName);
-                }
-            } 
-            Collections.sort(paramNames);
-            sb.append(secret);
-            for (String paramName : paramNames) {
-                sb.append(paramName).append(paramValues.get(paramName));
-            }
-            sb.append(secret);
-//            System.out.println(sb.toString());
-            MessageDigest md = MessageDigest.getInstance("md5");
-            return toHexString(md.digest(sb.toString().getBytes()));
-        } catch (Exception e) {
-        	e.printStackTrace();
-        	logger.debug("key generaton failed");
-        	return "";
-        }
-    }
-    
-    public static String toHexString(byte bytes[]) {
-        StringBuilder hs = new StringBuilder();
-        String stmp = "";
-        for (int n = 0; n < bytes.length; n++) {
-            stmp = Integer.toHexString(bytes[n] & 0xff);
-            if (stmp.length() == 1)
-                hs.append("0").append(stmp);
-            else
-                hs.append(stmp);
-        } 
-        return hs.toString();
-    }
-    
-    @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    	super.doDelete(req, resp);
-    }
 
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    	super.doPut(req, resp);
-    }
-    
     public static void main(String [] args) throws NoSuchAlgorithmException{
     	String appkey = "tmpAppKey";
     	String appsecret = "tmpAppSecret";

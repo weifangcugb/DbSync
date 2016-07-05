@@ -3,6 +3,8 @@ package com.cloudbeaver.mockServer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,15 +14,24 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
+import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
+import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import scala.annotation.StaticAnnotation;
 
 @WebServlet("/api/business/sync/*")
 public class GetTaskServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(GetTaskServlet.class);
 	private static String getTaskApi = "/api/business/sync/";
+	public static long now = System.currentTimeMillis();
+	public static long fiveDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 5 - 8 * 3600 * 1000;
+	public static long fourDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 4 - 8 * 3600 * 1000;
+	public static String fourDayBeforeString = BeaverUtils.timestampToDateString(fourDayBefore);
 
 //	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj2\",\"tables\":"
 //			+ "[{\"table\":\"da_jbxx\",\"xgsj\":\"0000000000000000\"},{\"table\":\"da_jl\",\"xgsj\":\"0000000000000000\"},"
@@ -98,10 +109,14 @@ public class GetTaskServlet extends HttpServlet{
 //		+ "{\"table\":\"wp_bgzb\",\"join\":[\"wp_bgbc\"],\"key\":\"wp_bgzb.bh=wp_bgbc.bh AND wp_bgzb.djrq=wp_bgbc.djrq\",\"xgsj\":\"0\"},{\"table\":\"wwzk\",\"xgsj\":\"0\"},"
 //		+ "{\"table\":\"wwjc\",\"xgsj\":\"0\"},{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\",\"xgsj\":\"0\"},{\"table\":\"sndd\",\"xgsj\":\"0\"}]}]}";
 
-	private static String youDiInitJson = "{\"databases\":[{\"db\":\"MeetingDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pias/getItlist\",\"starttime\":\"0\"}]},"
-			+ "{\"db\":\"TalkDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"qqdh/getTalkList\",\"starttime\":\"0\"},{\"table\":\"qqdh/getQqdh\",\"starttime\":\"0\"}]},"
-			+ "{\"db\":\"PrasDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pras/getResult\",\"starttime\":\"0\"},{\"table\":\"pras/getTable\",\"starttime\":\"0\"}]}]}";
+//	private static String youDiInitJson = "{\"databases\":[{\"db\":\"MeetingDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pias/getItlist\",\"starttime\":\"0\"}]},"
+//			+ "{\"db\":\"TalkDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"qqdh/getTalkList\",\"starttime\":\"0\"},{\"table\":\"qqdh/getQqdh\",\"starttime\":\"0\"}]},"
+//			+ "{\"db\":\"PrasDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pras/getResult\",\"starttime\":\"0\"},{\"table\":\"pras/getTable\",\"starttime\":\"0\"}]}]}";
 
+	private static String youDiInitJson = "{\"databases\":[{\"db\":\"MeetingDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pias/getItlist\",\"starttime\":\"" + fiveDayBefore + "\"}]},"
+			+ "{\"db\":\"TalkDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"qqdh/getTalkList\",\"starttime\":\"" + fiveDayBefore + "\"},{\"table\":\"qqdh/getQqdh\",\"starttime\":\"" + fiveDayBefore + "\"}]},"
+			+ "{\"db\":\"PrasDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pras/getResult\",\"starttime\":\"" + fiveDayBefore + "\"},{\"table\":\"pras/getTable\",\"starttime\":\"" + fiveDayBefore + "\"}]}]}";
+	
 	private static String zhongCiInitJson = "{\"databases\":[{\"db\":\"JfkhDB\",\"rowversion\":\"ID\",\"tables\":["
 			+ "{\"table\":\"BZ_JFKH_DRECORDSUB\",\"join_subtable\":[\"BZ_JFKH_DRECORD\"],\"key\":\"BZ_JFKH_DRECORDSUB.PID=BZ_JFKH_DRECORD.ID\",\"ID\":\"8700\"},"
 			+ "{\"table\":\"BZ_JFKH_MYZKJFSPSUB\",\"join_subtable\":[\"BZ_JFKH_MYZKJFSP\"],\"key\":\"BZ_JFKH_MYZKJFSPSUB.PID=BZ_JFKH_MYZKJFSP.ID\",\"ID\":\"0\"},"
@@ -116,7 +131,9 @@ public class GetTaskServlet extends HttpServlet{
 	public static MultiDatabaseBean getMultiDatabaseBean() throws JsonParseException, JsonMappingException, IOException{
 		if(databaseBeans == null){			
 			ObjectMapper oMapper = new ObjectMapper();
-			databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
+//			databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
+			//for web server test
+			databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
 		}
 		return databaseBeans;
 	}
@@ -140,6 +157,13 @@ public class GetTaskServlet extends HttpServlet{
     	String json;
     	if (tableId.endsWith("db")) {
     		databaseBeans = getMultiDatabaseBean();
+    		for(int i = 0; i < databaseBeans.getDatabases().size(); i++){
+    			DatabaseBean dBean = databaseBeans.getDatabases().get(i);
+    			for(int j = 0; j < dBean.getTables().size(); j++){
+    				TableBean tBean = dBean.getTables().get(j);
+    				tBean.setID(tBean.getStarttime());
+    			}
+    		}
     		ObjectMapper oMapper = new ObjectMapper();
     		StringWriter str=new StringWriter();
     		oMapper.writeValue(str, databaseBeans);
@@ -172,4 +196,9 @@ public class GetTaskServlet extends HttpServlet{
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	super.doPut(req, resp);
     }
+    
+    public static void main(String []args) {
+		System.out.println(fourDayBeforeString);
+		System.out.println(fourDayBefore);
+	}
 }
