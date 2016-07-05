@@ -156,10 +156,10 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
-		<compilerArguments>
-                   <extdirs>src/resources</extdirs>
-                </compilerArguments>
-	    </configuration>
+		            <compilerArguments>
+                        <extdirs>src/resources</extdirs>
+                    </compilerArguments>
+                </configuration>
             </plugin>
 
             <plugin>

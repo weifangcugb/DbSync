@@ -1,6 +1,7 @@
 package com.cloudbeaver.client.common;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 import net.sf.json.JSONArray;
@@ -98,7 +99,23 @@ public class SqlHelper {
 
 	public static String getDBData(String prisonId, DatabaseBean dbBean,TableBean tableBean, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
 		String sqlQuery = tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), sqlLimitNum);
-		return execSqlQuery(sqlQuery, dbBean, jArray);
+		String maxRowVersion = execSqlQuery(sqlQuery, dbBean, jArray);
+		if (!jArray.isEmpty() && tableBean.getJoin_subtable() != null) {
+//			handle join_subtable
+			for (int i = 0; i < jArray.size(); i++) {
+				JSONObject jsonObject = jArray.getJSONObject(i);
+				ArrayList<String> subtables = tableBean.getJoin_subtable();
+				for (String subtable : subtables) {
+					String subtableSql = tableBean.getSubTableSqlString(dbBean.getType(), dbBean.getRowversion(), subtable, jsonObject.getString(dbBean.getRowversion()));
+					JSONArray subArray = new JSONArray();
+					execSqlQuery(subtableSql, dbBean, subArray);
+					if (!subArray.isEmpty()) {
+						jsonObject.put(subtable, subArray);
+					}
+				}
+			}
+		}
+		return maxRowVersion;
 	}
 
 	public static String getMaxRowVersion(DatabaseBean dbBean, TableBean tableBean) throws SQLException, BeaverFatalException{
