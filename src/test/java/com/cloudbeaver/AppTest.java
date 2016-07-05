@@ -175,7 +175,7 @@ public class AppTest{
             for (TableBean tBean : dbBean.getTables()) {
                 JSONArray jArray = new JSONArray();
                 String maxVersion = SqlHelper.getDBData(dbUploader.getPrisonId(), dbBean, tBean, 1, jArray);
-//                  jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
+//              jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
                 ObjectMapper oMapper = new ObjectMapper();
                 JsonNode root = oMapper.readTree(jArray.toString());
                 for (int i = 0; i < root.size(); i++) {

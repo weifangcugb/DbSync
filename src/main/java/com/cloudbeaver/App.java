@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.fileUploader.FileUploader;
+//import com.cloudbeaver.mockServer.MockWebServer;
 import com.cloudbeaver.server.brokermonitor.BrokerMonitorWebServer;
 import com.cloudbeaver.server.consumer.SyncConsumer;
 
@@ -91,26 +92,6 @@ public class App {
 				}
 			}
 
-            if (commandLine.hasOption('m')) {
-            	String moduleName = commandLine.getOptionValue('m');
-                switch (moduleName) {
-                    case "dbUploader":
-                    	DbUploader.startDbUploader();
-                    	break;
-                    case "fileUploader":
-                    	FileUploader.startFileUploader();
-                    	break;
-                    case "syncConsumer":
-                    	SyncConsumer.startSyncConsumer();
-                    	break;
-                    case "brokerMonitor":
-                    	BrokerMonitorWebServer.startBrokerMonitor();
-                    	break;
-                    default:
-                    	throw new ParseException("module name is wrong");
-                }
-	  		}
-
             if (commandLine.hasOption('k')) {
             	String kafkaVersion = commandLine.getOptionValue('k');
             	switch (kafkaVersion) {
@@ -138,6 +119,29 @@ public class App {
 						throw new ParseException("dir location is wrong, only 'local' or 'remote' allowed.");
 				}
 			}
+
+            if (commandLine.hasOption('m')) {
+            	String moduleName = commandLine.getOptionValue('m');
+                switch (moduleName) {
+                    case "dbUploader":
+                    	DbUploader.startDbUploader();
+                    	break;
+                    case "fileUploader":
+                    	FileUploader.startFileUploader();
+                    	break;
+                    case "syncConsumer":
+                    	SyncConsumer.startSyncConsumer();
+                    	break;
+                    case "brokerMonitor":
+                    	BrokerMonitorWebServer.startBrokerMonitor();
+                    	break;
+                    case "mockWebServer":
+//                    	MockWebServer.startMockWebServer();
+                    	break;
+                    default:
+                    	throw new ParseException("module name is wrong");
+                }
+	  		}
 		} catch (ParseException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.fatal("command line is wrong, msg:" + e.getMessage());

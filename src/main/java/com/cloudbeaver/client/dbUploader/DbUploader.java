@@ -283,8 +283,7 @@ public class DbUploader extends CommonUploader{
 				}
 			}
 
-//			handle join_subtable, do we really need join_subtable?
-
+			logger.info("get data from oracle, data:" + jArray.toString());
 			return jArray.toString();
 		} catch (SQLException e) {
 			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);

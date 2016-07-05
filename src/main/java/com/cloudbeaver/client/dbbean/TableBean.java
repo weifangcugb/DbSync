@@ -1,5 +1,7 @@
 package com.cloudbeaver.client.dbbean;
 
+import net.sf.json.JSONObject;
+
 import org.apache.log4j.*;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
@@ -198,28 +200,38 @@ public class TableBean implements Serializable{
     	switch (dbType) {
 			case CommonUploader.DB_TYPE_SQL_SERVER:
 				return "SELECT top " + sqlLimitNum + " '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-                table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
-                + " order by " + table + "." + rowVersionColumn;
+                		table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+                		+ " order by " + table + "." + rowVersionColumn;
 
 			case CommonUploader.DB_TYPE_SQL_SQLITE:
 				return "SELECT '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-                table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
-                + " order by " + table + "." + rowVersionColumn + " limit " + sqlLimitNum;
+                		table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+                		+ " order by " + table + "." + rowVersionColumn + " limit " + sqlLimitNum;
 
 			case CommonUploader.DB_TYPE_SQL_ORACLE:
 				return "SELECT '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-		                table + "' AS hdfs_table, " + table + ".* " + fromClause() + whereClause(rowVersionColumn, dbType, sqlLimitNum)
+		                table + "' AS hdfs_table, " + selectColumnClause() + fromClause() + whereClause(rowVersionColumn, dbType, sqlLimitNum)
 		                + " order by " + table + "." + rowVersionColumn;
 
 			default:
 				throw new BeaverFatalException("unknow sql type, " + dbType);
 		}
     }
-    
-    public String getSqlStringForSqlite(String prisonId, String dbName, String rowVersionColumn, int sqlLimitNum) {
+
+	public String getSubTableSqlString(String dbType, String dbRowVersion, String subtableName, String xgsj) throws BeaverFatalException {
+		switch (dbType) {
+			case CommonUploader.DB_TYPE_SQL_ORACLE:
+				return "select " + subtableName + ".* from " + subtableName + "," + table + " where " + key + " and " + table + "." + dbRowVersion + "=" + xgsj;
+//			TODO: add other types
+			default:
+				throw new BeaverFatalException("unknow sql type, " + dbType);
+		}
+	}
+
+	public String getSqlStringForSqlite(String prisonId, String dbName, String rowVersionColumn, int sqlLimitNum) {
       return "SELECT " + " '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-      table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
-      + " order by " + table + "." + rowVersionColumn + " limit " + sqlLimitNum;
+    		  table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+    		  + " order by " + table + "." + rowVersionColumn + " limit " + sqlLimitNum;
   }
 
     private String whereClause(String rowVersionColumn, String dbType, int sqlLimitNum) {
@@ -230,6 +242,17 @@ public class TableBean implements Serializable{
 		}
 	}
 
+    private String selectColumnClause() {
+    	StringBuilder sb = new StringBuilder();
+    	sb.append(table + ".* ");
+		if (join != null) {
+			for (String joinName : join) {
+				sb.append(',').append(joinName).append(".* ");
+			}
+		}
+		return sb.toString();
+	}
+
 	private String fromClause() {
         if (join == null) {
             return "FROM " + table + " ";
@@ -238,7 +261,7 @@ public class TableBean implements Serializable{
             for (String tableName : join) {
                 sb.append(',').append(tableName);
             }
-            return "FROM " + table + sb.toString() + " ";
+            return " FROM " + table + sb.toString() + " ";
         }
     }
 

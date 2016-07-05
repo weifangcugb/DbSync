@@ -57,9 +57,13 @@ public class MockWebServer {
 		}
 	}
 
-	public static void main(String[] args){
+	public static void startMockWebServer(){
 		MockWebServer mockWebServer = new MockWebServer();
 		mockWebServer.start(true);
+	}
+
+	public static void main(String[] args){
+		startMockWebServer();
 	}
 
 }
