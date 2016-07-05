@@ -49,6 +49,10 @@ public class TableBean implements Serializable{
 
     @JsonIgnore
     private boolean syncTypeOnceADay = false;
+    
+	public String getStarttime() {
+		return starttime;
+	}
 
 	public void setStarttime(String starttime) {
 		this.starttime = starttime;

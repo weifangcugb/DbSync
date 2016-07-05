@@ -2,15 +2,22 @@ package com.cloudbeaver;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import scala.annotation.bridge;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
+import org.eclipse.jetty.websocket.api.StatusCode;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.omg.Messaging.SYNC_WITH_TRANSPORT;
 
+import com.cloudbeaver.client.common.BeaverFatalException;
+import com.cloudbeaver.client.common.BeaverTableIsFullException;
+import com.cloudbeaver.client.common.BeaverTableNeedRetryException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbUploader.DbUploader;
@@ -28,6 +35,7 @@ public class AppTest{
 	private static MockWebServer mockServer = new MockWebServer();
 	private static MockSqlServer mockSqlServer = new MockSqlServer();
 	public static String DEFAULT_CHARSET = "utf-8";
+	private int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 
 //	@BeforeClass
 	@Ignore
@@ -44,7 +52,8 @@ public class AppTest{
 		mockServer.stop();
 	}
 
-	@Test
+//	@Test
+	@Ignore
 	public void testGetMsg() throws Exception {
 		DbUploader dbUploader = new DbUploader();
 		dbUploader.setup();
@@ -135,35 +144,40 @@ public class AppTest{
     public void testGetMsgForWeb() throws Exception {
 		DbUploader dbUploader = new DbUploader();
         dbUploader.setup();
-        for (int index = 0; index < dbUploader.getThreadNum(); index++) {
+        int num = dbUploader.getThreadNum();
+        for (int index = 0; index < num; index++) {
             DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
             if (dbBean == null) {
                 continue;
             }
-            if(!dbBean.getType().equals(dbUploader.DB_TYPE_WEB_SERVICE))
+            if(!dbBean.getType().equals(DbUploader.DB_TYPE_WEB_SERVICE)){
             	continue;
-            for (TableBean tBean : dbBean.getTables()) {
-                String dbData = null;
-                if(dbBean.getType().equals(dbUploader.DB_TYPE_WEB_SERVICE) && tBean.getTable().equals("pias/getItlist")){
-                	dbData = dbUploader.getDataFromWebServiceForTest(dbBean, tBean);
-                	System.out.println(dbData);
-//                	return;
-                }
-//                JSONArray jArray = new JSONArray();
-//                String maxVersion = SqlHelper.getDBData(dbUploader.getPrisonId(), dbBean, tBean, 1, jArray);
-////                  jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
-//                ObjectMapper oMapper = new ObjectMapper();
-//                JsonNode root = oMapper.readTree(jArray.toString());
-//                for (int i = 0; i < root.size(); i++) {
-//                    JsonNode item = root.get(i);
-//                    Assert.assertEquals(item.get("hdfs_prison").asText(),dbUploader.getPrisonId());
-//                    Assert.assertEquals(item.get("hdfs_db").asText(),"DocumentDB");
-//                }
             }
+            //case 1: test day by day until yesterday
+//            testDayByDay(dbBean, dbUploader);
+            //case 2: test when SyncTypeOnceADay is true
+//            testSyncTypeOnceADay(dbBean, dbUploader);
         }
 	}
 	
-    @Test
+	public static void testSyncTypeOnceADay(DatabaseBean dbBean, DbUploader dbUploader) throws BeaverFatalException{
+		for (TableBean tBean : dbBean.getTables()) {
+        	if(tBean.isSyncTypeOnceADay()){
+        		dbUploader.doTask(dbBean);
+        		break;
+        	}
+        }
+	}
+	
+	public static void testDayByDay(DatabaseBean dbBean, DbUploader dbUploader) throws BeaverFatalException{
+//      test by day, including cases when totalpages = 0 and pageno = 0
+        if(dbBean.getType().equals(DbUploader.DB_TYPE_WEB_SERVICE)){                	
+      	   dbUploader.doTask(dbBean);
+        }
+	}
+
+//    @Test
+	@Ignore
     public void testGetMsgProduct() throws Exception {
         DbUploader dbUploader = new DbUploader();
         dbUploader.setup();

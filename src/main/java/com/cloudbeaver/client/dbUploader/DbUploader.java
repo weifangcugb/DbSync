@@ -135,19 +135,19 @@ public class DbUploader extends CommonUploader{
 //        	sleep 1s when move to a new table
         	BeaverUtils.sleep(1000);
 
-            if (tableBean.isSyncTypeOnceADay() && !tableBean.getPrevxgsj().equals(tableBean.getXgsj())) {
-//				has moved to next day
-            	if (System.currentTimeMillis() - tableBean.getPrevxgsjAsLong() > 3 * WEB_DB_UPDATE_INTERVAL) {
-					tableBean.setPrevxgsj(tableBean.getXgsj());
-				}else {
-					BeaverUtils.sleep(60 * 1000);
-					continue;
-				}
-			}
-
 //        	keep trying until get all data from this table
         	while (true) {
         		BeaverUtils.sleep(100);
+
+                if (tableBean.isSyncTypeOnceADay() && !tableBean.getPrevxgsj().equals(tableBean.getXgsj())) {
+//    				has moved to next day
+                	if (System.currentTimeMillis() - tableBean.getXgsjAsLong() > 3 * WEB_DB_UPDATE_INTERVAL) {
+    					tableBean.setPrevxgsj(tableBean.getXgsj());
+    				}else {
+    					BeaverUtils.sleep(60 * 1000);
+    					break;
+    				}
+    			}
 
         		Date date = new Date();
         		dbBean.setQueryTime(date.toString());
@@ -186,6 +186,7 @@ public class DbUploader extends CommonUploader{
         }
 	}
 
+	//for test
 	public String getDataFromWebServiceForTest(DatabaseBean dbBean,TableBean tableBean) throws BeaverTableIsFullException, BeaverTableNeedRetryException, BeaverFatalException {
 		return getDataFromWebService(dbBean,tableBean);
 	}
@@ -234,13 +235,18 @@ public class DbUploader extends CommonUploader{
 //		can't get any data since some day
 		throw new BeaverTableIsFullException();
 	}
+	
+	//for test
+	public StringBuilder getDataOfSomeDayForTest(String webUrl, DatabaseBean dbBean,TableBean tableBean) throws NoSuchAlgorithmException, IOException {
+		return getDataOfSomeDay(webUrl,dbBean,tableBean);
+	}
 
 	private StringBuilder getDataOfSomeDay(String webUrl, DatabaseBean dbBean,TableBean tableBean) throws NoSuchAlgorithmException, IOException {
 		Map<String, String> paraMap = new HashMap<String, String>();
 		paraMap.put("appkey", dbBean.getAppKey());
 
 		if (tableBean.getCurrentPageNum() != 0) {
-			paraMap.put("pageno", "" + tableBean.getCurrentPageNum() + 1);
+			paraMap.put("pageno", "" + (tableBean.getCurrentPageNum() + 1));
 		}
 
 		if (dbBean.getDb().equals("PrasDB") && tableBean.getTable().equals("pras/getTable")) {
@@ -318,6 +324,11 @@ public class DbUploader extends CommonUploader{
 		}
 	}
 
+	//for test
+	public String getDBDataServerUrlForTest(String dbUrl, String table) {
+		return getDBDataServerUrl(dbUrl, table);
+	}
+	
 	private String getDBDataServerUrl(String dbUrl, String table) {
 		return dbUrl.replaceAll("\\{tableName\\}", table);
 	}

@@ -21,8 +21,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @WebServlet("/")
-public class postTaskServlet extends HttpServlet{
-	private static Logger logger = Logger.getLogger(postTaskServlet.class);
+public class PostDataServlet extends HttpServlet{
+	private static Logger logger = Logger.getLogger(PostDataServlet.class);
 	private static String getTaskApi = "/";
 	public static String DEFAULT_CHARSET = "utf-8";
 
