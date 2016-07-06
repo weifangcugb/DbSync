@@ -55,7 +55,7 @@ public class GetWebServerDataServlet extends HttpServlet{
     	String pagesize = req.getParameter("pagesize");
     	
     	int totalsize = 100;
-    	if(starttime.equals(GetTaskServlet.fourDayBeforeString)){
+    	if(starttime != null && starttime.equals(GetTaskServlet.fourDayBeforeString)){
     		totalsize = 0;
     	}
     	int totalpages = 0;
@@ -125,23 +125,47 @@ public class GetWebServerDataServlet extends HttpServlet{
     				+ "\"ls\":0,\"normal\":0,\"noticetime\":1384741573800,\"peoples\":2,\"pfcardno\":\"\",\"pfcardtype\":\"身份证\",\"pfname\":\"李东\",\"printtime\":1384738549083,"
     				+ "\"qiq\":0,\"regtime\":1384738549083,\"reviewtime\":0,\"starttime\":1384739404733,\"syprisonfk\":\"615564\",\"thismonth\":0,\"thisyear\":0,\"ts\":0}],"
     				+ "\"total\":" + totalsize +",\"totalPages\":" + totalpages + "}";
+//    		json = "{\"pageNo\":" + pageno + ",\"pageSize\":" + pagesize + ",\"records\":[{\"bj\":0,\"children\":0,\"endtime\":1384741859453,\"entertime\":1384739540593,"
+//    				+"\"exittime\":1384738423000,\"id\":121,\"itlocation\":\"会见楼6号卡位\",\"itlx\":\"普通会见\",\"itsibs\":"
+//    				+"[{\"cardno\":\"6444445\",\"cardtype\":\"\",\"dwmx\":\"xxxx街道\",\"id\":161,\"jtmx\":\"xx卫xx县xx小区12号\",\"jtzz\":\" \","
+//    				+"\"name\":\"王二\",\"parentid\":121,\"phone\":\"\",\"qw\":\"父亲\",\"sex\":\"\",\"sibid\":\"13440\",\"zy\":\"农民\"},{\"cardno\":\"\","
+//    				+"\"cardtype\":\"\",\"dwmx\":\"\",\"id\":162,\"jtmx\":\"\",\"jtzz\":\" \",\"name\":\"王元\",\"parentid\":121,\"phone\":\"\",\"qw\":\"叔父\","
+//    				+"\"sex\":\"\",\"sibid\":\"315\",\"zy\":\"\"},{\"cardno\":\"\",\"cardtype\":\"\",\"dwmx\":\"\",\"id\":163,\"jtmx\":\"\",\"jtzz\":\" \","
+//    				+"\"name\":\"王凤\",\"parentid\":121,\"phone\":\"\",\"qw\":\"婶婶\",\"sex\":\"\",\"sibid\":\"312\",\"zy\":\"\"}],\"ittime\":1384738423220,"
+//    				+ "\"ittype\":\"普通会见\",\"lasttime\":\"\",\"leadtime\":1384739504137,\"ls\":0,\"normal\":2,\"noticetime\":1384739504137,\"peoples\":3,"
+//    				+ "\"pfcardno\":\"\",\"pfcardtype\":\"身份证\",\"pfname\":\"王年\",\"printtime\":1384738423220,\"qiq\":0,\"regtime\":1384738423220,"
+//    				+ "\"reviewtime\":0,\"starttime\":1484739540593,\"syprisonfk\":\"612222\",\"thismonth\":0,\"thisyear\":2,\"ts\":0},{\"bj\":0,\"children\":0,"
+//    				+ "\"endtime\":1384743586667,\"entertime\":1384739404733,\"exittime\":1384738549000,\"id\":122,\"itlocation\":\"会见楼24号卡位\",\"itlx\":\"普通会见\","
+//    				+ "\"itsibs\":[{\"cardno\":\"62012313\",\"cardtype\":\"\",\"dwmx\":\"\",\"id\":165,\"jtmx\":\"xx市xx区66号\",\"jtzz\":\" \",\"mm\":\"群众\","
+//    				+ "\"name\":\"刘杨\",\"parentid\":122,\"phone\":\"\",\"qw\":\"母亲\",\"sex\":\"\",\"sibid\":\"4241\",\"zy\":\"个体\"},{\"cardno\":\"64010319540123151X\","
+//    				+ "\"cardtype\":\"\",\"dwmx\":\"\",\"id\":164,\"jtmx\":\"xx市xx区66号\",\"jtzz\":\" \",\"mm\":\"群众\",\"name\":\"李平\",\"parentid\":122,\"phone\":\"\","
+//    				+ "\"qw\":\"父亲\",\"sex\":\"\",\"sibid\":\"412\",\"zy\":\"个体\"}],\"ittime\":1384738549083,\"ittype\":\"普通会见\",\"lasttime\":\"\",\"leadtime\":1384741573800,"
+//    				+ "\"ls\":0,\"normal\":0,\"noticetime\":1384741573800,\"peoples\":2,\"pfcardno\":\"\",\"pfcardtype\":\"身份证\",\"pfname\":\"李东\",\"printtime\":1384738549083,"
+//    				+ "\"qiq\":0,\"regtime\":1384738549083,\"reviewtime\":0,\"starttime\":1484739404733,\"syprisonfk\":\"615564\",\"thismonth\":0,\"thisyear\":0,\"ts\":0}],"
+//    				+ "\"total\":" + totalsize +",\"totalPages\":" + totalpages + "}";
     	}
     	else if(tablename.equals("qqdh/getTalkList")){
+//    		json = "{\"pageNo\":" + pageno + ",\"pageSize\":" + pagesize + ",\"records\":[{\"caller\":\"张三\",\"enddate\":\"2015-04-15 11:11:45\",\"fee\":20.0000,\"id\":7,"
+//    				+ "\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\",\"startdate\":\"2015-04-15 11:11:40\",\"state\":1,\"type\":\"拨出\",\"userno\":\"9999999999\"},"
+//    				+ "{\"caller\":\"张三\",\"enddate\":\"2015-04-15 11:27:25\",\"fee\":0.0000,\"id\":8,\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\","
+//    				+ "\"startdate\":\"2015-04-15 11:27:17\",\"state\":1,\"type\":\"拨出\",\"userno\":\"9999999999\"},{\"caller\":\"张三\",\"enddate\":\"2015-04-15 16:35:46\","
+//    				+ "\"fee\":0.0000,\"id\":9,\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\",\"startdate\":\"2015-04-15 16:34:33\",\"state\":1,\"type\":\"拨出\","
+//    				+ "\"userno\":\"9999999999\"}],\"total\":" + totalsize +",\"totalPages\":" + totalpages + "}";
     		json = "{\"pageNo\":" + pageno + ",\"pageSize\":" + pagesize + ",\"records\":[{\"caller\":\"张三\",\"enddate\":\"2015-04-15 11:11:45\",\"fee\":20.0000,\"id\":7,"
-    				+ "\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\",\"startdate\":\"2015-04-15 11:11:40\",\"state\":1,\"type\":\"拨出\",\"userno\":\"9999999999\"},"
+    				+ "\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\",\"startdate\":\"2016-07-15 11:11:40\",\"state\":1,\"type\":\"拨出\",\"userno\":\"9999999999\"},"
     				+ "{\"caller\":\"张三\",\"enddate\":\"2015-04-15 11:27:25\",\"fee\":0.0000,\"id\":8,\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\","
     				+ "\"startdate\":\"2015-04-15 11:27:17\",\"state\":1,\"type\":\"拨出\",\"userno\":\"9999999999\"},{\"caller\":\"张三\",\"enddate\":\"2015-04-15 16:35:46\","
-    				+ "\"fee\":0.0000,\"id\":9,\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\",\"startdate\":\"2015-04-15 16:34:33\",\"state\":1,\"type\":\"拨出\","
-    				+ "\"userno\":\"9999999999\"}],\"total\":" + totalsize +",\"totalPages\":" + totalpages + "}";    		
+    				+ "\"fee\":0.0000,\"id\":9,\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\",\"startdate\":\"2016-07-15 16:34:33\",\"state\":1,\"type\":\"拨出\","
+    				+ "\"userno\":\"9999999999\"}],\"total\":" + totalsize +",\"totalPages\":" + totalpages + "}";
     	}
     	else if(tablename.equals("qqdh/getQqdh")){
     		json = "{\"pageNo\":" + pageno + ",\"pageSize\":" + pagesize + ",\"records\":[{\"id\":1,\"modifydate\":1413388800000,\"phone\":\"1018\",\"phoneid\":1,"
-    				+ "\"relation\":\"1\",\"sibname\":\"张大\",\"userno\":\"0001\"},{\"id\":2,\"modifydate\":2016-01-02 12:31:31,\"phone\":\"18900000000\","
+    				+ "\"relation\":\"1\",\"sibname\":\"张大\",\"userno\":\"0001\"},{\"id\":2,\"modifydate\":\"2016-01-02 12:31:31\",\"phone\":\"18900000000\","
     				+ "\"phoneid\":1,\"relation\":\"父亲\",\"sibname\":\"张三\",\"userno\":\"9999999999\"}],\"total\":" + totalsize +",\"totalPages\":" + totalpages + "}";
     	}
     	else if(tablename.equals("pras/getResult")){
     		json = "{\"pageNo\":" + pageno + ",\"pageSize\":" + pagesize + ",\"records\":[{\"ANSWER\":\"2|1|1|2|1|1|2|2|2|2|1|1|2|2|2|1|2|1|1|2|1|2|1|1|1|2|1|1|1|2|1|2|1|2|1|"
-    				+ "1|1|1|1|1|2|1|2|2|1|2|1|2|2|1|1|1|1|2|2|1|1|2|1|1|1|1|2|2|2|1|2|2|1|1|1|1|1|1|2|2|1|2|1|1|2|1|2|2|1|1|1|1\",\"CHECKDAY\":2016-01-05 10:33:40,"
+    				+ "1|1|1|1|1|2|1|2|2|1|2|1|2|2|1|1|1|1|2|2|1|1|2|1|1|1|1|2|2|2|1|2|2|1|1|1|1|1|1|2|2|1|2|1|1|2|1|2|2|1|1|1|1\",\"CHECKDAY\":\"2016-01-05 10:33:40\","
     				+ "\"ID\":\"ID00000000020751\",\"OPERATOR\":\"王二\",\"PFCODE\":\"6402512870\",\"PFNAME\":\"李高\",\"PFOUCODE\":\"0101-B1\",\"PFOUNAME\":\"xx监狱十监区\","
     				+ "\"RESULT\":[{\"NAME\":\"jsz_o\",\"NAMECHINESE\":\"精神质（p）\",\"ORIGIN\":\"4.0\",\"SPECIALDOCTOR\":\"7.1.3\",\"STANDARD\":\"45.0\"},"
     				+ "{\"NAME\":\"nwx_o\",\"NAMECHINESE\":\"内外向（e）\",\"ORIGIN\":\"8.0\",\"SPECIALDOCTOR\":\"7.2.3\",\"STANDARD\":\"45.0\"},"
