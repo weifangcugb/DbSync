@@ -315,7 +315,7 @@ public class DbUploader extends CommonUploader{
 				tableBean.setXgsj(maxXgsj);
 			}
 
-			logger.debug("get db data, json:" + jArray.toString()); 
+			logger.info("get db data, json:" + jArray.toString()); 
 			return jArray.toString();
 		} catch (SQLException e) {
 			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
@@ -378,6 +378,8 @@ public class DbUploader extends CommonUploader{
 	}
 
 	public static void startDbUploader(){
+		logger.info("starting dbUploader");
+
 		DbUploader dbUploader = new DbUploader();
     	Thread dbUploaderThread = new Thread(dbUploader);
     	dbUploaderThread.start();
@@ -405,6 +407,14 @@ public class DbUploader extends CommonUploader{
         	String dbType = conf.get("db." + dbBean.getDb() + ".type");
         	if (dbType.equals(DB_TYPE_SQL_ORACLE) || dbType.equals(DB_TYPE_SQL_SERVER) || dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
         		dbBean.setType(dbType);
+
+    			if (dbType.equals(DB_TYPE_SQL_SERVER)) {
+    				for (TableBean tableBean : dbBean.getTables()) {
+						if (!tableBean.getXgsj().startsWith("0x")) {
+							tableBean.setXgsj("0x" + tableBean.getXgsj());
+						}
+					}
+    			}
 			}else {
 				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
 			}

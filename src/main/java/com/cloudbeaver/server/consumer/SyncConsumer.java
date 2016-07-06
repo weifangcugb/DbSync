@@ -255,11 +255,9 @@ public class SyncConsumer extends FixedNumThreadPool{
 		return "db/file consumer";
 	}
 
-    public static void main( String[] args ) {
-    	startSyncConsumer();
-    }
-
 	public static void startSyncConsumer(){
+		logger.info("starting syncConsumer");
+
     	Thread syncConsumer = new Thread(new SyncConsumer());
     	syncConsumer.start();
 
@@ -275,4 +273,8 @@ public class SyncConsumer extends FixedNumThreadPool{
 	protected void doHeartBeat() {
 //		TODO: send heart beat to server
 	}
+
+    public static void main( String[] args ) {
+    	startSyncConsumer();
+    }
 }
