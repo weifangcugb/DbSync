@@ -18,6 +18,8 @@ public class BrokerMonitorWebServer {
 	private Server server;
 
 	public void start(boolean shouldJoin){
+		logger.info("starting brokerMonitorWebServer");
+
         server = new Server();
 
         ServerConnector connector = new ServerConnector(server);
