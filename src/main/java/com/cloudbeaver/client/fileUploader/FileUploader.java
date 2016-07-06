@@ -239,6 +239,8 @@ public class FileUploader extends CommonUploader {
 	}
 
 	public static void startFileUploader(){
+		logger.info("starting fileUploader");
+
 		Thread fileUploaderThread = new Thread(new FileUploader());
 		fileUploaderThread.start();
 
