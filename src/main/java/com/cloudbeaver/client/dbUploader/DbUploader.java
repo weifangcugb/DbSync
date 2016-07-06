@@ -93,6 +93,7 @@ public class DbUploader extends CommonUploader{
 		ArrayList<DatabaseBean> databases = new ArrayList<DatabaseBean>();
 		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
 			if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE)) {
+//				TODO: not all webdbs need to sync data 3 day's ago
 				DatabaseBean newBean;
 				try {
 					newBean = BeaverUtils.cloneTo(dbBean);
@@ -222,7 +223,18 @@ public class DbUploader extends CommonUploader{
 				}
 
 				logger.info("web query finished, time:" + tableBean.getXgsj() + " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:" + tableBean.getTotalPageNum());
-				return sb.toString();
+
+//				change webquery data to beaver format
+				JSONObject jsonObject = JSONObject.fromObject(sb.toString());
+				JSONArray records = jsonObject.getJSONArray("records");
+				for (int i = 0; i < records.size(); i++) {
+					JSONObject record = (JSONObject) records.get(i);
+					record.element("hdfs_prison", prisonId);
+					record.element("hdfs_db", dbBean.getDb());
+					record.element("hdfs_table", tableBean.getTable());
+				}
+
+				return records.toString();
 			} catch (NoSuchAlgorithmException e) {
 				BeaverUtils.PrintStackTrace(e);
 				throw new BeaverFatalException("no md5 algorithm, exit. msg:" + e.getMessage());
