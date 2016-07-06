@@ -5,6 +5,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -32,6 +34,16 @@ public class GetTaskServlet extends HttpServlet{
 	public static long fiveDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 5 - 8 * 3600 * 1000;
 	public static long fourDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 4 - 8 * 3600 * 1000;
 	public static String fourDayBeforeString = BeaverUtils.timestampToDateString(fourDayBefore);
+	public static Map<String, String> map = new HashMap<String, String>();
+
+	{
+		map.put("DocumentDB", "sqlserver");
+		map.put("MeetingDB", "webservice");
+		map.put("TalkDB", "webservice");
+		map.put("PrasDB", "webservice");
+		map.put("JfkhDB", "oracle");
+		map.put("DocumentDBForSqlite", "sqlite");
+	}
 
 //	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj2\",\"tables\":"
 //			+ "[{\"table\":\"da_jbxx\",\"xgsj\":\"0000000000000000\"},{\"table\":\"da_jl\",\"xgsj\":\"0000000000000000\"},"
@@ -79,9 +91,9 @@ public class GetTaskServlet extends HttpServlet{
 		+ "{\"table\":\"khf\",\"xgsj\":\"0\"},{\"table\":\"thdj\",\"xgsj\":\"0\"},{\"table\":\"wp_bgzb\",\"join\":[\"wp_bgbc\"],\"key\":"
 		+ "\"wp_bgzb.bh=wp_bgbc.bh AND wp_bgzb.djrq=wp_bgbc.djrq\",\"xgsj\":\"0\"},{\"table\":\"wwzk\",\"xgsj\":\"0\"},{\"table\":\"wwjc\",\"xgsj\":\"0\"},"
 		+ "{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\",\"xgsj\":\"0\"},{\"table\":\"sndd\",\"xgsj\":\"0\"}]},"
-		+ "{\"db\":\"MeetingDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pias/getItlist\",\"starttime\":\"0\"}]},"
-		+ "{\"db\":\"TalkDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"qqdh/getTalkList\",\"starttime\":\"0\"},{\"table\":\"qqdh/getQqdh\",\"starttime\":\"0\"}]},"
-		+ "{\"db\":\"PrasDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pras/getResult\",\"starttime\":\"0\"},{\"table\":\"pras/getTable\",\"starttime\":\"0\"}]},"
+		+ "{\"db\":\"MeetingDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pias/getItlist\",\"starttime\":\"" + fiveDayBefore + "\"}]},"
+		+ "{\"db\":\"TalkDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"qqdh/getTalkList\",\"starttime\":\"" + fiveDayBefore + "\"},{\"table\":\"qqdh/getQqdh\",\"starttime\":\"" + fiveDayBefore + "\"}]},"
+		+ "{\"db\":\"PrasDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pras/getResult\",\"starttime\":\"" + fiveDayBefore + "\"},{\"table\":\"pras/getTable\",\"starttime\":\"" + fiveDayBefore + "\"}]},"
 		+ "{\"db\":\"JfkhDB\",\"rowversion\":\"ID\",\"tables\":[{\"table\":\"BZ_JFKH_DRECORDSUB\",\"join_subtable\":[\"BZ_JFKH_DRECORD\"],\"key\":"
 		+ "\"BZ_JFKH_DRECORDSUB.PID=BZ_JFKH_DRECORD.ID\",\"ID\":\"0\"},{\"table\":\"BZ_JFKH_MYZKJFSPSUB\",\"join_subtable\":[\"BZ_JFKH_MYZKJFSP\"],\"key\":"
 		+ "\"BZ_JFKH_MYZKJFSPSUB.PID=BZ_JFKH_MYZKJFSP.ID\",\"ID\":\"0\"},{\"table\":\"BZ_JFKH_ZFFJQDDJL\",\"ID\":\"0\"},{\"table\":\"BZ_JFKH_ZFFYDDJL\",\"ID\":\"0\"},"
@@ -131,9 +143,10 @@ public class GetTaskServlet extends HttpServlet{
 	public static MultiDatabaseBean getMultiDatabaseBean() throws JsonParseException, JsonMappingException, IOException{
 		if(databaseBeans == null){			
 			ObjectMapper oMapper = new ObjectMapper();
-//			databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
+			//for sqlserver test
+			databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
 			//for web server test
-			databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
+//			databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
 		}
 		return databaseBeans;
 	}
@@ -159,9 +172,24 @@ public class GetTaskServlet extends HttpServlet{
     		databaseBeans = getMultiDatabaseBean();
     		for(int i = 0; i < databaseBeans.getDatabases().size(); i++){
     			DatabaseBean dBean = databaseBeans.getDatabases().get(i);
-    			for(int j = 0; j < dBean.getTables().size(); j++){
-    				TableBean tBean = dBean.getTables().get(j);
-    				tBean.setID(tBean.getStarttime());
+    			if(map.get(dBean.getDb()).equals("webservice")){
+    				for(int j = 0; j < dBean.getTables().size(); j++){
+        				TableBean tBean = dBean.getTables().get(j);
+        				tBean.setID(tBean.getStarttime());
+        			}
+    			}
+    			else if(map.get(dBean.getDb()).equals("oracle")){
+    				for(int j = 0; j < dBean.getTables().size(); j++){
+        				TableBean tBean = dBean.getTables().get(j);
+        				tBean.setStarttime(tBean.getID());
+        			}
+    			}
+    			else if(map.get(dBean.getDb()).equals("sqlserver")){
+    				for(int j = 0; j < dBean.getTables().size(); j++){
+        				TableBean tBean = dBean.getTables().get(j);
+        				tBean.setStarttime(tBean.getXgsj());
+        				tBean.setID(tBean.getXgsj());
+        			}
     			}
     		}
     		ObjectMapper oMapper = new ObjectMapper();

@@ -63,6 +63,11 @@ public class TableBean implements Serializable{
 		this.id = ID;
 		xgsj = ID;
 	}
+	
+	//for test
+	public String getID() {
+		return id;
+	}
 
 	public void moveToNextXgsj(int interval) throws BeaverTableIsFullException {
 		setXgsjByInterval(interval);
