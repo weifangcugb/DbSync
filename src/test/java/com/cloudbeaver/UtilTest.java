@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -64,5 +65,20 @@ public class UtilTest {
 		paraMap.put("starttime", "2016-01-01");
 		String sign = BeaverUtils.getRequestSign(paraMap, "tmpSecret");
 		Assert.assertEquals(sign, "d90d440655ab3d3dcf96c3487378756d");
+	}
+
+	@Test
+	public void testJson() {
+		JSONObject jObject = new JSONObject();
+		jObject.put("k2", "v2");
+		jObject.element("k2", "v4");
+//		jObject.put("k2", "v3");
+		jObject.accumulate("k1", "v1");
+		jObject.accumulate("k1", "v4");
+		jObject.put("k3", "v3");
+		jObject.put("k1", "v7");
+		jObject.accumulate("k1", "v8");
+		jObject.put("k5", "v5");
+		System.out.println("object:" + jObject);
 	}
 }
