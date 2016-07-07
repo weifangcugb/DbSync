@@ -41,8 +41,8 @@ public class AppTest{
 		map.put("DocumentDBForSqlite", "sqlite");
 	}
 
-//	@BeforeClass
-	@Ignore
+	@BeforeClass
+//	@Ignore
 	public static void setUpServers(){
 		//start the mocked SqlServer
 //		mocksqlserver.
@@ -50,15 +50,15 @@ public class AppTest{
 		mockServer.start(false);
 	}
 
-//	@AfterClass
-	@Ignore
+	@AfterClass
+//	@Ignore
 	public static void tearDownServers(){
 		mockServer.stop();
 	}
 
 	@Test
 //	@Ignore
-	public void testGetMsgForSqlserver() throws Exception {
+	public void testGetMsgForSqlserverStep() throws Exception {
 		DbUploader dbUploader = new DbUploader();
 		dbUploader.setup();
 
@@ -72,14 +72,12 @@ public class AppTest{
 				if (dbBean == null) {
 					continue;
 				}
-				if(!map.get(dbBean.getDb()).equals("sqlserver")){
+				if(!dbBean.getType().equals(DbUploader.DB_TYPE_SQL_SERVER)){
 					continue;
 				}
 				for (TableBean tBean : dbBean.getTables()) {
 					JSONArray jArray = new JSONArray();
 					String maxVersion = null;
-					//test sqlite
-//					maxVersion = MockSqlHelper.execSqlQuery(DbUploader.getPrisonId(), dbBean, tBean, dbUploader, 1, jArray);
 					//test sqlserver
 					maxVersion = SqlHelper.getDBData(dbUploader.getPrisonId(), dbBean, tBean, 2, jArray);
 
@@ -112,7 +110,96 @@ public class AppTest{
 		    					updateRefTask(maxVersion,olddbs,index,tBean,map.get(dbName));
 		    					tBean.setXgsj("0x"+maxVersion);
 			    				BeaverUtils.doPost(dbUploader.getConf().get(dbUploader.CONF_FLUME_SERVER_URL), flumeJson);
-//			    				dbUploader.testDoHeartBeat();
+			    				//test HeartBeat
+			    				dbUploader.testDoHeartBeat();
+			    				break;
+							}
+		    			} catch (IOException e) {
+		    				BeaverUtils.PrintStackTrace(e);
+		    				BeaverUtils.sleep(1000);
+		    			}
+					}
+				}
+			}
+			dbUploader.setup();
+			newdbs = dbUploader.getDbBeans();
+		}
+	}
+
+	@Test
+//	@Ignore
+    public void testGetMsgForSqlserver() throws Exception {
+		DbUploader dbUploader = new DbUploader();
+        dbUploader.setup();
+        int num = dbUploader.getThreadNum();
+        for (int index = 0; index < num; index++) {
+            DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
+            if (dbBean == null) {
+                continue;
+            }
+            if(!dbBean.getType().equals(DbUploader.DB_TYPE_SQL_SERVER)){
+            	continue;
+            }
+            //test sqlserver
+            dbUploader.doTask(dbBean);
+        }
+	}
+
+	@Test
+//	@Ignore
+	public void testGetMsgForSqlite() throws Exception {
+		DbUploader dbUploader = new DbUploader();
+		dbUploader.setup();
+
+		MultiDatabaseBean olddbs = dbUploader.getDbBeans();
+		int num = dbUploader.getDbBeans().getDatabases().size();
+		MultiDatabaseBean newdbs = olddbs;
+		for(int j = 0;j<5;j++){
+			isEqulas(olddbs, newdbs);			
+			for (int index = 0; index < num; index++) {
+				DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
+				if (dbBean == null) {
+					continue;
+				}
+				if(!dbBean.getType().equals(DbUploader.DB_TYPE_SQL_SQLITE)){
+					continue;
+				}
+				for (TableBean tBean : dbBean.getTables()) {
+					JSONArray jArray = new JSONArray();
+					String maxVersion = null;
+					//test sqlite
+					maxVersion = SqlHelper.getDBData(dbUploader.getPrisonId(), dbBean, tBean, 2, jArray);
+
+//					jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
+					ObjectMapper oMapper = new ObjectMapper();
+					JsonNode root = oMapper.readTree(jArray.toString());
+					for (int i = 0; i < root.size(); i++) {
+						JsonNode item = root.get(i);
+						Assert.assertEquals(item.get("hdfs_prison").asText(),DbUploader.getPrisonId());
+						Assert.assertEquals(item.get("hdfs_db").asText(),"DocumentDBForSqlite");
+					}
+					
+					if(!jArray.isEmpty()){	
+						JSONArray newjArray = JSONArray.fromObject(jArray.toArray());						
+						String dbName = null;
+						if(newjArray.size()>0){
+							JSONObject job = newjArray.getJSONObject(0);
+							dbName = (String) job.get("hdfs_db");
+						}
+		                String flumeJson = null;
+						try {
+							flumeJson = BeaverUtils.compressAndFormatFlumeHttp(jArray.toString());
+						} catch (IOException e) {
+							BeaverUtils.PrintStackTrace(e);
+							BeaverUtils.sleep(1000);
+							continue;
+						}					
+		                try {
+		    				if (maxVersion != null) {
+		    					updateRefTask(maxVersion,olddbs,index,tBean,map.get(dbName));
+		    					tBean.setXgsj(maxVersion);
+			    				BeaverUtils.doPost(dbUploader.getConf().get(dbUploader.CONF_FLUME_SERVER_URL), flumeJson);
+			    				dbUploader.testDoHeartBeat();
 			    				break;
 							}
 		    			} catch (IOException e) {
@@ -149,6 +236,9 @@ public class AppTest{
 				else if(map.get(db1.getDb()).equals("oracle") && map.get(db2.getDb()).equals("oracle")){
 					Assert.assertEquals(t1.getID(), t2.getID());
 				}
+				else if(map.get(db1.getDb()).equals("sqlite") && map.get(db2.getDb()).equals("sqlite")){
+					Assert.assertEquals(t1.getXgsj(), t2.getXgsj());
+				}
 			}
 		}
 	}
@@ -177,12 +267,16 @@ public class AppTest{
 					Assert.assertTrue("max ID is less than old ID", Long.parseLong(maxVersion) > Long.parseLong(xgsj));
 					tableBean.setID(maxVersion);
 				}
+				else if(serverType.equals("sqlite")){
+					xgsj = tableBean.getXgsj();
+					Assert.assertTrue("max xgsj is less than old xgsj", Long.parseLong(maxVersion) > Long.parseLong(xgsj));
+					tableBean.setXgsj(maxVersion);
+				}
 				return;
 			}
 		}
 	}
 
-	
 	@Test
 //	@Ignore
     public void testGetMsgForWeb() throws Exception {
@@ -201,7 +295,7 @@ public class AppTest{
             testDayByDay(dbBean, dbUploader);
         }
 	}
-	
+
 	@Test
 //	@Ignore
 	public void testGetMsgForWebSync() throws Exception {
@@ -216,25 +310,50 @@ public class AppTest{
             if(!dbBean.getType().equals(DbUploader.DB_TYPE_WEB_SERVICE)){
             	continue;
             }
-          //case 2: test when SyncTypeOnceADay is true
+            //case 2: test when SyncTypeOnceADay is true
             testSyncTypeOnceADay(dbBean, dbUploader);
         }
 	}
 	
+//	@Test
+	@Ignore
+    public void testGetMsgForOracle() throws Exception {
+		DbUploader dbUploader = new DbUploader();
+        dbUploader.setup();
+        int num = dbUploader.getThreadNum();
+        for (int index = 0; index < num; index++) {
+            DatabaseBean dbBean = (DatabaseBean) dbUploader.getTaskObject(index);
+            if (dbBean == null) {
+                continue;
+            }
+            if(!dbBean.getType().equals(DbUploader.DB_TYPE_SQL_ORACLE)){
+            	continue;
+            }
+            //test oracle
+            dbUploader.doTask(dbBean);
+        }
+	}
 	
 	public static void testSyncTypeOnceADay(DatabaseBean dbBean, DbUploader dbUploader) throws BeaverFatalException{
-		for (TableBean tBean : dbBean.getTables()) {
-        	if(tBean.isSyncTypeOnceADay()){
-        		dbUploader.doTask(dbBean);
-        		break;
-        	}
-        }
+		if(dbBean.getType().equals(DbUploader.DB_TYPE_WEB_SERVICE)){
+			for (TableBean tBean : dbBean.getTables()) {
+	        	if(tBean.isSyncTypeOnceADay()){
+	        		dbUploader.doTask(dbBean);
+	        		break;
+	        	}
+	        }
+		}		
 	}
 	
 	public static void testDayByDay(DatabaseBean dbBean, DbUploader dbUploader) throws BeaverFatalException{
 //      test by day, including cases when totalpages = 0 and pageno = 0
-        if(dbBean.getType().equals(DbUploader.DB_TYPE_WEB_SERVICE)){                	
-      	   dbUploader.doTask(dbBean);
+        if(dbBean.getType().equals(DbUploader.DB_TYPE_WEB_SERVICE)){
+        	for (TableBean tBean : dbBean.getTables()) {
+	        	if(!tBean.isSyncTypeOnceADay()){
+	        		dbUploader.doTask(dbBean);
+	        		break;
+	        	}
+	        }
         }
 	}
 
@@ -265,9 +384,14 @@ public class AppTest{
 
 	public static void main(String[] args) throws Exception {
 		AppTest appTest = new AppTest();
-		appTest.testGetMsgForSqlserver();
+//		AppTest.setUpServers();
+//		appTest.testGetMsgForSqlserverStep();
+//		appTest.testGetMsgForSqlserver();
+//		appTest.testGetMsgForWeb();
+//		appTest.testGetMsgForWebSync();
+//		appTest.testGetMsgForOracle();
+//		appTest.testGetMsgForSqlite();
 //		appTest.testGetMsgProduct();
-		appTest.testGetMsgForWeb();
-		appTest.testGetMsgForWebSync();
+//		AppTest.tearDownServers();
 	}
 }

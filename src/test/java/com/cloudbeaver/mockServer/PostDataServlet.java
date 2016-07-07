@@ -24,7 +24,6 @@ import com.cloudbeaver.client.dbbean.TableBean;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import scala.xml.dtd.PublicID;
 
 @WebServlet("/")
 public class PostDataServlet extends HttpServlet{
@@ -100,6 +99,56 @@ public class PostDataServlet extends HttpServlet{
 		long l = date.getTime();
 		return String.valueOf(l);
     }
+
+    public final static String getIpAddress(HttpServletRequest request) throws IOException { 
+        String ip = request.getHeader("X-Forwarded-For");  
+        if (logger.isInfoEnabled()) {  
+            logger.info("getIpAddress(HttpServletRequest) - X-Forwarded-For - String ip=" + ip);  
+        }  
+  
+        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+                ip = request.getHeader("Proxy-Client-IP");  
+                if (logger.isInfoEnabled()) {  
+                    logger.info("getIpAddress(HttpServletRequest) - Proxy-Client-IP - String ip=" + ip);  
+                }  
+            }  
+            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+                ip = request.getHeader("WL-Proxy-Client-IP");  
+                if (logger.isInfoEnabled()) {  
+                    logger.info("getIpAddress(HttpServletRequest) - WL-Proxy-Client-IP - String ip=" + ip);  
+                }  
+            }  
+            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+                ip = request.getHeader("HTTP_CLIENT_IP");  
+                if (logger.isInfoEnabled()) {  
+                    logger.info("getIpAddress(HttpServletRequest) - HTTP_CLIENT_IP - String ip=" + ip);  
+                }  
+            }  
+            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+                ip = request.getHeader("HTTP_X_FORWARDED_FOR");  
+                if (logger.isInfoEnabled()) {  
+                    logger.info("getIpAddress(HttpServletRequest) - HTTP_X_FORWARDED_FOR - String ip=" + ip);  
+                }  
+            }  
+            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {  
+                ip = request.getRemoteAddr();  
+                if (logger.isInfoEnabled()) {  
+                    logger.info("getIpAddress(HttpServletRequest) - getRemoteAddr - String ip=" + ip);  
+                }  
+            }  
+        } else if (ip.length() > 15) {  
+            String[] ips = ip.split(",");  
+            for (int index = 0; index < ips.length; index++) {  
+                String strIp = (String) ips[index];  
+                if (!("unknown".equalsIgnoreCase(strIp))) {  
+                    ip = strIp;  
+                    break;  
+                }  
+            }  
+        }  
+        return ip;  
+    }
     
     public static void updateTask(String content, String serverType) throws IOException, ParseException{
     	MultiDatabaseBean databases = GetTaskServlet.getMultiDatabaseBean();
@@ -146,6 +195,9 @@ public class PostDataServlet extends HttpServlet{
 				else if(serverType.equals("oracle")){
 					maxxgsj = iob.get("ID").toString();
 				}
+				else if(serverType.equals("sqlite")){
+					maxxgsj = iob.get("xgsj2").toString();
+				}
 				table = iob.get("hdfs_table");
 				database = iob.get("hdfs_db");
 				
@@ -181,6 +233,12 @@ public class PostDataServlet extends HttpServlet{
 							if(Long.parseLong(maxxgsj) > Long.parseLong(tBean.getID())){
 								tBean.setID(maxxgsj);
 								System.out.println("update table："+tBean.getTable()+" "+tBean.getID());
+							}		
+						}
+						else if(serverType.equals("sqlite")){					
+							if(Long.parseLong(maxxgsj) > Long.parseLong(tBean.getXgsj())){
+								tBean.setXgsj(maxxgsj);
+								System.out.println("update table："+tBean.getTable()+" "+tBean.getXgsj());
 							}		
 						}
 						return;

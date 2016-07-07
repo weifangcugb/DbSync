@@ -247,11 +247,6 @@ public class DbUploader extends CommonUploader{
 //		can't get any data since some day
 		throw new BeaverTableIsFullException();
 	}
-	
-	//for test
-	public StringBuilder getDataOfSomeDayForTest(String webUrl, DatabaseBean dbBean,TableBean tableBean) throws NoSuchAlgorithmException, IOException {
-		return getDataOfSomeDay(webUrl,dbBean,tableBean);
-	}
 
 	private StringBuilder getDataOfSomeDay(String webUrl, DatabaseBean dbBean,TableBean tableBean) throws NoSuchAlgorithmException, IOException {
 		Map<String, String> paraMap = new HashMap<String, String>();
