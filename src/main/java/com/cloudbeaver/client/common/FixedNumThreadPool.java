@@ -22,10 +22,6 @@ public abstract class FixedNumThreadPool implements Runnable{
 	protected abstract long getSleepTimeBetweenTaskInnerLoop();
 	protected abstract String getTaskDescription();
 	protected abstract void doHeartBeat();
-	//for test
-	public void testDoHeartBeat(){
-		doHeartBeat();
-	}
 
 	protected void shutdown() {
 //		as default, do nothing

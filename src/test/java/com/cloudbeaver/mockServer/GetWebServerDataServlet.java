@@ -39,6 +39,7 @@ public class GetWebServerDataServlet extends HttpServlet{
 			throw new ServletException("invalid url: " + url);
 		}
     	String tablename = url.substring(pos+getTaskApi.length());
+    	System.out.println(tablename);
     	
     	Map<String, String> map = new HashMap<String,String>();
     	map.put("tmpKey", "tmpSecret");

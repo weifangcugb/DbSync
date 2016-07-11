@@ -37,6 +37,7 @@ public class MockWebServer {
 
         try {
 			server.start();
+			GetTaskServlet.setMultiDatabaseBean(null);
 			if (shouldJoin) {
 				server.join();
 			}
@@ -50,6 +51,7 @@ public class MockWebServer {
 		if (server != null) {
 			try {
 				server.stop();
+//				BeaverUtils.sleep(10 * 1000);
 			} catch (Exception e) {
 				BeaverUtils.PrintStackTrace(e);
 				logger.error("mock server can't stop");

@@ -22,6 +22,9 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import scala.collection.mutable.ArrayBuilder.ofBoolean;
+import scala.sys.process.ProcessBuilderImpl.AndBuilder;
+
 @WebServlet("/api/business/sync/*")
 public class GetTaskServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(GetTaskServlet.class);
@@ -39,6 +42,7 @@ public class GetTaskServlet extends HttpServlet{
 		map.put("PrasDB", "webservice");
 		map.put("JfkhDB", "oracle");
 		map.put("DocumentDBForSqlite", "sqlite");
+		map.put("DocumentFiles", "file");
 	}
 
 //	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj2\",\"tables\":"
@@ -89,7 +93,7 @@ public class GetTaskServlet extends HttpServlet{
 			+ "{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\",\"xgsj\":\"0\"},{\"table\":\"sndd\",\"xgsj\":\"0\"}]}]}";
 
 //	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj\",\"tables\":"
-//		+ "[{\"table\":\"da_jbxx\",\"xgsj\":\"0\"},{\"table\":\"da_jl\",\"xgsj\":\"0\"},{\"table\":\"da_qklj\",\"xgsj\":\"0\"},{\"table\":\"da_shgx\",\"xgsj\":\"0\"},"
+//		+ "[{\"table\":\"da_jbxx\",\"xgsj\":\"0\"},{\"table\":\"daFILE_UPLOAD_RETRY_TIMES_jl\",\"xgsj\":\"0\"},{\"table\":\"da_qklj\",\"xgsj\":\"0\"},{\"table\":\"da_shgx\",\"xgsj\":\"0\"},"
 //		+ "{\"table\":\"da_tzzb\",\"xgsj\":\"0\"},{\"table\":\"da_tszb\",\"join\":[\"da_tsbc\"],\"key\":\"da_tszb.bh=da_tsbc.bh\",\"xgsj\":\"0\"},"
 //		+ "{\"table\":\"bwxb\",\"xgsj\":\"0\"},{\"table\":\"tt\",\"xgsj\":\"0\"},{\"table\":\"lbc\",\"xgsj\":\"0\"},{\"table\":\"ss\",\"join\":[\"ssfb\"],\"key\":"
 //		+ "\"ss.ssid=ssfb.ssid\",\"xgsj\":\"0\"},{\"table\":\"ks\",\"join\":[\"ksfb\"],\"key\":\"ks.bh=ksfb.bh AND ks.ksrq=ksfb.ksrq\",\"xgsj\":\"0\"},"
@@ -194,21 +198,39 @@ public class GetTaskServlet extends HttpServlet{
 			+ "{\"table\":\"BZ_KHBZ_LJTQSP\",\"join_subtable\":[\"BZ_KHBZ_LJTQSPSUB\"],\"key\":\"BZ_KHBZ_LJTQSP.ID=BZ_KHBZ_LJTQSPSUB.PID\",\"ID\":\"0\"},"
 			+ "{\"table\":\"BZ_KHBZ_TXLJTQSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZCFSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZJLSP\",\"ID\":\"0\"}]}]}";
 
+	private static String documentFilesInitJson = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":"
+			+ "[{\"table\":\"/home/beaver/Documents/test\",\"xgsj\":\"0000000000000000\"}]}]}";
+
 	private static MultiDatabaseBean databaseBeans;
+	private static String tableId = null;
+
+	public static String getTableId() {
+		return tableId;
+	}
 
 	public static MultiDatabaseBean getMultiDatabaseBean() throws JsonParseException, JsonMappingException, IOException{
-		if(databaseBeans == null){			
+		if(databaseBeans == null && tableId != null){
 			ObjectMapper oMapper = new ObjectMapper();
-			//test all
-			databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
-			//for web server test
-//			databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
-			//for sqlite
-//			databaseBeans = oMapper.readValue(documentDBForSqliteInitJson, MultiDatabaseBean.class);
-			//for oracle
-//			databaseBeans = oMapper.readValue(zhongCiInitJson, MultiDatabaseBean.class);
+			if (tableId.endsWith("db")) {
+				//test all
+				databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
+				//for web server test
+//				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
+				//for sqlite
+//				databaseBeans = oMapper.readValue(documentDBForSqliteInitJson, MultiDatabaseBean.class);
+				//for oracle
+//				databaseBeans = oMapper.readValue(zhongCiInitJson, MultiDatabaseBean.class);
+				//for file
+			}
+			else if(tableId.endsWith("documentfile")){
+				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);
+			}
 		}
 		return databaseBeans;
+	}
+
+	public static void setMultiDatabaseBean(MultiDatabaseBean dbs) {
+		databaseBeans = dbs;
 	}
 
     @Override
@@ -226,7 +248,7 @@ public class GetTaskServlet extends HttpServlet{
 
     	System.out.println("start get task succeed!");
     	
-    	String tableId = url.substring(tableIdIndex + 1);
+    	tableId = url.substring(tableIdIndex + 1);
     	String json;
     	if (tableId.endsWith("db")) {
     		databaseBeans = getMultiDatabaseBean();
@@ -267,7 +289,21 @@ public class GetTaskServlet extends HttpServlet{
 //    		json = zhongCiInitJson;
 //    		System.out.println("task from server："+json);
     	}else if (tableId.endsWith("documentfile")) {
-    		json = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":[{\"table\":\"c://罪犯媒体/像片\",\"xgsj\":\"0000000000000000\"}]}]}";
+//    		json = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":[{\"table\":\"c://罪犯媒体/像片\",\"xgsj\":\"0000000000000000\"}]}]}";
+    		databaseBeans = getMultiDatabaseBean();
+    		for(int i = 0; i < databaseBeans.getDatabases().size(); i++){
+    			DatabaseBean dBean = databaseBeans.getDatabases().get(i);
+    			for(int j = 0; j < dBean.getTables().size(); j++){
+    				TableBean tBean = dBean.getTables().get(j);
+    				tBean.setStarttime(tBean.getXgsj());
+    				tBean.setID(tBean.getXgsj());
+    			}
+    		}
+    		ObjectMapper oMapper = new ObjectMapper();
+    		StringWriter str=new StringWriter();
+    		oMapper.writeValue(str, databaseBeans);
+    		json = str.toString();
+    		logger.info("task from server："+json);
     	}else {
     		json = "{\"databases\":[]}";
 		}
