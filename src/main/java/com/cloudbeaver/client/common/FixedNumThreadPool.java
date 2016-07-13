@@ -27,6 +27,11 @@ public abstract class FixedNumThreadPool implements Runnable{
 //		as default, do nothing
 	}
 
+	protected void handleBeaverFatalException(BeaverFatalException e) throws Exception {
+		BeaverUtils.PrintStackTrace(e);
+		logger.fatal("got fatal error, exit. msg:" + e.getMessage());
+	}
+
 	private static volatile boolean KEEP_RUNNING = true;
 
 	@Override
@@ -71,8 +76,12 @@ public abstract class FixedNumThreadPool implements Runnable{
 						try {
 							doTask(taskObject);
 						} catch (BeaverFatalException e) {
-							BeaverUtils.PrintStackTrace(e);
-							logger.fatal("got fatal error, exit. msg:" + e.getMessage());
+							try {
+								handleBeaverFatalException(e);
+							} catch (Exception e1) {
+								BeaverUtils.printLogExceptionAndSleep(e1, "got Exception from children class, need exit.", 1000);
+								return;
+							}
 						}
 						BeaverUtils.sleep(getSleepTimeBetweenTaskInnerLoop());
 					}

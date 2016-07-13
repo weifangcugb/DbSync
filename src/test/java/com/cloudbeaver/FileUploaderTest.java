@@ -30,6 +30,12 @@ public class FileUploaderTest extends FileUploader{
 		mockServer.stop();
 	}
 
+	@Override
+	protected void handleBeaverFatalException(BeaverFatalException e) throws Exception {
+		super.handleBeaverFatalException(e);
+		throw new Exception("get BeaverFatalException during testing");
+	}
+
 	@Test
 //	@Ignore
     public void testGetMsgForFile() throws BeaverFatalException{
