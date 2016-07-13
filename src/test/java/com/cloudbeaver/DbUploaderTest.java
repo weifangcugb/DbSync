@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 //@Ignore
-public class AppDbTest extends DbUploader{
+public class DbUploaderTest extends DbUploader{
 	private static MockWebServer mockServer = new MockWebServer();
 	private static MockSqlServer mockSqlServer = new MockSqlServer();
 	public static String DEFAULT_CHARSET = "utf-8";

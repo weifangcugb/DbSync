@@ -12,7 +12,7 @@ import com.cloudbeaver.client.fileUploader.DirInfo;
 import com.cloudbeaver.client.fileUploader.FileUploader;
 import com.cloudbeaver.mockServer.MockWebServer;
 
-public class AppFileTest extends FileUploader{
+public class FileUploaderTest extends FileUploader{
 	private static MockWebServer mockServer = new MockWebServer();
 
 //	@BeforeClass

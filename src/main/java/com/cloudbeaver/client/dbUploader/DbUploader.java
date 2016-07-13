@@ -187,11 +187,6 @@ public class DbUploader extends CommonUploader{
         }
 	}
 
-	//for test
-	public String getDataFromWebServiceForTest(DatabaseBean dbBean,TableBean tableBean) throws BeaverTableIsFullException, BeaverTableNeedRetryException, BeaverFatalException {
-		return getDataFromWebService(dbBean,tableBean);
-	}
-	
 	private String getDataFromWebService(DatabaseBean dbBean,TableBean tableBean) throws BeaverTableIsFullException, BeaverTableNeedRetryException, BeaverFatalException {
 		String webUrl = getDBDataServerUrl(dbBean.getDbUrl(), tableBean.getTable());
 		logger.debug("requet one weburl, webUrl:" + webUrl);
