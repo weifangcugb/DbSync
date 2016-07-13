@@ -45,7 +45,7 @@ public class FileUploaderTest extends FileUploader{
     }
 
 	public static void main(String[] args) {
-		AppFileTest appFileTest = new AppFileTest();
+		FileUploaderTest appFileTest = new FileUploaderTest();
 		appFileTest.setUpServers();
 		try {
 			appFileTest.testGetMsgForFile();
