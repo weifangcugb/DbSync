@@ -383,7 +383,7 @@ public class DbUploaderTest extends DbUploader{
     }
 
 	public static void main(String[] args) {
-		AppDbTest appTest = new AppDbTest();
+		DbUploaderTest appTest = new DbUploaderTest();
 		appTest.setUpServers();
 
 		try {
