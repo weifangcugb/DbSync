@@ -1,6 +1,12 @@
 package com.cloudbeaver.mockServer;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
@@ -31,6 +37,7 @@ public class PostDataServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(PostDataServlet.class);
 	private static String getTaskApi = "/";
 	public static String DEFAULT_CHARSET = "utf-8";
+	public static String FILE_SAVE_DIR = "/home/beaver/Documents/test/result/";
 	public static Map<String, String> map = new HashMap<String, String>();
 
 	{
@@ -62,14 +69,13 @@ public class PostDataServlet extends HttpServlet{
 			sb.append(tmp);
 		}
     	
-    	String flumeJson = sb.toString();
-    	String content = null;
-        byte []bs = null;
-        content = flumeJson.substring(0, flumeJson.lastIndexOf("\""));
-		content = content.substring(content.lastIndexOf("\"")+1);
-		bs = BeaverUtils.decompress(content.getBytes(DEFAULT_CHARSET));
+    	String content = sb.toString();
+    	if(content.contains("headers") && content.contains("body")){
+    		content = content.substring(content.indexOf("[{ \"headers\" : {}, \"body\" : \"")+"[{ \"headers\" : {}, \"body\" : \"".length(), content.indexOf("\" }]"));
+    	}       
+		byte []bs = BeaverUtils.decompress(content.getBytes(DEFAULT_CHARSET));
 		content = new String(bs,DEFAULT_CHARSET);
-		System.out.println("content = "+content);
+		System.out.println("content = " + content);
 		
 		String dbName = null;
 		JSONArray newjArray = JSONArray.fromObject(content);
@@ -90,6 +96,10 @@ public class PostDataServlet extends HttpServlet{
 			}
 		}
 		
+		if(!content.contains("HeartBeat") && map.containsKey(dbName) && map.get(dbName).equals("file")){
+			saveFile(content, dbName);
+		}
+		
 //		if(content.substring(3).startsWith("hdfs_prison")){
 //	    	updateTask(content);
 //		}		
@@ -97,7 +107,7 @@ public class PostDataServlet extends HttpServlet{
     	int debugLen = sb.length() > 300 ? 300 : sb.length();
     	System.out.println("get post data, data:" + sb.toString().substring(0, debugLen));
     }
-    
+
     public static String changeDateToLongFormat(String str) throws ParseException{
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");  
 	    Date date = sdf.parse(str);
@@ -219,7 +229,7 @@ public class PostDataServlet extends HttpServlet{
 			}
 		}
     }
-    
+
     public static void searchOriginTask(MultiDatabaseBean databases,Object database,Object table,String maxxgsj,String serverType) throws IOException{
 		for(int i = 0; i < databases.getDatabases().size(); i++){
 			DatabaseBean dbBean = databases.getDatabases().get(i);
@@ -260,7 +270,7 @@ public class PostDataServlet extends HttpServlet{
 							}		
 						}
 						else if(serverType.equals("file")){
-							Assert.assertTrue("xgsj of a record is less than table's xgsj", Long.parseLong(maxxgsj,16) > Long.parseLong(tBean.getXgsj(),16));
+							Assert.assertTrue("xgsj of a record is less than table's xgsj", Long.parseLong(maxxgsj,16) >= Long.parseLong(tBean.getXgsj(),16));
 							if(Long.parseLong(maxxgsj,16) > Long.parseLong(tBean.getXgsj(),16)){
 								tBean.setXgsj(maxxgsj);
 								Assert.assertEquals(tBean.getXgsj(), maxxgsj);
@@ -273,7 +283,27 @@ public class PostDataServlet extends HttpServlet{
 			}
 		}
     }
-    
+
+    public static void saveFile(String content, String serverType) throws IOException{
+    	JSONArray newjArray = JSONArray.fromObject(content);
+		if(newjArray.size()>0){
+			for(int i=0;i<newjArray.size();i++){
+				JSONObject iob = newjArray.getJSONObject(i);
+				String fileName = iob.getString("file_name");
+//				String dirName = iob.getString("hdfs_table");
+				String fileData = iob.getString("file_data");
+				Object database = iob.get("hdfs_db");
+				if(!map.get(database).equals("file")){
+					continue;
+				}
+				BufferedWriter out = new BufferedWriter(new FileWriter(FILE_SAVE_DIR+fileName));
+				out.write(fileData);
+				out.flush();
+				out.close();
+			}
+		}
+    }
+
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	super.doDelete(req, resp);

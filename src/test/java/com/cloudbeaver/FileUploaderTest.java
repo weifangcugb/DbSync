@@ -12,6 +12,14 @@ import com.cloudbeaver.client.fileUploader.DirInfo;
 import com.cloudbeaver.client.fileUploader.FileUploader;
 import com.cloudbeaver.mockServer.MockWebServer;
 
+/**
+ * 
+ * @author beaver
+ * This is mainly test FileUploader
+ * testGetMsgForFile():mainly test whether the modified time of directory is correct
+ *
+ */
+
 public class FileUploaderTest extends FileUploader{
 	private static MockWebServer mockServer = new MockWebServer();
 
@@ -47,18 +55,22 @@ public class FileUploaderTest extends FileUploader{
                 continue;
             }
             doTask(dirInfo);
+            doHeartBeat();
         }
     }
 
 	public static void main(String[] args) {
 		FileUploaderTest appFileTest = new FileUploaderTest();
-		appFileTest.setUpServers();
+//		appFileTest.setUpServers();
 		try {
 			appFileTest.testGetMsgForFile();
 		} catch (BeaverFatalException e) {
 			e.printStackTrace();
 		}
-		appFileTest.tearDownServers();
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+//		appFileTest.tearDownServers();
 	}
 
 }

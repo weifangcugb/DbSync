@@ -265,7 +265,7 @@ public class BeaverUtils {
 	}
 
 	public static boolean fileIsPics(String fileName) {
-		return fileName.endsWith("jpg") || fileName.endsWith("jpeg") || fileName.endsWith("bmp");
+		return fileName.endsWith("jpg") || fileName.endsWith("jpeg") || fileName.endsWith("bmp") || fileName.endsWith("png");
 	}
 
 	public static void printLogExceptionAndSleep(Exception e, String msgPrefix, int sleepTime) {

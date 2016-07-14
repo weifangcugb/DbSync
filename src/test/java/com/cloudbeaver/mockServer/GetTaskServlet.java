@@ -199,7 +199,7 @@ public class GetTaskServlet extends HttpServlet{
 			+ "{\"table\":\"BZ_KHBZ_TXLJTQSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZCFSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZJLSP\",\"ID\":\"0\"}]}]}";
 
 	private static String documentFilesInitJson = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":"
-			+ "[{\"table\":\"/home/beaver/Documents/test\",\"xgsj\":\"0000000000000000\"}]}]}";
+			+ "[{\"table\":\"/home/beaver/Documents/test/test1\",\"xgsj\":\"0000000000000000\"}]}]}";
 
 	private static MultiDatabaseBean databaseBeans;
 	private static String tableId = null;
