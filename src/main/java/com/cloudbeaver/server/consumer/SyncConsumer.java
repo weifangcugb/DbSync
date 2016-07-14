@@ -69,6 +69,16 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private String dbUploadUrl = null;
 	private String heartBeatUrl = null;
 
+	public static Map<String, String> DBName2DBType = new HashMap<String, String>();
+	{
+		DBName2DBType.put("DocumentDB", "sqlserver");
+		DBName2DBType.put("MeetingDB", "webservice");
+		DBName2DBType.put("TalkDB", "webservice");
+		DBName2DBType.put("PrasDB", "webservice");
+		DBName2DBType.put("JfkhDB", "oracle");
+		DBName2DBType.put("DocumentFiles", "file");
+	}
+
 	@Override
 	protected void setup() throws BeaverFatalException {
         try {
@@ -147,7 +157,7 @@ public class SyncConsumer extends FixedNumThreadPool{
     
     			ObjectMapper oMapper = new ObjectMapper();
     			JsonNode root= oMapper.readTree(msgBody);
-				if (root.isArray() && root.get(0) != null && root.get(0).has(JSON_FILED_HDFS_DB)) {
+				if (root.isArray() && root.get(0) != null && (root.get(0).has(JSON_FILED_HDFS_DB) || root.get(0).has(JSON_FILED_HDFS_DB.toUpperCase()))) {
 					if (root.get(0).has(CommonUploader.REPORT_TYPE) && root.get(0).get(CommonUploader.REPORT_TYPE).asText().equals(CommonUploader.REPORT_TYPE_HEARTBEAT)) {
 						logger.debug("heart beat data, msg:" + msgBody);
 						try {
@@ -161,25 +171,33 @@ public class SyncConsumer extends FixedNumThreadPool{
 						continue;
 					}
 
-					String dbName = root.get(0).get(JSON_FILED_HDFS_DB).asText();
+					String dbName = null;
+					if (root.get(0).has(JSON_FILED_HDFS_DB)) {
+						dbName = root.get(0).get(JSON_FILED_HDFS_DB).asText();
+					}else{
+						dbName = root.get(0).get(JSON_FILED_HDFS_DB.toUpperCase()).asText();
+					}
+
 					int tryTime = 0;
 					for (; tryTime < MAX_POST_RETRY_TIME; tryTime++) {
 						try {
-							if (dbName.equals(CommonUploader.TASK_DB_NAME)) {
-//								upload db data to web server
-								BeaverUtils.doPost(dbUploadUrl, msgBody);
-							}else if (dbName.equals(CommonUploader.TASK_FILEDB_NAME)) {
-								if (UPLOAD_FILE_TO_WEB_SERVER) {
-									logger.debug("posturl:" + fileUploadUrl);
-									BeaverUtils.doPost(fileUploadUrl, msgBody);
-								}
-
-								if (STOR_IN_LOCAL) {
-									for (int i = 0; i < root.size(); i++) {
-										JsonNode item = root.get(i);
-										if (item.get(JSON_FILED_HDFS_DB).asText().equals(CommonUploader.TASK_FILEDB_NAME)) {
-											System.out.println(item.get("file_name").asText());
-											writeToFile(Base64.decodeBase64(item.get("file_data").asText()));
+							if (DBName2DBType.containsKey(dbName)) {
+								if (!dbName.equals(CommonUploader.TASK_FILEDB_NAME)) {
+//									upload db data to web server
+									BeaverUtils.doPost(dbUploadUrl, msgBody);
+								} else {
+									if (UPLOAD_FILE_TO_WEB_SERVER) {
+										logger.debug("posturl:" + fileUploadUrl);
+										BeaverUtils.doPost(fileUploadUrl, msgBody);
+									}
+	
+									if (STOR_IN_LOCAL) {
+										for (int i = 0; i < root.size(); i++) {
+											JsonNode item = root.get(i);
+											if (item.get(JSON_FILED_HDFS_DB).asText().equals(CommonUploader.TASK_FILEDB_NAME)) {
+												System.out.println(item.get("file_name").asText());
+												writeToFile(Base64.decodeBase64(item.get("file_data").asText()));
+											}
 										}
 									}
 								}

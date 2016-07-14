@@ -35,18 +35,21 @@ import net.sf.json.JSONObject;
 @WebServlet("/")
 public class PostDataServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(PostDataServlet.class);
-	public static String DEFAULT_CHARSET = "utf-8";
-	public static String FILE_SAVE_DIR = "/home/beaver/Documents/test/result/";
-	public static Map<String, String> map = new HashMap<String, String>();
 
+	private static final String FLUME_HTTP_REQ_PREFIX = "[{ \"headers\" : {}, \"body\" : \"";
+	public static final String DEFAULT_CHARSET = "utf-8";
+	public static final String FILE_SAVE_DIR = "/home/beaver/Documents/test/result/";
+	public static final boolean NEED_SAVE_FILE = false;
+	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
+	public static Map<String, String> DBName2DBType = new HashMap<String, String>();
 	{
-		map.put("DocumentDB", "sqlserver");
-		map.put("MeetingDB", "webservice");
-		map.put("TalkDB", "webservice");
-		map.put("PrasDB", "webservice");
-		map.put("JfkhDB", "oracle");
-		map.put("DocumentDBForSqlite", "sqlite");
-		map.put("DocumentFiles", "file");
+		DBName2DBType.put("DocumentDB", "sqlserver");
+		DBName2DBType.put("MeetingDB", "webservice");
+		DBName2DBType.put("TalkDB", "webservice");
+		DBName2DBType.put("PrasDB", "webservice");
+		DBName2DBType.put("JfkhDB", "oracle");
+		DBName2DBType.put("DocumentDBForSqlite", "sqlite");
+		DBName2DBType.put("DocumentFiles", "file");
 	}
 
     @Override
@@ -64,35 +67,42 @@ public class PostDataServlet extends HttpServlet{
     	while ((tmp = br.readLine()) != null) {
 			sb.append(tmp);
 		}
-    	
-    	String content = sb.toString();
-    	if(content.contains("headers") && content.contains("body")){
-    		content = content.substring(content.indexOf("[{ \"headers\" : {}, \"body\" : \"")+"[{ \"headers\" : {}, \"body\" : \"".length(), content.indexOf("\" }]"));
-    	}       
-		byte []bs = BeaverUtils.decompress(content.getBytes(DEFAULT_CHARSET));
-		content = new String(bs,DEFAULT_CHARSET);
+
+    	String content = null;
+    	if(sb.indexOf("headers") != -1 && sb.indexOf("body") != -1){
+    		String base64code = sb.substring(sb.indexOf(FLUME_HTTP_REQ_PREFIX)+FLUME_HTTP_REQ_PREFIX.length(), sb.indexOf("\" }]"));
+    		byte []bs = BeaverUtils.decompress(base64code.getBytes(DEFAULT_CHARSET));
+    		content = new String(bs,DEFAULT_CHARSET);
+    	} else {
+    		content = sb.toString();
+    	}
 		System.out.println("content = " + content);
-		
+
 		String dbName = null;
 		JSONArray newjArray = JSONArray.fromObject(content);
 		if(newjArray.size()>0){
-			JSONObject job = newjArray.getJSONObject(0);
-			dbName = (String) job.get("hdfs_db");
+			JSONObject record = newjArray.getJSONObject(0);
+			if (record.containsKey(JSON_FILED_HDFS_DB)) {
+				dbName = record.getString(JSON_FILED_HDFS_DB);
+			}else if (record.containsKey(JSON_FILED_HDFS_DB.toUpperCase())) {
+				dbName = record.getString(JSON_FILED_HDFS_DB.toUpperCase());
+			}
 		}
 		System.out.println("dbName = " + dbName);
+
 		if(!content.contains("HeartBeat")){
-			Assert.assertTrue("this database or file doesn't exists", map.containsKey(dbName));
+			Assert.assertTrue("this database or file doesn't exists", DBName2DBType.containsKey(dbName));
 		}
 
-		if(!content.contains("HeartBeat") && map.containsKey(dbName)){
+		if(!content.contains("HeartBeat") && DBName2DBType.containsKey(dbName)){
 			try {
-				updateTask(content, map.get(dbName));
+				updateTask(content, DBName2DBType.get(dbName));
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		if(!content.contains("HeartBeat") && map.containsKey(dbName) && map.get(dbName).equals("file")){
+
+		if (NEED_SAVE_FILE && !content.contains("HeartBeat") && DBName2DBType.containsKey(dbName) && DBName2DBType.get(dbName).equals("file")) {
 			saveFile(content, dbName);
 		}
 		
@@ -289,7 +299,7 @@ public class PostDataServlet extends HttpServlet{
 //				String dirName = iob.getString("hdfs_table");
 				String fileData = iob.getString("file_data");
 				Object database = iob.get("hdfs_db");
-				if(!map.get(database).equals("file")){
+				if(!DBName2DBType.get(database).equals("file")){
 					continue;
 				}
 				BufferedWriter out = new BufferedWriter(new FileWriter(FILE_SAVE_DIR+fileName));
