@@ -46,7 +46,7 @@ public class FileUploaderTest extends FileUploader{
             if (dirInfo == null) {
                 continue;
             }
-            doTask(dirInfo);	
+            doTask(dirInfo);
         }
     }
 
