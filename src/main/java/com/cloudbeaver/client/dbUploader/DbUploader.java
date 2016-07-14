@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DbUploader extends CommonUploader{
@@ -51,7 +52,7 @@ public class DbUploader extends CommonUploader{
 	public void setTaskJson(String taskJson) {
 		this.taskJson = taskJson;
 	}
-	
+
 	//for test
 	public MultiDatabaseBean getDbBeans(){
 		return dbBeans;
@@ -90,26 +91,26 @@ public class DbUploader extends CommonUploader{
 
 	@Override
 	public int getThreadNum() {	
-		ArrayList<DatabaseBean> databases = new ArrayList<DatabaseBean>();
-		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
-			if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE)) {
-//				TODO: not all webdbs need to sync data 3 day's ago
-				DatabaseBean newBean;
-				try {
-					newBean = BeaverUtils.cloneTo(dbBean);
-					for (TableBean tableBean : newBean.getTables()) {
-						tableBean.setSyncTypeOnceADay(true);
-						long now = System.currentTimeMillis();
-						tableBean.setXgsjwithLong((now - now % (24 * 3600 * 1000))- WEB_DB_UPDATE_INTERVAL * 3 - 8 * 3600 * 1000);
-					}
-					databases.add(newBean);
-				} catch (ClassNotFoundException | IOException e) {
-					BeaverUtils.printLogExceptionAndSleep(e, "can't clone databaseBean,", 100);
-					break;
-				}
-			}
-		}		
-		dbBeans.getDatabases().addAll(databases);
+//		ArrayList<DatabaseBean> databases = new ArrayList<DatabaseBean>();
+//		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
+//			if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE)) {
+////				TODO: not all webdbs need to sync data 3 day's ago
+//				DatabaseBean newBean;
+//				try {
+//					newBean = BeaverUtils.cloneTo(dbBean);
+//					for (TableBean tableBean : newBean.getTables()) {
+//						tableBean.setSyncTypeOnceADay(true);
+//						long now = System.currentTimeMillis();
+//						tableBean.setXgsjwithLong((now - now % (24 * 3600 * 1000))- WEB_DB_UPDATE_INTERVAL * 3 - 8 * 3600 * 1000);
+//					}
+//					databases.add(newBean);
+//				} catch (ClassNotFoundException | IOException e) {
+//					BeaverUtils.printLogExceptionAndSleep(e, "can't clone databaseBean,", 100);
+//					break;
+//				}
+//			}
+//		}		
+//		dbBeans.getDatabases().addAll(databases);
 		return dbBeans.getDatabases().size();
 	}
 
@@ -217,7 +218,7 @@ public class DbUploader extends CommonUploader{
 					BeaverUtils.sleep(500);
 				}
 
-				logger.info("web query finished, time:" + tableBean.getXgsj() + " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:" + tableBean.getTotalPageNum());
+				logger.info("web query finished, table:" + tableBean.getTable() + " xgsj:" + tableBean.getXgsj() + " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:" + tableBean.getTotalPageNum());
 
 //				change webquery data to beaver format
 				JSONObject jsonObject = JSONObject.fromObject(sb.toString());
@@ -330,7 +331,7 @@ public class DbUploader extends CommonUploader{
 	public String getDBDataServerUrlForTest(String dbUrl, String table) {
 		return getDBDataServerUrl(dbUrl, table);
 	}
-	
+
 	private String getDBDataServerUrl(String dbUrl, String table) {
 		return dbUrl.replaceAll("\\{tableName\\}", table);
 	}
@@ -402,31 +403,38 @@ public class DbUploader extends CommonUploader{
 
         ObjectMapper objectMapper = new ObjectMapper();
         dbBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
+
+        ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
         for (DatabaseBean dbBean : dbBeans.getDatabases()) {
-        	dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
-        	dbBean.setDbUserName(conf.get("db." + dbBean.getDb() + ".username"));
-        	dbBean.setDbPassword(conf.get("db." + dbBean.getDb() + ".password"));
-        	String dbType = conf.get("db." + dbBean.getDb() + ".type");
-        	if (dbType.equals(DB_TYPE_SQL_ORACLE) || dbType.equals(DB_TYPE_SQL_SERVER) || dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
-        		dbBean.setType(dbType);
-
-    			if (dbType.equals(DB_TYPE_SQL_SERVER)) {
-    				for (TableBean tableBean : dbBean.getTables()) {
-						if (!tableBean.getXgsj().startsWith("0x")) {
-							tableBean.setXgsj("0x" + tableBean.getXgsj());
-						}
-					}
+        	if (conf.get("db." + dbBean.getDb() + ".url") != null) {
+            	dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
+            	dbBean.setDbUserName(conf.get("db." + dbBean.getDb() + ".username"));
+            	dbBean.setDbPassword(conf.get("db." + dbBean.getDb() + ".password"));
+            	String dbType = conf.get("db." + dbBean.getDb() + ".type");
+            	if (dbType.equals(DB_TYPE_SQL_ORACLE) || dbType.equals(DB_TYPE_SQL_SERVER) || dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
+            		dbBean.setType(dbType);
+    
+        			if (dbType.equals(DB_TYPE_SQL_SERVER)) {
+        				for (TableBean tableBean : dbBean.getTables()) {
+    						if (!tableBean.getXgsj().startsWith("0x")) {
+    							tableBean.setXgsj("0x" + tableBean.getXgsj());
+    						}
+    					}
+        			}
+    			}else {
+    				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
     			}
-			}else {
-				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
-			}
-
-			String appKey = conf.get("db." + dbBean.getDb() + ".appKey");
-			if (appKey != null) {
-				dbBean.setAppKey(appKey);
-				dbBean.setAppSecret(appKeySecret.get(appKey));
-			}
+    
+    			String appKey = conf.get("db." + dbBean.getDb() + ".appKey");
+    			if (appKey != null) {
+    				dbBean.setAppKey(appKey);
+    				dbBean.setAppSecret(appKeySecret.get(appKey));
+    			}
+    			newDatabaseBeans.add(dbBean);
+        	}
         }
+
+        dbBeans.setDatabases(newDatabaseBeans);
     }
 
     public static void main(String[] args) {

@@ -125,7 +125,6 @@ public class BeaverUtils {
 			}
 
 	        URL url = new URL(urlString);
-
 	        urlConnection = (HttpURLConnection) url.openConnection();
 	        urlConnection.setRequestMethod("POST");
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
