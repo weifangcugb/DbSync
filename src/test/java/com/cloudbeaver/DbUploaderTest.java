@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 //@Ignore
 public class DbUploaderTest extends DbUploader{
+	private static final int MAX_LOOP_NUM = 5;
 	private static MockWebServer mockServer = new MockWebServer();
 	private static MockSqlServer mockSqlServer = new MockSqlServer();
 	public static String DEFAULT_CHARSET = "utf-8";
@@ -75,7 +76,7 @@ public class DbUploaderTest extends DbUploader{
 		MultiDatabaseBean olddbs = getDbBeans();
 		int num = getDbBeans().getDatabases().size();
 		MultiDatabaseBean newdbs = olddbs;
-		for(int j = 0;j<2;j++){
+		for(int j = 0; j < MAX_LOOP_NUM; j++){
 			isEqulas(olddbs, newdbs);			
 			for (int index = 0; index < num; index++) {
 				DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
@@ -161,7 +162,7 @@ public class DbUploaderTest extends DbUploader{
 		MultiDatabaseBean olddbs = getDbBeans();
 		int num = getDbBeans().getDatabases().size();
 		MultiDatabaseBean newdbs = olddbs;
-		for(int j = 0;j<2;j++){
+		for(int j = 0; j < MAX_LOOP_NUM; j++){
 			isEqulas(olddbs, newdbs);			
 			for (int index = 0; index < num; index++) {
 				DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
