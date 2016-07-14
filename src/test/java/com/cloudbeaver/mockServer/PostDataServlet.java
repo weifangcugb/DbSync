@@ -29,7 +29,7 @@ import net.sf.json.JSONObject;
 @WebServlet("/")
 public class PostDataServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(PostDataServlet.class);
-	private static String getTaskApi = "/";
+//	private static String getTaskApi = "/";
 	public static String DEFAULT_CHARSET = "utf-8";
 	public static Map<String, String> map = new HashMap<String, String>();
 
@@ -42,7 +42,7 @@ public class PostDataServlet extends HttpServlet{
 		map.put("DocumentDBForSqlite", "sqlite");
 		map.put("DocumentFiles", "file");
 	}
-	
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	doPost(req, resp);
@@ -50,10 +50,10 @@ public class PostDataServlet extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
-    	String url = req.getRequestURI();
-    	if (!url.equals(getTaskApi)) {
-			throw new ServletException("invalid url, format: " + getTaskApi);
-		}
+//    	String url = req.getRequestURI();
+//    	if (!url.equals(getTaskApi)) {
+//			throw new ServletException("invalid url, format: " + getTaskApi);
+//		}
 
     	BufferedReader br = new BufferedReader(new InputStreamReader(req.getInputStream()));
     	StringBuilder sb = new StringBuilder();
@@ -61,13 +61,12 @@ public class PostDataServlet extends HttpServlet{
     	while ((tmp = br.readLine()) != null) {
 			sb.append(tmp);
 		}
-    	
+
     	String flumeJson = sb.toString();
-    	String content = null;
-        byte []bs = null;
-        content = flumeJson.substring(0, flumeJson.lastIndexOf("\""));
+
+    	String content = flumeJson.substring(0, flumeJson.lastIndexOf("\""));
 		content = content.substring(content.lastIndexOf("\"")+1);
-		bs = BeaverUtils.decompress(content.getBytes(DEFAULT_CHARSET));
+		byte[] bs = BeaverUtils.decompress(content.getBytes(DEFAULT_CHARSET));
 		content = new String(bs,DEFAULT_CHARSET);
 		System.out.println("content = "+content);
 		

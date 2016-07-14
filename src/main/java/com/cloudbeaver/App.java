@@ -22,13 +22,8 @@ public class App {
 	public static void main(String[] args) {
         Options options = new Options();
 
-        Option option = new Option("m", "module", true, "the module name you want to lautch, 'dbUploader' or 'fileUploader' or 'syncConsumer'");
+        Option option = new Option("m", "module", true, "the module name you want to lautch, 'dbUploader' or 'fileUploader' or 'syncConsumer' or 'mockWebServer'");
         option.setRequired(true);
-        options.addOption(option);
-
-//      conf file name, useless for this version
-        option = new Option("f", "conf-file", true, "specify a config file, useless in this version");
-        option.setRequired(false);
         options.addOption(option);
 
         option = new Option("h", "help", false, "display help text");
@@ -55,34 +50,6 @@ public class App {
 	            new HelpFormatter().printHelp("java -jar dbsync ", options, true);
 	            return;
             }
-
-            if (commandLine.hasOption('k')) {
-            	String kafkaVersion = commandLine.getOptionValue('k');
-            	switch (kafkaVersion) {
-					case "beaver":
-						SyncConsumer.USE_BEAVER_KAFKA = true;
-						break;
-					case "origin":
-						SyncConsumer.USE_BEAVER_KAFKA = false;
-						break;
-					default:
-						throw new ParseException("kafka version is wrong, only 'beaver' or 'origin' allowed");
-				}
-			}
-
-            if (commandLine.hasOption('d')) {
-            	String dirLocation = commandLine.getOptionValue('d');
-            	switch (dirLocation) {
-					case "local":
-						FileUploader.USE_REMOTE_DIRS = false;
-						break;
-					case "remote":
-						FileUploader.USE_REMOTE_DIRS = true;
-						break;
-					default:
-						throw new ParseException("dir location is wrong, only 'local' or 'remote' allowed.");
-				}
-			}
 
             if (commandLine.hasOption('l')) {
             	String largeFileSize = commandLine.getOptionValue('l');

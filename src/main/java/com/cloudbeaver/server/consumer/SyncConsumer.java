@@ -105,7 +105,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 		props.put(ZOOKEEPER_OFFSET_RESET, KAFKA_OFFSET_SMALLEST); 
 		props.put(KAFKA_GROUP_ID, conf.get(KAFKA_GROUP_ID) == null? DEFAULT_CONSUMER_GROUP_ID: conf.get(KAFKA_GROUP_ID));
 		props.put(KAFKA_AUTO_COMMIT_INTERVALS, conf.get(KAFKA_AUTO_COMMIT_INTERVALS) == null ? DEFAULT_KAFKA_AUTO_COMMIT_INTERVALS : conf.get(KAFKA_AUTO_COMMIT_INTERVALS));
-		props.put(KAFKA_FETCH_MAX_SIZE , DEFAULT_MAX_FETCH_SIZE);
+//		props.put(KAFKA_FETCH_MAX_SIZE , DEFAULT_MAX_FETCH_SIZE);
 
 		ConsumerConfig consumerConfig = new ConsumerConfig(props);
 		consumer = (ConsumerConnector) Consumer.createJavaConsumerConnector(consumerConfig);
