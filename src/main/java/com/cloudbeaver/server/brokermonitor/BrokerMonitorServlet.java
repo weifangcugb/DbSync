@@ -20,6 +20,7 @@ import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.server.brokermonitor.zkbean.BrokerListBean;
 import com.cloudbeaver.server.brokermonitor.zkbean.BrokerZkNodeBean;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -156,12 +157,16 @@ public class BrokerMonitorServlet extends HttpServlet {
 
 				//String testJson = "{\"jmx_port\":-1,\"timestamp\":\"1466058881070\",\"endpoints\":[\"PLAINTEXT://localhost:9092\"],\"host\":\"localhost\",\"version\":3,\"port\":9093}\"";
 				//Ob_res = mapper.readValue(testJson, ResType.class);
-				BrokerZkNodeBean zkData = mapper.readValue(zkDataString, BrokerZkNodeBean.class);
+				BrokerZkNodeBean zkData = mapper.readValue(getJsonFormat(zkDataString), BrokerZkNodeBean.class);
 				zkData.setIds(b_id);
 				brokerList.addZkd(zkData);
 			}
 		}
 
 		return mapper.writeValueAsString(brokerList);
+	}
+
+	protected String getJsonFormat(String zkDataString) {
+		return zkDataString;
 	}
 }

@@ -30,6 +30,7 @@ public class MockWebServer {
         context.addServlet(PostDataServlet.class, "/");
         context.addServlet(SimpleTests.class, "/simple");
         context.addServlet(GetWebServerDataServlet.class, "/interface/*");
+        context.addServlet(BrokerMonitorServletTest.class, "/getBrokerList");
 
         HandlerCollection handlers = new HandlerCollection();
         handlers.setHandlers(new Handler[] { context, new DefaultHandler() });

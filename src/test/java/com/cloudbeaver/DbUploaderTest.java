@@ -14,7 +14,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.omg.Messaging.SYNC_WITH_TRANSPORT;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
@@ -23,11 +22,24 @@ import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
-import com.cloudbeaver.mockServer.GetTaskServlet;
 import com.cloudbeaver.mockServer.MockSqlServer;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * 
+ * @author beaver
+ * This is mainly test DbUploader
+ * testGetMsgForSqlserverStep():test SqlServer. Execute one sql statement each time to make sure that the task has been updated
+ * testGetMsgForSqlserver():test SqlServer. Query all the tables
+ * public void testGetMsgForSqlite():test Sqlite. Execute one sql statement each time to make sure that the task has been updated
+ * testGetMsgForWeb():test web service, not including databases from three days before
+ * testGetMsgForWebSync():test web service, only testing databases from three days before
+ * testGetMsgForOracle():test oracle.
+ * testGetMsgProduct():test all kinds of databases togeher
+ *
+ */
 
 //@Ignore
 public class DbUploaderTest extends DbUploader{
@@ -391,12 +403,11 @@ public class DbUploaderTest extends DbUploader{
 
 	public static void main(String[] args) {
 		DbUploaderTest appTest = new DbUploaderTest();
-		appTest.setUpServers();
+//		appTest.setUpServers();
 
 		try {
 			appTest.testGetMsgForSqlserverStep();
-//			System.out.println("The second case starts:");
-			appTest.testGetMsgForSqlserver();
+//			appTest.testGetMsgForSqlserver();
 //			appTest.testGetMsgForWeb();
 //			appTest.testGetMsgForWebSync();
 //			appTest.testGetMsgForOracle();
@@ -405,6 +416,6 @@ public class DbUploaderTest extends DbUploader{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		appTest.tearDownServers();
+//		appTest.tearDownServers();
 	}
 }
