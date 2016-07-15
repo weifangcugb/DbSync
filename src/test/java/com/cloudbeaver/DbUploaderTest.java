@@ -432,7 +432,7 @@ public class DbUploaderTest extends DbUploader{
 
 	@Test
 //	@Ignore
-    public void testGetMsgForOracle() throws Exception {
+    public void testGetMsgForOracle() throws BeaverFatalException {
         setup();
         int num = getThreadNum();
         for (int index = 0; index < num; index++) {
@@ -450,7 +450,7 @@ public class DbUploaderTest extends DbUploader{
 
 //    @Test
 	@Ignore
-    public void testGetMsgProduct() throws Exception {
+    public void testGetMsgProduct() throws BeaverFatalException{
         setup();
         int num = getThreadNum();
         for (int index = 0; index < num; index++) {

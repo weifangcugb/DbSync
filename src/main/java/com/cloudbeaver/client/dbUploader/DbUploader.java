@@ -280,10 +280,21 @@ public class DbUploader extends CommonUploader{
 			}
 
 			JSONArray jArray = new JSONArray();
+			int i = 0;
 			while (jArray.isEmpty()) {
+				if (i++ % 100 == 0) {
+					System.out.println("Executing query: " + tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));					
+				}
+
 				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
-				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) { // && storedMaxXgsj < maxRV
-					tableBean.setXgsj((tableBean.getXgsjAsLong() + DB_QEURY_LIMIT_DB) + "");
+				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
+					long nextPoint = tableBean.getXgsjAsLong() + DB_QEURY_LIMIT_DB;
+					if (tableBean.getMaxXgsjAsLong() < nextPoint) {
+						tableBean.setXgsj(tableBean.getMaxXgsjAsLong() + "");
+						throw new BeaverTableIsFullException();
+					} else {
+						tableBean.setXgsj((tableBean.getXgsjAsLong() + DB_QEURY_LIMIT_DB) + "");
+					}
 				}else {
 					logger.debug("get db data, json:" + jArray.toString());
 					tableBean.setXgsj(nowMaxXgsj);

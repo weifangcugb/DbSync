@@ -234,7 +234,7 @@ public class TableBean implements Serializable{
 
     private String whereClause(String rowVersionColumn, String dbType, int sqlLimitNum) {
 		if (dbType.equals(CommonUploader.DB_TYPE_SQL_ORACLE)) {
-			return whereClause(rowVersionColumn) + " and " + table + "." + rowVersionColumn + " < (" + xgsj + " + " + sqlLimitNum + ")";
+			return whereClause(rowVersionColumn) + " and " + table + "." + rowVersionColumn + " <= (" + xgsj + " + " + sqlLimitNum + ")";
 		}else {
 			return null;
 		}
@@ -285,6 +285,10 @@ public class TableBean implements Serializable{
 
 	@JsonIgnore
 	public long getXgsjAsLong() {
+		return Long.parseLong(xgsj);
+	}
+
+	public long getMaxXgsjAsLong() {
 		return Long.parseLong(xgsj);
 	}
 }
