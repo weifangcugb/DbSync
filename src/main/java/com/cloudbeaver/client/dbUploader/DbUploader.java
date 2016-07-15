@@ -282,8 +282,8 @@ public class DbUploader extends CommonUploader{
 			JSONArray jArray = new JSONArray();
 			int i = 0;
 			while (jArray.isEmpty()) {
-				if (i++ % 100 == 0) {
-					System.out.println("Executing query: " + tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));					
+				if (i++ % 200 == 0) {
+					logger.info("Executing query: " + tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));					
 				}
 
 				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
