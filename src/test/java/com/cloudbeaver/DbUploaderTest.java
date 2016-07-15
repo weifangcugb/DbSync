@@ -4,6 +4,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +25,7 @@ import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
 import com.cloudbeaver.mockServer.MockSqlServer;
 import com.cloudbeaver.mockServer.MockWebServer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -360,8 +362,76 @@ public class DbUploaderTest extends DbUploader{
         }
 	}
 
-//	@Test
-	@Ignore
+	@Test
+//	@Ignore
+	public void	testGetMsgForOraleStep() throws SQLException, BeaverFatalException, JsonProcessingException, IOException {
+		setup();
+		MultiDatabaseBean olddbs = getDbBeans();
+		int num = getDbBeans().getDatabases().size();
+		MultiDatabaseBean newdbs = olddbs;
+		for(int j = 0; j < MAX_LOOP_NUM; j++){
+			isEqulas(olddbs, newdbs);			
+			for (int index = 0; index < num; index++) {
+				DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
+				if (dbBean == null) {
+					continue;
+				}
+				if(!dbBean.getType().equals(DbUploader.DB_TYPE_SQL_ORACLE)){
+					continue;
+				}
+				for (TableBean tBean : dbBean.getTables()) {
+					JSONArray jArray = new JSONArray();
+					String maxVersion = null;
+					//test oracle
+					maxVersion = SqlHelper.getDBData(prisonId, dbBean, tBean, 2, jArray);
+
+//					jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
+					ObjectMapper oMapper = new ObjectMapper();
+					JsonNode root = oMapper.readTree(jArray.toString());
+					for (int i = 0; i < root.size(); i++) {
+						JsonNode item = root.get(i);
+						Assert.assertEquals(item.get("hdfs_prison").asText(),prisonId);
+						Assert.assertEquals(item.get("hdfs_db").asText(),"JfkhDB");
+					}
+					
+					if(!jArray.isEmpty()){	
+						JSONArray newjArray = JSONArray.fromObject(jArray.toArray());						
+						String dbName = null;
+						if(newjArray.size()>0){
+							JSONObject job = newjArray.getJSONObject(0);
+							dbName = (String) job.get("hdfs_db");
+						}
+		                String flumeJson = null;
+						try {
+							flumeJson = BeaverUtils.compressAndFormatFlumeHttp(jArray.toString());
+						} catch (IOException e) {
+							BeaverUtils.PrintStackTrace(e);
+							BeaverUtils.sleep(1000);
+							continue;
+						}					
+		                try {
+		    				if (maxVersion != null) {
+		    					updateRefTask(maxVersion,olddbs,index,tBean,map.get(dbName));
+		    					tBean.setXgsj(maxVersion);
+			    				BeaverUtils.doPost(getConf().get(CONF_FLUME_SERVER_URL), flumeJson);
+			    				//test HeartBeat
+			    				doHeartBeat();
+			    				break;
+							}
+		    			} catch (IOException e) {
+		    				BeaverUtils.PrintStackTrace(e);
+		    				BeaverUtils.sleep(1000);
+		    			}
+					}
+				}
+			}
+			setup();
+			newdbs = getDbBeans();
+		}
+	}
+
+	@Test
+//	@Ignore
     public void testGetMsgForOracle() throws Exception {
         setup();
         int num = getThreadNum();
@@ -406,11 +476,12 @@ public class DbUploaderTest extends DbUploader{
 //		appTest.setUpServers();
 
 		try {
-			appTest.testGetMsgForSqlserverStep();
+//			appTest.testGetMsgForSqlserverStep();
 //			appTest.testGetMsgForSqlserver();
 //			appTest.testGetMsgForWeb();
 //			appTest.testGetMsgForWebSync();
 //			appTest.testGetMsgForOracle();
+			appTest.testGetMsgForOraleStep();
 //			appTest.testGetMsgForSqlite();
 //			appTest.testGetMsgProduct();
 		} catch (Exception e) {

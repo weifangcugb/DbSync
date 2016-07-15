@@ -245,7 +245,7 @@ public class PostDataServlet extends HttpServlet{
 					if(tBean.getTable().equals(table)){
 //						if(maxxgsj > Long.parseLong(tBean.getXgsj().substring("0x".length()))){
 						if(serverType.equals("sqlserver")){
-							Assert.assertTrue("table：" + tBean.getTable() + "xgsj of a record is less than table's xgsj", Long.parseLong(maxxgsj,16) > Long.parseLong(tBean.getXgsj(),16));
+							Assert.assertTrue("table：" + tBean.getTable() + "xgsj of a record is less than table's xgsj", Long.parseLong(maxxgsj,16) >= Long.parseLong(tBean.getXgsj(),16));
 							if(Long.parseLong(maxxgsj,16) > Long.parseLong(tBean.getXgsj(),16)){
 								tBean.setXgsj(maxxgsj);
 								Assert.assertEquals(tBean.getXgsj(), maxxgsj);
@@ -261,7 +261,7 @@ public class PostDataServlet extends HttpServlet{
 							}		
 						}
 						else if(serverType.equals("oracle")){
-							Assert.assertTrue("ID of a record is less than table's ID", Long.parseLong(maxxgsj) > Long.parseLong(tBean.getID()));
+							Assert.assertTrue("ID of a record is less than table's ID", Long.parseLong(maxxgsj) >= Long.parseLong(tBean.getID()));
 							if(Long.parseLong(maxxgsj) > Long.parseLong(tBean.getID())){
 								tBean.setID(maxxgsj);
 								Assert.assertEquals(tBean.getID(), maxxgsj);
@@ -269,7 +269,7 @@ public class PostDataServlet extends HttpServlet{
 							}		
 						}
 						else if(serverType.equals("sqlite")){
-							Assert.assertTrue("xgsj of a record is less than table's xgsj", Long.parseLong(maxxgsj) > Long.parseLong(tBean.getXgsj()));
+							Assert.assertTrue("xgsj of a record is less than table's xgsj", Long.parseLong(maxxgsj) >= Long.parseLong(tBean.getXgsj()));
 							if(Long.parseLong(maxxgsj) > Long.parseLong(tBean.getXgsj())){
 								tBean.setXgsj(maxxgsj);
 								Assert.assertEquals(tBean.getXgsj(), maxxgsj);

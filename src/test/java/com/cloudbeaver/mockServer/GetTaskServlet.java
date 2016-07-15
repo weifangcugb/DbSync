@@ -31,6 +31,7 @@ public class GetTaskServlet extends HttpServlet{
 	private static String getTaskApi = "/api/business/sync/";
 	private static MultiDatabaseBean databaseBeans;
 	private static String tableId = null;
+	private static String PROJECT_ABSOLUTE_PATH = System.getProperty("user.dir");
 	public static long now = System.currentTimeMillis();
 	public static long fiveDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 5 - 8 * 3600 * 1000;
 	public static long fourDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 4 - 8 * 3600 * 1000;
@@ -201,7 +202,7 @@ public class GetTaskServlet extends HttpServlet{
 			+ "{\"table\":\"BZ_KHBZ_TXLJTQSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZCFSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZJLSP\",\"ID\":\"0\"}]}]}";
 
 	private static String documentFilesInitJson = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":"
-			+ "[{\"table\":\"/home/beaver/Documents/test/test1\",\"xgsj\":\"0000000000000000\"}]}]}";
+			+ "[{\"table\":\"" + PROJECT_ABSOLUTE_PATH + "/src/resources/fileUploaderTestPics\",\"xgsj\":\"0000000000000000\"}]}]}";
 
 	public static String getTableId() {
 		return tableId;
@@ -330,5 +331,6 @@ public class GetTaskServlet extends HttpServlet{
     public static void main(String []args) {
 		System.out.println(fourDayBeforeString);
 		System.out.println(fourDayBefore);
+		System.out.println(PROJECT_ABSOLUTE_PATH);
 	}
 }
