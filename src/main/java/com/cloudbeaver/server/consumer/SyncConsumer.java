@@ -31,7 +31,7 @@ import kafka.message.MessageAndMetadata;
  * get db/file data from kafka, upload them to web server
  */
 public class SyncConsumer extends FixedNumThreadPool{
-	public static boolean USE_BEAVER_KAFKA = false;
+	public static boolean USE_BEAVER_KAFKA = true;
 
 	private static Logger logger = Logger.getLogger(SyncConsumer.class);
 
@@ -154,10 +154,10 @@ public class SyncConsumer extends FixedNumThreadPool{
     				logger.error("unzip error, this is an invalid message. msg:" + e.getMessage());
     				continue;
     			}
-    
+
     			ObjectMapper oMapper = new ObjectMapper();
     			JsonNode root= oMapper.readTree(msgBody);
-				if (root.isArray() && root.get(0) != null && (root.get(0).has(JSON_FILED_HDFS_DB) || root.get(0).has(JSON_FILED_HDFS_DB.toUpperCase()))) {
+				if (root.isArray() && root.get(0) != null && (root.get(0).has(JSON_FILED_HDFS_DB))) {
 					if (root.get(0).has(CommonUploader.REPORT_TYPE) && root.get(0).get(CommonUploader.REPORT_TYPE).asText().equals(CommonUploader.REPORT_TYPE_HEARTBEAT)) {
 						logger.debug("heart beat data, msg:" + msgBody);
 						try {
@@ -171,13 +171,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 						continue;
 					}
 
-					String dbName = null;
-					if (root.get(0).has(JSON_FILED_HDFS_DB)) {
-						dbName = root.get(0).get(JSON_FILED_HDFS_DB).asText();
-					}else{
-						dbName = root.get(0).get(JSON_FILED_HDFS_DB.toUpperCase()).asText();
-					}
-
+					String dbName = root.get(0).get(JSON_FILED_HDFS_DB).asText();
 					int tryTime = 0;
 					for (; tryTime < MAX_POST_RETRY_TIME; tryTime++) {
 						try {

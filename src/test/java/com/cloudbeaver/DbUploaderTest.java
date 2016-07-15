@@ -102,14 +102,14 @@ public class DbUploaderTest extends DbUploader{
 					JSONArray jArray = new JSONArray();
 					String maxVersion = null;
 					//test sqlserver
-					maxVersion = SqlHelper.getDBData(getPrisonId(), dbBean, tBean, 2, jArray);
+					maxVersion = SqlHelper.getDBData(prisonId, dbBean, tBean, 2, jArray);
 
 //					jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
 					ObjectMapper oMapper = new ObjectMapper();
 					JsonNode root = oMapper.readTree(jArray.toString());
 					for (int i = 0; i < root.size(); i++) {
 						JsonNode item = root.get(i);
-						Assert.assertEquals(item.get("hdfs_prison").asText(),DbUploader.getPrisonId());
+						Assert.assertEquals(item.get("hdfs_prison").asText(),prisonId);
 						Assert.assertEquals(item.get("hdfs_db").asText(),"DocumentDB");
 					}
 					
@@ -188,14 +188,14 @@ public class DbUploaderTest extends DbUploader{
 					JSONArray jArray = new JSONArray();
 					String maxVersion = null;
 					//test sqlite
-					maxVersion = SqlHelper.getDBData(getPrisonId(), dbBean, tBean, 2, jArray);
+					maxVersion = SqlHelper.getDBData(prisonId, dbBean, tBean, 2, jArray);
 
 //					jArray : [{"hdfs_client":"1","hdfs_db":"DocumentDB", xxx}]
 					ObjectMapper oMapper = new ObjectMapper();
 					JsonNode root = oMapper.readTree(jArray.toString());
 					for (int i = 0; i < root.size(); i++) {
 						JsonNode item = root.get(i);
-						Assert.assertEquals(item.get("hdfs_prison").asText(),DbUploader.getPrisonId());
+						Assert.assertEquals(item.get("hdfs_prison").asText(), prisonId);
 						Assert.assertEquals(item.get("hdfs_db").asText(),"DocumentDBForSqlite");
 					}
 					
