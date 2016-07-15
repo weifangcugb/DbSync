@@ -19,9 +19,6 @@ import org.apache.zookeeper.ZooKeeper;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.server.brokermonitor.zkbean.BrokerListBean;
 import com.cloudbeaver.server.brokermonitor.zkbean.BrokerZkNodeBean;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BrokerMonitorServlet extends HttpServlet {
