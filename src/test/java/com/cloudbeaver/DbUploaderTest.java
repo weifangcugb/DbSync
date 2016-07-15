@@ -430,7 +430,7 @@ public class DbUploaderTest extends DbUploader{
 		}
 	}
 
-	@Test
+	@Test(timeout = 5 * 60 * 1000) 
 //	@Ignore
     public void testGetMsgForOracle() throws BeaverFatalException {
         setup();
@@ -480,8 +480,8 @@ public class DbUploaderTest extends DbUploader{
 //			appTest.testGetMsgForSqlserver();
 //			appTest.testGetMsgForWeb();
 //			appTest.testGetMsgForWebSync();
-//			appTest.testGetMsgForOracle();
-			appTest.testGetMsgForOraleStep();
+			appTest.testGetMsgForOracle();
+//			appTest.testGetMsgForOraleStep();
 //			appTest.testGetMsgForSqlite();
 //			appTest.testGetMsgProduct();
 		} catch (Exception e) {

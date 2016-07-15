@@ -288,6 +288,7 @@ public class TableBean implements Serializable{
 		return Long.parseLong(xgsj);
 	}
 
+	@JsonIgnore
 	public long getMaxXgsjAsLong() {
 		return Long.parseLong(xgsj);
 	}

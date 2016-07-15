@@ -16,7 +16,8 @@ import com.cloudbeaver.mockServer.MockWebServer;
  * 
  * @author beaver
  * This is mainly test FileUploader
- * testGetMsgForFile():mainly test whether the modified time of directory is correct
+ * testGetMsgForWebFile():test files from web server, mainly test whether the modified time of directory is correct
+ * testGetMsgForLocalFile():test files from local
  *
  */
 
@@ -46,9 +47,24 @@ public class FileUploaderTest extends FileUploader{
 
 	@Test
 //	@Ignore
-    public void testGetMsgForFile() throws BeaverFatalException{
+    public void testGetMsgForWebFile() throws BeaverFatalException{
+		FileUploader.USE_REMOTE_DIRS = true;
         setup();
-//        System.out.println(getThreadNum());
+        for (int index = 0; index < getThreadNum(); index++) {
+        	DirInfo  dirInfo = (DirInfo) getTaskObject(index);
+            if (dirInfo == null) {
+                continue;
+            }
+            doTask(dirInfo);
+            doHeartBeat();
+        }
+    }
+
+	@Test
+//	@Ignore
+    public void testGetMsgForLocalFile() throws BeaverFatalException{
+		FileUploader.USE_REMOTE_DIRS = false;
+        setup();
         for (int index = 0; index < getThreadNum(); index++) {
         	DirInfo  dirInfo = (DirInfo) getTaskObject(index);
             if (dirInfo == null) {
@@ -63,7 +79,8 @@ public class FileUploaderTest extends FileUploader{
 		FileUploaderTest appFileTest = new FileUploaderTest();
 //		appFileTest.setUpServers();
 		try {
-			appFileTest.testGetMsgForFile();
+			appFileTest.testGetMsgForWebFile();
+			appFileTest.testGetMsgForLocalFile();
 		} catch (BeaverFatalException e) {
 			e.printStackTrace();
 		}
