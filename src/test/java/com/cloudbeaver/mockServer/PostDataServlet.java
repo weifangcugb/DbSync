@@ -41,6 +41,8 @@ public class PostDataServlet extends HttpServlet{
 	public static final String FILE_SAVE_DIR = "/home/beaver/Documents/test/result/";
 	public static final boolean NEED_SAVE_FILE = false;
 	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
+	private static int picNum = 0;
+
 	public static Map<String, String> DBName2DBType = new HashMap<String, String>();
 	{
 		DBName2DBType.put("DocumentDB", "sqlserver");
@@ -102,10 +104,13 @@ public class PostDataServlet extends HttpServlet{
 			}
 		}
 
-		if (NEED_SAVE_FILE && !content.contains("HeartBeat") && DBName2DBType.containsKey(dbName) && DBName2DBType.get(dbName).equals("file")) {
-			saveFile(content, dbName);
+		if (!content.contains("HeartBeat") && DBName2DBType.containsKey(dbName) && DBName2DBType.get(dbName).equals("file")) {
+			System.out.println("got one pic, Num:" + picNum++);
+			if (NEED_SAVE_FILE) {
+				saveFile(content, dbName);
+			}
 		}
-		
+
 //		if(content.substring(3).startsWith("hdfs_prison")){
 //	    	updateTask(content);
 //		}		

@@ -55,7 +55,7 @@ public class SqlHelper {
         }
     }
 
-	public static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
+	private static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
 		Connection con = getConn(dbBean);
 		PreparedStatement pStatement = null;
 		try {
@@ -98,12 +98,17 @@ public class SqlHelper {
 	}
 
 	public static String getDBData(String prisonId, DatabaseBean dbBean,TableBean tableBean, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
-		String sqlQuery = tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), sqlLimitNum);
+		String sqlQuery = tableBean.getSqlString(dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), sqlLimitNum);
 		String maxRowVersion = execSqlQuery(sqlQuery, dbBean, jArray);
 		if (!jArray.isEmpty() && tableBean.getJoin_subtable() != null) {
 //			handle join_subtable
 			for (int i = 0; i < jArray.size(); i++) {
 				JSONObject jsonObject = jArray.getJSONObject(i);
+
+				jsonObject.put("hdfs_prison", prisonId);
+				jsonObject.put("hdfs_db", dbBean.getDb());
+				jsonObject.element("hdfs_table", tableBean.getTable());
+
 				ArrayList<String> subtables = tableBean.getJoin_subtable();
 				for (String subtable : subtables) {
 					String subtableSql = tableBean.getSubTableSqlString(dbBean.getType(), dbBean.getRowversion(), subtable, jsonObject.getString(dbBean.getRowversion()));

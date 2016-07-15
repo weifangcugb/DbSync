@@ -205,21 +205,18 @@ public class TableBean implements Serializable{
         this.key = key;
     }
 
-    public String getSqlString(String prisonId, String dbName, String rowVersionColumn, String dbType, int sqlLimitNum) throws BeaverFatalException {
+    public String getSqlString(String dbName, String rowVersionColumn, String dbType, int sqlLimitNum) throws BeaverFatalException {
     	switch (dbType) {
 			case CommonUploader.DB_TYPE_SQL_SERVER:
-				return "SELECT top " + sqlLimitNum + " '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-                		table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+				return "SELECT top " + sqlLimitNum  + " * " + fromClause() + whereClause(rowVersionColumn)
                 		+ " order by " + table + "." + rowVersionColumn;
 
 			case CommonUploader.DB_TYPE_SQL_SQLITE:
-				return "SELECT '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-                		table + "' AS hdfs_table, * " + fromClause() + whereClause(rowVersionColumn)
+				return "SELECT * " + fromClause() + whereClause(rowVersionColumn)
                 		+ " order by " + table + "." + rowVersionColumn + " limit " + sqlLimitNum;
 
 			case CommonUploader.DB_TYPE_SQL_ORACLE:
-				return "SELECT '" + prisonId + "' AS hdfs_prison, '" + dbName + "' AS hdfs_db, '" +
-		                table + "' AS hdfs_table, " + selectColumnClause() + fromClause() + whereClause(rowVersionColumn, dbType, sqlLimitNum)
+				return "SELECT " + selectColumnClause() + fromClause() + whereClause(rowVersionColumn, dbType, sqlLimitNum)
 		                + " order by " + table + "." + rowVersionColumn;
 
 			default:
