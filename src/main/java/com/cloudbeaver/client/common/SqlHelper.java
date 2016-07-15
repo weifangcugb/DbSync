@@ -99,7 +99,7 @@ public class SqlHelper {
 	}
 
 	public static String getDBData(String prisonId, DatabaseBean dbBean,TableBean tableBean, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
-		String sqlQuery = tableBean.getSqlString(dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), sqlLimitNum);
+		String sqlQuery = tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), sqlLimitNum);
 		String maxRowVersion = execSqlQuery(sqlQuery, dbBean, jArray);
 		if (!jArray.isEmpty()) {
 //			handle join_subtable

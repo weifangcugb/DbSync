@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
+import com.cloudbeaver.client.common.CommonUploader;
 import com.cloudbeaver.client.common.FixedNumThreadPool;
 import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
@@ -17,7 +18,7 @@ import net.sf.json.JSONObject;
 
 public class MockSqlHelper extends SqlHelper{
 	public static String execSqlQuery(String prisonId, DatabaseBean dbBean,TableBean tableBean, FixedNumThreadPool threadPool, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
-		String sqlQuery = tableBean.getSqlStringForSqlite(prisonId, dbBean.getDb(), dbBean.getRowversion(), sqlLimitNum);
+		String sqlQuery = tableBean.getSqlString(dbBean.getRowversion(), CommonUploader.DB_TYPE_SQL_SQLITE, sqlLimitNum);
 		
 		int startpos = sqlQuery.indexOf(dbBean.getRowversion());
 		int endpos = sqlQuery.indexOf("order");
