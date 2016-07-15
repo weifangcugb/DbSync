@@ -71,6 +71,7 @@ public class SqlHelper {
 	        while (rs.next()) {
 	            if (jArray != null) {
 	                JSONObject jsonObj = new JSONObject();
+
 	                for (int i = 1; i <= columnCount; i++) {
 	                    String columnName =metaData.getColumnLabel(i);
 	                    String value = rs.getString(columnName);
@@ -100,23 +101,25 @@ public class SqlHelper {
 	public static String getDBData(String prisonId, DatabaseBean dbBean,TableBean tableBean, int sqlLimitNum, JSONArray jArray) throws SQLException, BeaverFatalException {
 		String sqlQuery = tableBean.getSqlString(dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), sqlLimitNum);
 		String maxRowVersion = execSqlQuery(sqlQuery, dbBean, jArray);
-		if (!jArray.isEmpty() && tableBean.getJoin_subtable() != null) {
+		if (!jArray.isEmpty()) {
 //			handle join_subtable
 			for (int i = 0; i < jArray.size(); i++) {
-				JSONObject jsonObject = jArray.getJSONObject(i);
+				JSONObject jsonObj = jArray.getJSONObject(i);
 
-				jsonObject.put("hdfs_prison", prisonId);
-				jsonObject.put("hdfs_db", dbBean.getDb());
-				jsonObject.element("hdfs_table", tableBean.getTable());
+                jsonObj.put("hdfs_prison", prisonId);
+                jsonObj.put("hdfs_db", dbBean.getDb());
+                jsonObj.element("hdfs_table", tableBean.getTable());
 
-				ArrayList<String> subtables = tableBean.getJoin_subtable();
-				for (String subtable : subtables) {
-					String subtableSql = tableBean.getSubTableSqlString(dbBean.getType(), dbBean.getRowversion(), subtable, jsonObject.getString(dbBean.getRowversion()));
-					JSONArray subArray = new JSONArray();
-					execSqlQuery(subtableSql, dbBean, subArray);
-					if (!subArray.isEmpty()) {
-						jsonObject.put(subtable, subArray);
-					}
+                if (tableBean.getJoin_subtable() != null) {
+    				ArrayList<String> subtables = tableBean.getJoin_subtable();
+    				for (String subtable : subtables) {
+    					String subtableSql = tableBean.getSubTableSqlString(dbBean.getType(), dbBean.getRowversion(), subtable, jsonObj.getString(dbBean.getRowversion()));
+    					JSONArray subArray = new JSONArray();
+    					execSqlQuery(subtableSql, dbBean, subArray);
+    					if (!subArray.isEmpty()) {
+    						jsonObj.put(subtable, subArray);
+    					}
+    				}
 				}
 			}
 		}
