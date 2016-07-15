@@ -267,7 +267,7 @@ public class DbUploader extends CommonUploader{
 	}
 
 	private String getDataFromOracle(DatabaseBean dbBean, TableBean tableBean) throws BeaverFatalException, BeaverTableIsFullException, BeaverTableNeedRetryException {
-		logger.info("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
+		logger.info("Executing query : " + tableBean.getSqlString(dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
 
 		try {
 			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION) || tableBean.getMaxXgsj().equals(tableBean.getXgsj())) {
@@ -302,7 +302,7 @@ public class DbUploader extends CommonUploader{
 	}
 
 	private String getDataFromSqlServer(DatabaseBean dbBean, TableBean tableBean) throws BeaverFatalException, BeaverTableIsFullException, BeaverTableNeedRetryException {
-		logger.info("Executing query : " + tableBean.getSqlString(prisonId, dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
+		logger.info("Executing query : " + tableBean.getSqlString(dbBean.getDb(), dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
 
 		try {
 			JSONArray jArray = new JSONArray();
