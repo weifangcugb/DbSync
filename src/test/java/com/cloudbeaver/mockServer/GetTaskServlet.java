@@ -29,6 +29,8 @@ import scala.sys.process.ProcessBuilderImpl.AndBuilder;
 public class GetTaskServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(GetTaskServlet.class);
 	private static String getTaskApi = "/api/business/sync/";
+	private static MultiDatabaseBean databaseBeans;
+	private static String tableId = null;
 	public static long now = System.currentTimeMillis();
 	public static long fiveDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 5 - 8 * 3600 * 1000;
 	public static long fourDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 4 - 8 * 3600 * 1000;
@@ -200,9 +202,6 @@ public class GetTaskServlet extends HttpServlet{
 
 	private static String documentFilesInitJson = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":"
 			+ "[{\"table\":\"/home/beaver/Documents/test/test1\",\"xgsj\":\"0000000000000000\"}]}]}";
-
-	private static MultiDatabaseBean databaseBeans;
-	private static String tableId = null;
 
 	public static String getTableId() {
 		return tableId;

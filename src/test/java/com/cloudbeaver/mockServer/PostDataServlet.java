@@ -84,11 +84,7 @@ public class PostDataServlet extends HttpServlet{
 		JSONArray newjArray = JSONArray.fromObject(content);
 		if(newjArray.size()>0){
 			JSONObject record = newjArray.getJSONObject(0);
-			if (record.containsKey(JSON_FILED_HDFS_DB)) {
-				dbName = record.getString(JSON_FILED_HDFS_DB);
-			}else if (record.containsKey(JSON_FILED_HDFS_DB.toUpperCase())) {
-				dbName = record.getString(JSON_FILED_HDFS_DB.toUpperCase());
-			}
+			dbName = record.getString(JSON_FILED_HDFS_DB);
 		}
 		System.out.println("dbName = " + dbName);
 
