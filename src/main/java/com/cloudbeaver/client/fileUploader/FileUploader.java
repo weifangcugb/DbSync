@@ -107,6 +107,11 @@ public class FileUploader extends CommonUploader {
 
 	@Override
 	protected void setup() throws BeaverFatalException {
+		dirInfos.clear();
+		if(conf != null){
+			conf.clear();
+		}
+
 //		load file dirs from local config files
 		try {
 			loadFileConfig();
