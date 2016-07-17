@@ -166,11 +166,10 @@ public class DbUploader extends CommonUploader{
     					throw new BeaverFatalException("db type is wrong, type can only be 'sqldb' or 'urldb'");
     				}
 				} catch (BeaverTableIsFullException e) {
-//					move next table
+//					move to next table
 					break;
 				} catch (BeaverTableNeedRetryException e) {
 //					retry this table
-					tableBean.rollBackXgsj();
 					continue;
 				}
 
@@ -269,14 +268,14 @@ public class DbUploader extends CommonUploader{
 		logger.info("Executing query : " + tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
 
 		try {
-			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION) || tableBean.getMaxXgsj().equals(tableBean.getXgsj())) {
-//				thus, table is empty, or table is full
+			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION) || tableBean.getMaxXgsjAsLong() <= tableBean.getXgsjAsLong()) {
+//				table is empty, or table is full, or table has new data, or first time setup and client's xgsj is slower than web-server's
 				String maxRowVersion = SqlHelper.getMaxRowVersion(dbBean, tableBean);
+				tableBean.setMaxXgsj(maxRowVersion);
 				if (maxRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION) || maxRowVersion.equals(tableBean.getXgsj())) {
-//					empty table, move to next table
+//					empty table or no new data, move to next table
 					throw new BeaverTableIsFullException();
 				}
-				tableBean.setMaxXgsj(maxRowVersion);
 			}
 
 			JSONArray jArray = new JSONArray();
@@ -289,11 +288,11 @@ public class DbUploader extends CommonUploader{
 				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
 				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
 					long nextPoint = tableBean.getXgsjAsLong() + DB_QEURY_LIMIT_DB;
-					if (tableBean.getMaxXgsjAsLong() < nextPoint) {
+					if (tableBean.getMaxXgsjAsLong() <= nextPoint) {
 						tableBean.setXgsj(tableBean.getMaxXgsjAsLong() + "");
 						throw new BeaverTableIsFullException();
 					} else {
-						tableBean.setXgsj((tableBean.getXgsjAsLong() + DB_QEURY_LIMIT_DB) + "");
+						tableBean.setXgsj(nextPoint + "");
 					}
 				}else {
 					logger.debug("get db data, json:" + jArray.toString());
