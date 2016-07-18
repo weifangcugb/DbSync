@@ -31,7 +31,7 @@ public class DbUploader extends CommonUploader{
     private String taskJson;
     private MultiDatabaseBean dbBeans;
 
-	private int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
+	private static final int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 
     private static Map<String, String> appKeySecret = new HashMap<String, String>();
     private static String appPreDefKey = "tmpKey";
@@ -89,7 +89,7 @@ public class DbUploader extends CommonUploader{
 	}
 
 	@Override
-	public int getThreadNum() {	
+	public int getThreadNum() {
 //		ArrayList<DatabaseBean> databases = new ArrayList<DatabaseBean>();
 //		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
 //			if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE)) {
@@ -163,7 +163,7 @@ public class DbUploader extends CommonUploader{
     	        	} else if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE) && dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)) {
     	        		dbData = getDataFromWebService(dbBean, tableBean);
     	        	}else {
-    					throw new BeaverFatalException("db type is wrong, type can only be 'sqldb' or 'urldb'");
+    					throw new BeaverFatalException("db type is wrong, type can only be 'sqlserver', 'oracle' or 'webservice'");
     				}
 				} catch (BeaverTableIsFullException e) {
 //					move to next table
@@ -422,7 +422,7 @@ public class DbUploader extends CommonUploader{
             	String dbType = conf.get("db." + dbBean.getDb() + ".type");
             	if (dbType.equals(DB_TYPE_SQL_ORACLE) || dbType.equals(DB_TYPE_SQL_SERVER) || dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
             		dbBean.setType(dbType);
-    
+
         			if (dbType.equals(DB_TYPE_SQL_SERVER)) {
         				for (TableBean tableBean : dbBean.getTables()) {
     						if (!tableBean.getXgsj().startsWith("0x")) {
@@ -433,7 +433,7 @@ public class DbUploader extends CommonUploader{
     			}else {
     				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
     			}
-    
+
     			String appKey = conf.get("db." + dbBean.getDb() + ".appKey");
     			if (appKey != null) {
     				dbBean.setAppKey(appKey);
