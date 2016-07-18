@@ -17,26 +17,26 @@ import java.util.Properties;
 
 public class StandaloneJafkaServer {
 	private static Logger logger = Logger.getLogger(StandaloneZKServer.class);
-	private static Jafka broker = new Jafka();
+	private static String JAFKA_LOG_PATH_PREFIX = "/home/beaver/houjiajia/github/DBSync/jafkaLog/";
 
-	public void setUpJafkaServer(){
+	public void setUpJafkaServer(Jafka broker, String brokerId, String port, String logPath){
 		Properties props = new Properties();
-		props.setProperty("brokerid","1");
-		props.setProperty("port","9092");
-		props.setProperty("log.dir","/home/beaver/houjiajia/github/DBSync/jafkaLog");
+		props.setProperty("brokerid",brokerId);
+		props.setProperty("port",port);
+		props.setProperty("log.dir",JAFKA_LOG_PATH_PREFIX+logPath);
 		props.setProperty("enable.zookeeper","true");
 		props.setProperty("zk.connect", "localhost:2181/kafka");
-		props.setProperty("zk.connectiontimeout.ms", "600000");
+		props.setProperty("zk.connectiontimeout.ms", "6000000");
 		broker.start(props,null,null);
-//		broker.awaitShutdown();
+		broker.awaitShutdown();
 	}
 
-	private void tearDownJafkaServer(){
+	public void tearDownJafkaServer(Jafka broker) {
 		broker.close();
 	}
 
 	public static void main(String[] args) throws KeeperException, InterruptedException, IOException {
 		StandaloneJafkaServer jafkaServer = new StandaloneJafkaServer();
-		jafkaServer.setUpJafkaServer();
+		jafkaServer.setUpJafkaServer(new Jafka(),"1","9092","log1");
 	}
 }

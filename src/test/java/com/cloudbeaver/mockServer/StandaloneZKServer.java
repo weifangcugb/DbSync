@@ -17,6 +17,7 @@ import java.util.Properties;
 
 public class StandaloneZKServer {
 	private static Logger logger = Logger.getLogger(StandaloneZKServer.class);
+	final ZooKeeperServerMain zkServer = new ZooKeeperServerMain();
 
 	public void setUpZookeeperServer(){
 		Properties props = new Properties();
@@ -27,8 +28,7 @@ public class StandaloneZKServer {
         props.setProperty("syncLimit", "5");
         QuorumPeerConfig quorumConfig = new QuorumPeerConfig();
         try {
-            quorumConfig.parseProperties(props);
-            final ZooKeeperServerMain zkServer = new ZooKeeperServerMain();
+            quorumConfig.parseProperties(props);            
             final ServerConfig config = new ServerConfig();
             config.readFrom(quorumConfig);
             zkServer.runFromConfig(config);
