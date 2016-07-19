@@ -45,20 +45,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 //@Ignore
 public class DbUploaderTest extends DbUploader{
-	private static final int MAX_LOOP_NUM = 5;
+	public static final int MAX_LOOP_NUM = 5;
+	public static String DEFAULT_CHARSET = "utf-8";
+	public static Map<String, String> DB2TypeMap = new HashMap<String, String>();
+	{
+		DB2TypeMap.put("DocumentDB", "sqlserver");
+		DB2TypeMap.put("MeetingDB", "webservice");
+		DB2TypeMap.put("TalkDB", "webservice");
+		DB2TypeMap.put("PrasDB", "webservice");
+		DB2TypeMap.put("JfkhDB", "oracle");
+		DB2TypeMap.put("DocumentDBForSqlite", "sqlite");
+	}
+
 	private static MockWebServer mockServer = new MockWebServer();
 	private static MockSqlServer mockSqlServer = new MockSqlServer();
-	public static String DEFAULT_CHARSET = "utf-8";
-	public static Map<String, String> map = new HashMap<String, String>();
-
-	{
-		map.put("DocumentDB", "sqlserver");
-		map.put("MeetingDB", "webservice");
-		map.put("TalkDB", "webservice");
-		map.put("PrasDB", "webservice");
-		map.put("JfkhDB", "oracle");
-		map.put("DocumentDBForSqlite", "sqlite");
-	}
 
 //	@BeforeClass
 	@Before
@@ -132,7 +132,7 @@ public class DbUploaderTest extends DbUploader{
 						}					
 		                try {
 		    				if (maxVersion != null) {
-		    					updateRefTask(maxVersion,olddbs,index,tBean,map.get(dbName));
+		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj("0x"+maxVersion);
 			    				BeaverUtils.doPost(getConf().get(CONF_FLUME_SERVER_URL), flumeJson);
 			    				//test HeartBeat
@@ -218,7 +218,7 @@ public class DbUploaderTest extends DbUploader{
 						}					
 		                try {
 		    				if (maxVersion != null) {
-		    					updateRefTask(maxVersion,olddbs,index,tBean,map.get(dbName));
+		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj(maxVersion);
 			    				BeaverUtils.doPost(getConf().get(CONF_FLUME_SERVER_URL), flumeJson);
 			    				break;
@@ -250,16 +250,16 @@ public class DbUploaderTest extends DbUploader{
 				Assert.assertEquals(t1.getTable(), t2.getTable());
 //				System.out.println(t1.getXgsj());
 //				System.out.println(t2.getXgsj());
-				if(map.get(db1.getDb()).equals("sqlserver") && map.get(db2.getDb()).equals("sqlserver")){
+				if(DB2TypeMap.get(db1.getDb()).equals("sqlserver") && DB2TypeMap.get(db2.getDb()).equals("sqlserver")){
 					Assert.assertEquals(t1.getXgsj(), t2.getXgsj());
 				}
-				else if(map.get(db1.getDb()).equals("webservice") && map.get(db2.getDb()).equals("webservice")){
+				else if(DB2TypeMap.get(db1.getDb()).equals("webservice") && DB2TypeMap.get(db2.getDb()).equals("webservice")){
 					Assert.assertEquals(t1.getStarttime(), t2.getStarttime());
 				}
-				else if(map.get(db1.getDb()).equals("oracle") && map.get(db2.getDb()).equals("oracle")){
+				else if(DB2TypeMap.get(db1.getDb()).equals("oracle") && DB2TypeMap.get(db2.getDb()).equals("oracle")){
 					Assert.assertEquals(t1.getID(), t2.getID());
 				}
-				else if(map.get(db1.getDb()).equals("sqlite") && map.get(db2.getDb()).equals("sqlite")){
+				else if(DB2TypeMap.get(db1.getDb()).equals("sqlite") && DB2TypeMap.get(db2.getDb()).equals("sqlite")){
 					Assert.assertEquals(t1.getXgsj(), t2.getXgsj());
 				}
 			}
@@ -411,7 +411,7 @@ public class DbUploaderTest extends DbUploader{
 						}					
 		                try {
 		    				if (maxVersion != null) {
-		    					updateRefTask(maxVersion,olddbs,index,tBean,map.get(dbName));
+		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj(maxVersion);
 			    				BeaverUtils.doPost(getConf().get(CONF_FLUME_SERVER_URL), flumeJson);
 			    				//test HeartBeat

@@ -40,7 +40,7 @@ public class FileUploader extends CommonUploader {
 	public static void setTaskServer(String taskServer) {
 		FileUploader.taskServer = taskServer;
 	}
-	
+
 	public static String getFlumeServer() {
 		return flumeServer;
 	}
