@@ -117,7 +117,6 @@ public class DirInfo {
 				continue;
 			}
 
-//			TODO: resend logic
 			for (int i = 0; i < FILE_UPLOAD_RETRY_TIMES ; i++) {
 				try {
 					logger.info("start to upload file, file:" + fileInfo.getFile().getAbsolutePath());
@@ -137,5 +136,7 @@ public class DirInfo {
 			UploadingFile = null;
 			BeaverUtils.sleep(200);
 		}
+
+		logger.info("one loop has finished, uploadFileNum:" + finfos.size());
 	}
 }
