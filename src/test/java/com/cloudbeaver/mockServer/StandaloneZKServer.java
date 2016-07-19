@@ -19,7 +19,7 @@ public class StandaloneZKServer {
 	private static Logger logger = Logger.getLogger(StandaloneZKServer.class);
 	final ZooKeeperServerMain zkServer = new ZooKeeperServerMain();
 
-	public void setUpZookeeperServer(){
+	public void startZookeeper(){
 		Properties props = new Properties();
         props.setProperty("tickTime", "2000");
         props.setProperty("dataDir", new File(System.getProperty("java.io.tmpdir"), "zookeeper").getAbsolutePath());
@@ -40,7 +40,7 @@ public class StandaloneZKServer {
 
 	public static void main(String[] args) {
 		StandaloneZKServer zkServer = new StandaloneZKServer();
-		zkServer.setUpZookeeperServer();
+		zkServer.startZookeeper();
 	}
 
 }

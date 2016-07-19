@@ -11,6 +11,9 @@ public class BrokerMonitorServletTest extends BrokerMonitorServlet{
 
 	public BrokerMonitorServletTest() throws Exception {
 		super();
+		ZNODE = "/brokers/ids";
+		_ERR1 = "KeeperErrorCode = ConnectionLoss for " + ZNODE;
+		USE_MONITOR_THREAD = false;
 	}
 
 	protected String getJsonFormat(String zkDataString) {

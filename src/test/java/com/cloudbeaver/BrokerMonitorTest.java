@@ -1,42 +1,23 @@
 package com.cloudbeaver;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.io.IOException;
 
+import org.apache.log4j.Logger;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.mockServer.BrokerMonitorServletTest;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.cloudbeaver.mockServer.StandaloneJafkaServer;
 import com.cloudbeaver.mockServer.StandaloneZKServer;
-import com.sohu.jafka.Jafka;
 
-import scala.collection.parallel.ParIterableLike.Forall;
+public class BrokerMonitorTest{
+	private static Logger logger = Logger.getLogger(BrokerMonitorTest.class);
 
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-public class BrokerMonitorTest implements Callable<Object>{
 	private static MockWebServer mockServer = new MockWebServer();
-	private boolean HAS_ZK_BEEN_SETUP;
-	private boolean GET_BROKERJSON;
-	private static int id = 1;
-	private static int port = 9092;
-	private static String logPath = "log";
-	private Jafka broker = new Jafka();
-	private static String url = "http://localhost:8877/getBrokerList";
-
-	public BrokerMonitorTest(boolean hAS_ZK_BEEN_SETUP, boolean gET_BROKERJSON) throws Exception {
-		super();
-		HAS_ZK_BEEN_SETUP = hAS_ZK_BEEN_SETUP;
-		GET_BROKERJSON = gET_BROKERJSON;
-	}
+	private static String brokerListUrl = "http://localhost:8877/getBrokerList";
 
 	@Before
 //	@Ignore
@@ -51,60 +32,53 @@ public class BrokerMonitorTest implements Callable<Object>{
 		mockServer.stop();
 	}
 
+	class ZookeeperRunner extends Thread {
+		public void run() {
+			StandaloneZKServer zkServer = new StandaloneZKServer();
+			zkServer.startZookeeper();
+		}
+	}
+
+	class JafkaRunner extends Thread {
+		StandaloneJafkaServer jafkaServer = new StandaloneJafkaServer();
+		public void run() {
+			jafkaServer.startJafka();
+		}
+	}
+
 	@Test
-//	@Ignore
-    public void testBrokerMonitor() throws Exception{		
-		final ExecutorService service = Executors.newFixedThreadPool(4);
-		BrokerMonitorTest taskThread1 = new BrokerMonitorTest(false, false);
-        service.submit(taskThread1);
+	public void testBrokerMonitor() throws IOException {
+		ZookeeperRunner zkRunner = new ZookeeperRunner();
+		zkRunner.start();
+		BeaverUtils.sleep(5 * 1000);
 
-        BrokerMonitorTest taskThread2 = new BrokerMonitorTest(true, false);
-        service.submit(taskThread2);
+		JafkaRunner jafkaRunner1 = new JafkaRunner();
+		jafkaRunner1.start();
+		BeaverUtils.sleep(5 * 1000);
+		String brokerList = BeaverUtils.doGet(brokerListUrl);
+		Assert.assertEquals(brokerList,"{\"error_code\":0,\"zkd\":[{\"ids\":\"1\",\"host\":\"beaver-shujie\",\"port\":9093}]}");
+		System.out.println("Broker list = " + BeaverUtils.doGet(brokerListUrl));
 
-        BrokerMonitorTest taskThread3 = new BrokerMonitorTest(true, false);
-        Future<Object> taskFuture3 = service.submit(taskThread3);
+		JafkaRunner jafkaRunner2 = new JafkaRunner();
+		jafkaRunner2.start();
+		BeaverUtils.sleep(5 * 1000);
+		brokerList = BeaverUtils.doGet(brokerListUrl);
+		Assert.assertEquals(brokerList,"{\"error_code\":0,\"zkd\":[{\"ids\":\"2\",\"host\":\"beaver-shujie\",\"port\":9094},{\"ids\":\"1\",\"host\":\"beaver-shujie\",\"port\":9093}]}");
+		System.out.println("Broker list = " + brokerList);
 
-        BrokerMonitorTest taskThread4 = new BrokerMonitorTest(false, true);
-        service.submit(taskThread4);
-        try {
-            taskFuture3.get(10000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            System.out.println("Timeout, cancle broker 2");
-            taskFuture3.cancel(true);
-            StandaloneJafkaServer jafkaServer = new StandaloneJafkaServer();
-            jafkaServer.tearDownJafkaServer(taskThread3.broker);
-            System.out.println("shutdown broker 2");
-        }
-    }
+		jafkaRunner2.jafkaServer.stopJafka();
+		BeaverUtils.sleep(5 * 1000);
+		brokerList = BeaverUtils.doGet(brokerListUrl);
+		Assert.assertEquals(brokerList,"{\"error_code\":0,\"zkd\":[{\"ids\":\"1\",\"host\":\"beaver-shujie\",\"port\":9093}]}");
+		System.out.println("Broker list = " + brokerList);
+
+		jafkaRunner1.jafkaServer.stopJafka();
+	}
 
 	public static void main(String[] args) throws Exception {
-		BrokerMonitorTest brokerMonitorTest = new BrokerMonitorTest(false, false);
+		BrokerMonitorTest brokerMonitorTest = new BrokerMonitorTest();
+		brokerMonitorTest.setUpServers();
 		brokerMonitorTest.testBrokerMonitor();
+		brokerMonitorTest.tearDownServers();
 	}
-
-	@Override
-	public Object call() throws Exception {
-		System.out.println("HAS_ZK_BEEN_SETUP = " + HAS_ZK_BEEN_SETUP);
-		if(!HAS_ZK_BEEN_SETUP && !GET_BROKERJSON){
-			System.out.println("Start Zookeeper!");
-			StandaloneZKServer zkServer = new StandaloneZKServer();
-			zkServer.setUpZookeeperServer();
-		}
-		else if(HAS_ZK_BEEN_SETUP && !GET_BROKERJSON){
-			System.out.println("Start Jafka!");
-			StandaloneJafkaServer jafkaServer = new StandaloneJafkaServer();
-			System.out.println("id = " + id + ", port = " + port);
-			jafkaServer.setUpJafkaServer(broker, String.valueOf(id), String.valueOf(port++), logPath+id++);
-		}
-		for(int i = 0 ; i < 10 ; i++){
-			System.out.println("Broker list = " + BeaverUtils.doGet(url));
-			Thread.sleep(2000);
-		}
-		return null;
-	}
-
 }

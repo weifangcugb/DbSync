@@ -24,15 +24,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class BrokerMonitorServlet extends HttpServlet {
 	private static Logger logger = Logger.getLogger(BrokerMonitorWebServer.class);
 
-	public static final String _ERR1 = "KeeperErrorCode = ConnectionLoss for /kafka/brokers/ids";
-	public static final String ZNODE = "/kafka/brokers/ids";
-
 	public static final int ERROR_NO_KAFKA_NODE = 2;
 	public static final int ZK_RETRY_TIMES = 3;
-	public static final boolean USE_MONITOR_THREAD = true;
 	public static final String ZK_CONN_STRING = "localhost:2181";
 
 	private static volatile String brokerJsonString;
+
+	protected static String ZNODE = "/kafka/brokers/ids";
+	protected static String _ERR1 = "KeeperErrorCode = ConnectionLoss for " + ZNODE;
+	protected static boolean USE_MONITOR_THREAD = true;
 
 	public BrokerMonitorServlet() throws Exception {
         super();
