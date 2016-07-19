@@ -2,9 +2,7 @@ package com.cloudbeaver.mockServer;
 
 import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
-
 import com.sohu.jafka.Jafka;
-
 import java.io.IOException;
 import java.util.Properties;
 
@@ -22,7 +20,7 @@ public class StandaloneJafkaServer {
 		props.setProperty("port", port + "");
 		props.setProperty("log.dir",JAFKA_LOG_PATH_PREFIX);
 		props.setProperty("enable.zookeeper","true");
-		props.setProperty("zk.connect", "localhost:2181");
+		props.setProperty("zk.connect", "localhost:" + StandaloneZKServer.port);
 		props.setProperty("zk.connectiontimeout.ms", "6000000");
 
 		broker.start(props,null,null);

@@ -16,6 +16,14 @@ public class BrokerMonitorServletTest extends BrokerMonitorServlet{
 		USE_MONITOR_THREAD = false;
 	}
 
+	public static void setUseMonitorThread(boolean use_monitor_thread) {
+		USE_MONITOR_THREAD = use_monitor_thread;
+	}
+
+	public static void setZkConnString(String zkConnString) {
+		ZK_CONN_STRING = zkConnString;
+	}
+
 	protected String getJsonFormat(String zkDataString) {
 		//kafka:{"jmx_port":-1,"timestamp":"1468478612324","host":"localhost","version":1,"port":9092}
 		//jafka:beaver-inter1-1468478831294:beaver-inter1:9092
