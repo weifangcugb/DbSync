@@ -64,7 +64,7 @@ public class UtilTest {
 		paraMap.put("pagesize", "20");
 		paraMap.put("starttime", "2016-01-01");
 		String sign = BeaverUtils.getRequestSign(paraMap, "tmpSecret");
-		Assert.assertEquals(sign, "d90d440655ab3d3dcf96c3487378756d");
+		Assert.assertEquals(sign, "51C2D1697EB2293CA7E27E38ED99F813");
 	}
 
 	@Test
@@ -91,7 +91,7 @@ public class UtilTest {
 	    Map<String, String> paraMap = new HashMap<String, String>();
 		paraMap.put("appkey", appPreDefKey);
 		String sign = BeaverUtils.getRequestSign(paraMap, appPreDefSecret);
-		System.out.println("sign:" + sign);
+		Assert.assertEquals(sign, "D5421D0BCF81CA97810541D91897075A");
 	}
 
 	public static void main(String[] args) throws NoSuchAlgorithmException {
