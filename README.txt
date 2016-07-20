@@ -4,7 +4,7 @@ Features:
 3. get msg from kafka and upload them to beaver-web server
 
 How to use:
-usage: java -jar dbsync.jar  [-d <arg>] [-f <arg>] [-h] [-k <arg>] -m <arg>
+usage: java -jar dbsync.jar  [-d <arg>] [-h] [-k <arg>] -m <arg>
  -d,--dir-conf <arg>        which dir will be used in FileUploader,
                             'remote': default value, use dir set by web sync api,
                             'local': use dir set by conf/SyncClient_File.properties
