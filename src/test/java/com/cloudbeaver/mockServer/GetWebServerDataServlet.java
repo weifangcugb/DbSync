@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.dbUploader.DbUploader;
 
 @WebServlet("/interface/*")
 public class GetWebServerDataServlet extends HttpServlet{
@@ -40,9 +41,6 @@ public class GetWebServerDataServlet extends HttpServlet{
 		}
     	String tablename = url.substring(pos+getTaskApi.length());
     	System.out.println(tablename);
-    	
-    	Map<String, String> map = new HashMap<String,String>();
-    	map.put("tmpKey", "tmpSecret");
     	
     	String appkey = req.getParameter("appkey");
     	String starttime = req.getParameter("starttime");
@@ -75,13 +73,13 @@ public class GetWebServerDataServlet extends HttpServlet{
     	}
 //    	System.out.println("pageno = "+pageno);
     	
-    	if(!map.containsKey(appkey)){
+    	if(!DbUploader.getAppKeySecret().containsKey(appkey)){
     		System.out.println(appkey);
     		throw new ServletException("AppKey is invalid!");
     	}
     	String originSign = null;
 		try {
-			originSign = createSign(appkey, map.get(appkey), tablename, pageno, pagesize, starttime, endtime);
+			originSign = createSign(appkey, DbUploader.getAppKeySecret().get(appkey), tablename, pageno, pagesize, starttime, endtime);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
