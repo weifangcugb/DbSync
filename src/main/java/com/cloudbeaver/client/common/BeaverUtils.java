@@ -18,9 +18,12 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -275,10 +278,12 @@ public class BeaverUtils {
 
 	public static String getRequestSign(Map<String, String> paraMap, String appSecret) throws NoSuchAlgorithmException {
 //		the keys in the paraMap should be ordered
+		List<String> paramList = new ArrayList<>(paraMap.size());
+		paramList.addAll(paraMap.keySet());
+		Collections.sort(paramList);
 		StringBuilder sb = new StringBuilder();
 		sb.append(appSecret);
-		Set<String> keySet = paraMap.keySet();
-		for (String key : keySet) {
+		for (String key : paramList) {
 			sb.append(key).append(paraMap.get(key));
 		}
 		sb.append(appSecret);
