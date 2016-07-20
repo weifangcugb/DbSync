@@ -34,9 +34,11 @@ public class DbUploader extends CommonUploader{
 	private static final int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 
     private static Map<String, String> appKeySecret = new HashMap<String, String>();
-    private static String appPreDefKey = "20150603";
-    private static String appPreDefSecret = "7454739E907F5595AE61D84B8547F574";
-
+    {
+    	String appPreDefKey = "20150603";
+    	String appPreDefSecret = "7454739E907F5595AE61D84B8547F574";
+    	appKeySecret.put(appPreDefKey, appPreDefSecret);
+    }
 	private static final String DB_ROW_VERSION_START_TIME = "starttime";
 
 	public static Map<String, String> getAppKeySecret() {
@@ -63,8 +65,6 @@ public class DbUploader extends CommonUploader{
 
 	@Override
 	public void setup() throws BeaverFatalException {
-		appKeySecret.put(appPreDefKey, appPreDefSecret);
-
         try {
 			conf = BeaverUtils.loadConfig(CONF_DBSYNC_DB_FILENAME);
 	        if (conf.containsKey(CONF_CLIENT_ID) && conf.get(CONF_CLIENT_ID).contains("_")) {
