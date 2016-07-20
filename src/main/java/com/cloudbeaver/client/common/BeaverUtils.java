@@ -288,7 +288,11 @@ public class BeaverUtils {
 		}
 		sb.append(appSecret);
 		MessageDigest md = MessageDigest.getInstance("md5");
-		return toHexString(md.digest(sb.toString().getBytes()));
+		return toHexStringUpperCase(md.digest(sb.toString().getBytes()));
+	}
+
+	private static String toHexStringUpperCase(byte[] digest) {
+		return toHexString(digest).toUpperCase();
 	}
 
 	private static String toHexString(byte bytes[]) {
