@@ -132,6 +132,9 @@ public class BrokerMonitorTest{
 		BrokerMonitorTest brokerMonitorTest = new BrokerMonitorTest();
 		brokerMonitorTest.setUpServers();
 		brokerMonitorTest.testBrokerMonitor();
+		brokerMonitorTest.tearDownServers();
+
+		brokerMonitorTest.setUpServers();
 		brokerMonitorTest.testBrokerMonitor2();
 		brokerMonitorTest.tearDownServers();
 	}

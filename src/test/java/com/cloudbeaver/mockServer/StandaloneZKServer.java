@@ -21,12 +21,12 @@ public class StandaloneZKServer {
         props.setProperty("syncLimit", "5");
         QuorumPeerConfig quorumConfig = new QuorumPeerConfig();
         try {
-            quorumConfig.parseProperties(props);            
+            quorumConfig.parseProperties(props);
             final ServerConfig config = new ServerConfig();
             config.readFrom(quorumConfig);
             zkServer.runFromConfig(config);
         } catch(Exception e) {
-        	logger.error("Start zookeeper server faile", e);  
+        	logger.error("Start zookeeper server faile", e);
             throw new RuntimeException(e);
         }
 	}
