@@ -23,7 +23,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 public class DbUploaderIntergrationTest extends DbUploader {
-	@Test
+//	@Test
 //	@Ignore
 	public void testGetMsgProduct() throws BeaverFatalException, SQLException, JsonProcessingException, IOException{
 		setup();
