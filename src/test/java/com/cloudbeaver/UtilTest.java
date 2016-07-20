@@ -64,7 +64,7 @@ public class UtilTest {
 		paraMap.put("pagesize", "20");
 		paraMap.put("starttime", "2016-01-01");
 		String sign = BeaverUtils.getRequestSign(paraMap, "tmpSecret");
-		Assert.assertEquals(sign, "d90d440655ab3d3dcf96c3487378756d");
+		Assert.assertEquals(sign, "51C2D1697EB2293CA7E27E38ED99F813");
 	}
 
 	@Test
@@ -80,5 +80,22 @@ public class UtilTest {
 		jObject.accumulate("k1", "v8");
 		jObject.put("k5", "v5");
 		System.out.println("object:" + jObject);
+	}
+
+	@Test
+	public void testAppSign() throws NoSuchAlgorithmException{
+//		test YouDi system sign
+	    String appPreDefKey = "20150603";
+	    String appPreDefSecret = "7454739E907F5595AE61D84B8547F574";
+
+	    Map<String, String> paraMap = new HashMap<String, String>();
+		paraMap.put("appkey", appPreDefKey);
+		String sign = BeaverUtils.getRequestSign(paraMap, appPreDefSecret);
+		Assert.assertEquals(sign, "D5421D0BCF81CA97810541D91897075A");
+	}
+
+	public static void main(String[] args) throws NoSuchAlgorithmException {
+		UtilTest uTest = new UtilTest();
+		uTest.testAppSign();
 	}
 }
