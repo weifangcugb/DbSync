@@ -266,6 +266,7 @@ public class DbUploader extends CommonUploader{
 		String sign = BeaverUtils.getRequestSign(paraMap, dbBean.getAppSecret());
 		paraMap.put("sign", sign);
 		StringBuilder sb = BeaverUtils.doPost(webUrl, paraMap, "application/x-www-form-urlencoded");
+		logger.info("get web service data, url:" + webUrl + " startTime:" + paraMap.get("starttime") + " endTime:" + paraMap.get("endtime") + " pageNo:" + paraMap.get("pageno"));
 		return sb;
 	}
 
