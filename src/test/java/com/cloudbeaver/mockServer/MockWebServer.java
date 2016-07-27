@@ -26,11 +26,12 @@ public class MockWebServer {
 
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
-        context.addServlet(GetTaskServlet.class, "/api/business/sync/*");
-        context.addServlet(PostDataServlet.class, "/");
         context.addServlet(SimpleTests.class, "/simple");
         context.addServlet(GetWebServerDataServlet.class, "/interface/*");
         context.addServlet(BrokerMonitorServletTest.class, "/getBrokerList");
+        context.addServlet(FileMappingServlet.class, "/api/file/tableId");
+        context.addServlet(GetTaskServlet.class, "/api/business/sync/*");
+        context.addServlet(PostDataServlet.class, "/");
 
         HandlerCollection handlers = new HandlerCollection();
         handlers.setHandlers(new Handler[] { context, new DefaultHandler() });
