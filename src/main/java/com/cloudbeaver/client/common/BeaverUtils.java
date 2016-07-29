@@ -118,7 +118,7 @@ public class BeaverUtils {
 	public static String doPost(String urlString, String flumeJson) throws IOException {
 		return doPost(urlString, flumeJson, "application/json").toString();
 	}
-	
+
 	private static StringBuilder doPost(String urlString, String flumeJson, String contentType) throws IOException {
 		BufferedReader br = null;
 		HttpURLConnection urlConnection = null;
