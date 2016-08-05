@@ -493,7 +493,7 @@ CREATE TRIGGER insert_mongo1_trigger
 
 
 
-CREATE OR REPLACE FUNCTION mongo1_query(startDay varchar, endDay varchar, min_avg_duration integer, min_pid_count integer) RETURNS TABLE(pid_count integer,pid integer,avg_duration integer) AS
+CREATE OR REPLACE FUNCTION mongo1_query(startDay varchar, endDay varchar, min_avg_duration integer, min_pid_count integer) RETURNS TABLE(problem_count integer,problem_id bigint,average_duration integer) AS
 $BODY$
     declare
 	startTime bigint;
@@ -503,10 +503,10 @@ $BODY$
 	endTime := extract(epoch FROM date_trunc('second', to_timestamp(endDay, 'YYYY-MM-DD')));
 	RETURN  QUERY 
 		select * from 
-			(select count(problemid) as pid_count, problemid pid, avg(duration) as avg_duration 
+			(select count(problemid)::integer, problemid::bigint, avg(duration)::integer 
 				from mongo1 where finishtime between startTime and endTime 
 				group by problemid having avg(duration) > min_avg_duration) as pids 
-		where pids.pid_count > min_pid_count;
+		where pids.count > min_pid_count;
     end;
 $BODY$
   LANGUAGE plpgsql;
