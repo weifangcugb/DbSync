@@ -41,10 +41,9 @@ public class JWTSigner {
 
     private byte[] secret;
     private static PrivateKey privateKey;
-    private static PublicKey publicKey;
 
     // Default algorithm HMAC SHA-256 ("HS256")
-    protected final static Algorithm DEFAULT_ALGORITHM = Algorithm.HS256;
+    protected static Algorithm DEFAULT_ALGORITHM = Algorithm.HS256;
 
     public JWTSigner(final String secret) {
         this(secret.getBytes());
@@ -383,27 +382,36 @@ public class JWTSigner {
     	return privateKey;
     }
 
-    private static PublicKey getPubKey(){
-    	try{
-    		String pubKey ="MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCVRiDkEKXy/KBTe+UmkA+feq1zGWIgBxkgbz7aBJGb5+eMKKoiDRoEHzlGndwFKm4mQWNftuMOfNcogzYpGKSEfC7sqfBPDHsGPZixMWzL3J10zkMTWo6MDIXKKqMG1Pgeq1wENfJjcYSU/enYSZkg3rFTOaBSFId+rrPjPo7Y4wIDAQAB";
-    	    X509EncodedKeySpec bobPubKeySpec = new X509EncodedKeySpec(new BASE64Decoder().decodeBuffer(pubKey));
-    	    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-    	    publicKey = keyFactory.generatePublic(bobPubKeySpec);
-    	}catch (NoSuchAlgorithmException e) {
-    		e.printStackTrace();
-    	}catch (InvalidKeySpecException e) {
-    	    e.printStackTrace();
-    	}catch (IOException e) {
-    	    e.printStackTrace();
-    	}
-    	return publicKey;
+    public static String getToken(Algorithm alg, String issuer, String secret, long iat, long exp) throws JWTAlgorithmException{
+    	String token = null;
+    	PrivateKey priKey = getPrivateKey();
+    	final HashMap<String, Object> claims = new HashMap<String, Object>();
+    	claims.put("iss", issuer);
+    	claims.put("exp", exp);
+    	claims.put("iat", iat);
+    	DEFAULT_ALGORITHM = alg;
+    	JWTSigner signer = null;
+    	switch (alg) {
+	        case HS256:
+	        case HS384:
+	        case HS512:
+	        	signer = new JWTSigner(secret);
+	        	token = signer.sign(claims);
+	        	break;
+	        case RS256:
+	        case RS384:
+	        case RS512:
+	        	signer = new JWTSigner(priKey);
+	        	token = signer.sign(claims);
+	        	break;
+	        default:
+	            throw new JWTAlgorithmException("Unsupported signing method");
+	    }
+    	return token;
     }
 
     public static void main(String args[]) throws ClassNotFoundException, NoSuchAlgorithmException, NoSuchProviderException, IOException, InvalidKeySpecException{
     	PrivateKey priKey = getPrivateKey();
-    	PublicKey pubKey = getPubKey();
-    	System.out.println("private key = " + priKey);
-    	System.out.println("public key = " + pubKey);
     	String issuer = "com.cloudbeaver.testForToken";
     	String secret = "x6I0%^sa2u3$";
 //    	long iat = System.currentTimeMillis() / 1000l; // issued at claim 

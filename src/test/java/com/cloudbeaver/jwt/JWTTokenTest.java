@@ -241,49 +241,58 @@ public class JWTTokenTest {
 	@Test
 	public void testToken() throws InvalidKeyException, NoSuchProviderException, SignatureException, JWTAlgorithmException, IOException{
 		String token = null;
+		String jwtSigner = null;
     	Algorithm algorithm = null;
     	String issuer = "com.cloudbeaver.testForToken";
+    	 long iat = 1571234096;//for test
+         long exp = 1571234156;
 
     	//HS256
     	algorithm = Algorithm.HS256;
     	token = getAccessToken(issuer, algorithm);
 //    	System.out.println("token = " + token);
-    	Assert.assertEquals(token, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NzEyMzQxNTYsImlzcyI6ImNvbS5jbG91ZGJlYXZlci50ZXN0Rm9yVG9rZW4iLCJpYXQiOjE1NzEyMzQwOTZ9.5tqSaw33-NQYtgyPR_zMG6iPRNXdsKLmVqUiyOwrcoc");
+    	jwtSigner = JWTSigner.getToken(algorithm, issuer, secret, iat, exp);
+    	Assert.assertEquals(token, jwtSigner);
     	verifyToken(token);
 
     	//HS384
     	algorithm = Algorithm.HS384;
     	token = getAccessToken(issuer, algorithm);
 //    	System.out.println("token = " + token);
-    	Assert.assertEquals(token, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzM4NCJ9.eyJleHAiOjE1NzEyMzQxNTYsImlzcyI6ImNvbS5jbG91ZGJlYXZlci50ZXN0Rm9yVG9rZW4iLCJpYXQiOjE1NzEyMzQwOTZ9._KSoiyNFVb41CFWn_c6SGvo4WFoM14TApBoscT4JtBePlYmQxfwJRM_qE1JpWJJv");
+    	jwtSigner = JWTSigner.getToken(algorithm, issuer, secret, iat, exp);
+    	Assert.assertEquals(token, jwtSigner);
     	verifyToken(token);
 
     	//HS512
     	algorithm = Algorithm.HS512;
     	token = getAccessToken(issuer, algorithm);
 //    	System.out.println("token = " + token);
-    	Assert.assertEquals(token, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJleHAiOjE1NzEyMzQxNTYsImlzcyI6ImNvbS5jbG91ZGJlYXZlci50ZXN0Rm9yVG9rZW4iLCJpYXQiOjE1NzEyMzQwOTZ9.Ag99TbQFH_h8gzLQTWrUuPD3USwfwZZmnZfbKP__o51B0PPGYB4LLTDI7_jiO7q12N-7Ywcu_sR6vquOxFoyXA");
+    	jwtSigner = JWTSigner.getToken(algorithm, issuer, secret, iat, exp);
+    	Assert.assertEquals(token, jwtSigner);
     	verifyToken(token);
 
     	//RS256
     	algorithm = Algorithm.RS256;
     	token = getAccessToken(issuer, algorithm);
 //    	System.out.println("token = " + token);
-    	Assert.assertEquals(token, "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE1NzEyMzQxNTYsImlzcyI6ImNvbS5jbG91ZGJlYXZlci50ZXN0Rm9yVG9rZW4iLCJpYXQiOjE1NzEyMzQwOTZ9.A9xZ21au2Mo05R_3oXK6PNfcWCCdg6nee1tawRV6hIB4lfKBMF4VoddX5GXHU5NDUpy7sD6nOaQ4siu0gjx_FnChpiQUluz7T0IXFpRx45rpYIIkz8JU2pL9ajoIQsw9TRCTUZNFbBAHm9vD8et43wTh0gxY3K0sKXREKLCNuvw");
+    	jwtSigner = JWTSigner.getToken(algorithm, issuer, secret, iat, exp);
+    	Assert.assertEquals(token, jwtSigner);
     	verifyToken(token);
 
     	//RS384
     	algorithm = Algorithm.RS384;
     	token = getAccessToken(issuer, algorithm);
 //    	System.out.println("token = " + token);
-    	Assert.assertEquals(token, "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCJ9.eyJleHAiOjE1NzEyMzQxNTYsImlzcyI6ImNvbS5jbG91ZGJlYXZlci50ZXN0Rm9yVG9rZW4iLCJpYXQiOjE1NzEyMzQwOTZ9.TinWsa9hahY9fI19mDqLmVaueGc0-PVMZkKh-t8UflLRvd9q9gqrNKhzAWJsa5HnCmZrflZ1shSBkAs4AFQC_RdpJHoyAmFHD6ZVZbv-tqeD0BiW_NEjVleskYOHloWT94-eXFEIC2PvBjivcpIzCD_bD7oA0yswQxQYc8B2v38");
+    	jwtSigner = JWTSigner.getToken(algorithm, issuer, secret, iat, exp);
+    	Assert.assertEquals(token, jwtSigner);
     	verifyToken(token);
 
     	//RS512
     	algorithm = Algorithm.RS512;
     	token = getAccessToken(issuer, algorithm);
 //    	System.out.println("token = " + token);
-    	Assert.assertEquals(token, "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9.eyJleHAiOjE1NzEyMzQxNTYsImlzcyI6ImNvbS5jbG91ZGJlYXZlci50ZXN0Rm9yVG9rZW4iLCJpYXQiOjE1NzEyMzQwOTZ9.RSYoMtsRxQl9o6IvsgvOVWw0Af0TdXxtBXprwuO4Mg8x8gbdC7vXQD3B58Kc9pk15iVomG5zShNK1r1u9eJKxRrqYcs86qIdwNZArreB1D0UbiFUBADWwL5tkjxiDgFr0dkB4EPyaiCJu-Z5wSHf74fZPApLuQqz7OW87gxXLkE");
+    	jwtSigner = JWTSigner.getToken(algorithm, issuer, secret, iat, exp);
+    	Assert.assertEquals(token, jwtSigner);
     	verifyToken(token);
 	}
 
