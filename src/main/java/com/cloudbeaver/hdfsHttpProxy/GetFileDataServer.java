@@ -30,6 +30,9 @@ public class GetFileDataServer extends HttpServlet{
 	private static int LEN_PER_TIME = 1024 * 1024;
 	private static int BUFFER_SIZE = 100;
     private static FileSystem coreSys=null;
+    private static Path hdfsPath = null;
+    private FSDataOutputStream fsout = null;
+	private BufferedOutputStream bout = null;
 	private static  Configuration conf = new Configuration();
 	{
 		try {
@@ -44,6 +47,7 @@ public class GetFileDataServer extends HttpServlet{
 		try {
 			conf.setBoolean("dfs.support.append", true);
 			coreSys=FileSystem.get(URI.create(rootPath), conf);
+			hdfsPath = new Path(rootPath);
         } catch (IOException e) {
         	logger.error("init FileSystem failed:"+e.getLocalizedMessage());
         }
@@ -60,33 +64,35 @@ public class GetFileDataServer extends HttpServlet{
     	ServletInputStream mRead = req.getInputStream();
     	byte[] buf = new byte[BUFFER_SIZE];
     	int len;
-    	while((len = mRead.read(buf)) != -1){    		
-			startUploadFileToHdfs(buf,len);
+    	boolean b = checkFileExist(rootPath);
+    	if(b){
+    		fsout = coreSys.append(hdfsPath);
+     		bout = new BufferedOutputStream(fsout);
+	    	while((len = mRead.read(buf)) != -1){
+	    		writeFile(buf,len);
+	    	}
     	}
+    	else{
+    		fsout = coreSys.create(hdfsPath);
+     		bout = new BufferedOutputStream(fsout);
+    		len = mRead.read(buf);
+    		writeFile(buf,len);
+    		bout.close();
+            fsout.close();
+
+    		fsout = coreSys.append(hdfsPath);
+     		bout = new BufferedOutputStream(fsout);
+    		while((len = mRead.read(buf)) != -1){
+    			writeFile(buf,len);
+	    	}
+    	}
+    	bout.close();
+        fsout.close();
     	coreSys.close();
     }
 
-    public void startUploadFileToHdfs(byte[] filedata, int len) throws IOException {
-		try {
-    		boolean b = checkFileExist(rootPath);
-    		if(!b){
-    			createFile(rootPath, filedata, len);
-    		}
-    		else{
-    			appendFile(rootPath, filedata, len);
-    		}
-		} catch (Exception e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.fatal("upload to HDFS failed!");
-		}
-	}
-
-	public void createFile(String path, byte[] fileData, int len) throws IOException{
- 		Path hdfsPath = new Path(path);
+	public void writeFile(byte[] fileData, int len) throws IOException{
  		logger.info(hdfsPath);
- 		FSDataOutputStream fsout = coreSys.create(hdfsPath);
- 		BufferedOutputStream bout = new BufferedOutputStream(fsout);
-// 		System.out.println("len = " + len);
  		int offset = 0;
  		while(offset < len){
  			if(len - offset < LEN_PER_TIME){
@@ -98,36 +104,10 @@ public class GetFileDataServer extends HttpServlet{
  	 			offset += LEN_PER_TIME;
  			} 			
  		}
-// 		System.out.println("offset = " + offset);
-        bout.close();
-        fsout.close();
         logger.info("upload file data succeeds！");
     }
 
-	public void appendFile(String path, byte[] fileData, int len) throws Exception{
- 		Path hdfsPath = new Path(path);
- 		logger.info(hdfsPath);
- 		FSDataOutputStream fsout = coreSys.append(hdfsPath);
- 		BufferedOutputStream bout = new BufferedOutputStream(fsout);
-// 		System.out.println("len = " + len);
- 		int offset = 0;
- 		while(offset < len){
- 			if(len - offset < LEN_PER_TIME){
- 				bout.write(fileData, offset, len - offset);
- 				offset += (len - offset);
- 			}
- 			else{
- 				bout.write(fileData, offset, LEN_PER_TIME);
- 	 			offset += LEN_PER_TIME;
- 			} 			
- 		}
-// 		System.out.println("offset = " + offset);
-        bout.close();
-        fsout.close();
-        logger.info("upload file data succeeds！");
-    }
-
-	public boolean checkFileExist(String path) throws IOException {     
+	public boolean checkFileExist(String path) throws IOException {
         Path f = new Path(path);
         return coreSys.exists(f);
     }
