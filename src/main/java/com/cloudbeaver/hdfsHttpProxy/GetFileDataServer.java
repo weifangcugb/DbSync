@@ -1,36 +1,31 @@
 package com.cloudbeaver.hdfsHttpProxy;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
-
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.BeaverCommonUtil;
 import org.apache.log4j.Logger;
-import com.cloudbeaver.client.common.BeaverUtils;
-import com.sun.org.apache.xml.internal.resolver.helpers.PublicId;
-import com.sun.scenario.effect.Offset;
 
-@WebServlet("/filedata")
+import com.cloudbeaver.client.common.BeaverUtils;
+
+@WebServlet("/uploaddata")
 public class GetFileDataServer extends HttpServlet{
 	private static Logger logger = Logger.getLogger(GetFileDataServer.class);
-	private static String rootPath = new String("hdfs://localhost:9000/test");
+	private static String rootPath = new String("hdfs://localhost:9000/test/");
 	private static int LEN_PER_TIME = 1024 * 1024;
 	private static int BUFFER_SIZE = 100;
-    private static FileSystem coreSys=null;
-    private static Path hdfsPath = null;
+    private FileSystem coreSys=null;
+    private Path hdfsPath = null;
     private FSDataOutputStream fsout = null;
 	private BufferedOutputStream bout = null;
 	private static  Configuration conf = new Configuration();
@@ -43,11 +38,11 @@ public class GetFileDataServer extends HttpServlet{
 		}
 	}
 
-	public static void initFileSystemObject(){
+	public void initFileSystemObject(String path){
 		try {
 			conf.setBoolean("dfs.support.append", true);
 			coreSys=FileSystem.get(URI.create(rootPath), conf);
-			hdfsPath = new Path(rootPath);
+			hdfsPath = new Path(path);
         } catch (IOException e) {
         	logger.error("init FileSystem failed:"+e.getLocalizedMessage());
         }
@@ -60,36 +55,88 @@ public class GetFileDataServer extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
-    	initFileSystemObject();
+    	String filename = req.getParameter("filename");
+    	String path = rootPath + filename;
+    	initFileSystemObject(path);
     	ServletInputStream mRead = req.getInputStream();
-    	byte[] buf = new byte[BUFFER_SIZE];
-    	int len;
-    	boolean b = checkFileExist(rootPath);
+    	boolean b = checkFileExist(path);
     	if(b){
-    		fsout = coreSys.append(hdfsPath);
-     		bout = new BufferedOutputStream(fsout);
-	    	while((len = mRead.read(buf)) != -1){
-	    		writeFile(buf,len);
-	    	}
+    		appendFile(mRead);
     	}
     	else{
-    		fsout = coreSys.create(hdfsPath);
-     		bout = new BufferedOutputStream(fsout);
-    		len = mRead.read(buf);
-    		writeFile(buf,len);
-    		bout.close();
-            fsout.close();
-
-    		fsout = coreSys.append(hdfsPath);
-     		bout = new BufferedOutputStream(fsout);
-    		while((len = mRead.read(buf)) != -1){
-    			writeFile(buf,len);
-	    	}
+    		createFile(mRead);
     	}
     	bout.close();
         fsout.close();
     	coreSys.close();
+    	mRead.close();
     }
+
+    public void appendFile(ServletInputStream mRead) {
+    	byte[] buf = new byte[BUFFER_SIZE];
+    	int readCount = 0;
+    	int len = 0;
+    	try {
+			fsout = coreSys.append(hdfsPath);
+			bout = new BufferedOutputStream(fsout);
+	 		while((readCount = mRead.read(buf)) != -1){
+	 			while(readCount < BUFFER_SIZE) {
+	     			len = mRead.read(buf, readCount, BUFFER_SIZE - readCount);
+	     			if(len != -1){
+	     				readCount += len;
+	     			}
+	     			else{
+	     				break;
+	     			}
+	     		}
+	    		writeFile(buf,readCount);
+	    	}
+		} catch (IOException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("append data failed!");
+		}
+	}
+
+    public void createFile(ServletInputStream mRead) {
+    	byte[] buf = new byte[BUFFER_SIZE];
+    	int readCount = 0;
+    	int len = 0;
+    	try {
+			fsout = coreSys.create(hdfsPath);
+			bout = new BufferedOutputStream(fsout);
+	 		readCount = mRead.read(buf);
+	 		while(readCount != -1 && readCount < BUFFER_SIZE) {
+	 			len = mRead.read(buf, readCount, BUFFER_SIZE - readCount);
+	 			if(len != -1){
+	 				readCount += len;
+	 			}
+	 			else{
+	 				break;
+	 			}
+	 		}
+			writeFile(buf,readCount);
+			bout.close();
+	        fsout.close();
+
+			fsout = coreSys.append(hdfsPath);
+	 		bout = new BufferedOutputStream(fsout);
+	 		while((readCount = mRead.read(buf)) != -1){
+	 			while(readCount < BUFFER_SIZE) {
+	     			len = mRead.read(buf, readCount, BUFFER_SIZE - readCount);
+	     			if(len != -1){
+	     				readCount += len;
+	     			}
+	     			else{
+	     				break;
+	     			}
+	     		}
+	    		writeFile(buf,readCount);
+	    	}
+		} catch (IOException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("create file failed!");
+		}
+	}
 
 	public void writeFile(byte[] fileData, int len) throws IOException{
  		logger.info(hdfsPath);

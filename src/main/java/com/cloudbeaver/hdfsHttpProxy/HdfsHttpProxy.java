@@ -6,7 +6,7 @@ import com.cloudbeaver.client.common.BeaverUtils;
 
 public class HdfsHttpProxy {
 	private static Logger logger = Logger.getLogger(HdfsHttpProxy.class);
-	private static String URL = "http://localhost:8090/filedata";
+	private static String URL = "http://localhost:8090/uploaddata?filename=test.txt";
 	public static String fileData = "Jetty has a slogan, Don't deploy your application in Jetty, deploy Jetty in your application.\n"
 			+ " What this means is that as an alternative to bundling your application as a standard WAR to be deployed in Jetty, \n"
 			+ "Jetty is designed to be a software component that can be instantiated and used in a Java program just like any POJO. \n"
