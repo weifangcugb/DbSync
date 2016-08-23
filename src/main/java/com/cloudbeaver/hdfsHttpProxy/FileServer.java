@@ -24,11 +24,11 @@ public class FileServer{
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
         context.addServlet(GetFileDataServer.class, "/uploaddata");
+        context.addServlet(GetFileInfo.class, "/fileinfo");
 
         HandlerCollection handlers = new HandlerCollection();
         handlers.setHandlers(new Handler[] { context, new DefaultHandler() });
         server.setHandler(handlers);
-        
  
         try {
         	server.start();
