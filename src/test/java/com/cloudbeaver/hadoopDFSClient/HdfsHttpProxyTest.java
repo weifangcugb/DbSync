@@ -35,21 +35,37 @@ public class HdfsHttpProxyTest {
 	}
 
 	@Test
-	public void testUploadFileData() throws FileNotFoundException{
+	public void testUploadFileData(){
 		String url = urlPrefix + filename.substring(filename.lastIndexOf("/")+1);
-		HdfsHttpProxy hdfsHttpProxy = new HdfsHttpProxy();
+		HdfsHttpProxy hdfsHttpProxy = new HdfsHttpProxy(false);
 		try {
 			for(int i = 0; i < 7; i++){
-				hdfsHttpProxy.uploadFileData(filename,url,UPLOAD_SIZE);
+				hdfsHttpProxy.uploadFileDataWithLength(filename,url,UPLOAD_SIZE);
 			}
+			logger.info("upload data to HDFS succeed!");
+			String hdfsData = getMd5ByString(readFromHdfs(filename.substring(filename.lastIndexOf("/")+1)));
+			String localData = getMd5ByString(readFromLocal(filename));
+			Assert.assertEquals(hdfsData, localData);
+		} catch (FileNotFoundException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("upload data to server failed!");
+		}		
+	}
+
+	@Test
+	public void testUploadFileDataWithException(){
+		String url = urlPrefix + filename.substring(filename.lastIndexOf("/")+1);
+		HdfsHttpProxy hdfsHttpProxy = new HdfsHttpProxy(false);
+		try {
+			hdfsHttpProxy.uploadFileData(filename,url);
+			logger.info("upload data to HDFS succeed!");
+			String hdfsData = getMd5ByString(readFromHdfs(filename.substring(filename.lastIndexOf("/")+1)));
+			String localData = getMd5ByString(readFromLocal(filename));
+			Assert.assertEquals(hdfsData, localData);
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("upload data to server failed!");
-		}
-		logger.info("upload data to HDFS succeed!");
-		String hdfsData = getMd5ByString(readFromHdfs(filename.substring(filename.lastIndexOf("/")+1)));
-		String localData = getMd5ByString(readFromLocal(filename));
-		Assert.assertEquals(hdfsData, localData);
+		}		
 	}
 
 	public String readFromLocal(String localFile) throws FileNotFoundException{
@@ -96,6 +112,7 @@ public class HdfsHttpProxyTest {
 
 	public static void main(String[] args) throws FileNotFoundException {
 		HdfsHttpProxyTest hdfsHttpProxyTest = new HdfsHttpProxyTest();
-		hdfsHttpProxyTest.testUploadFileData();
+//		hdfsHttpProxyTest.testUploadFileData();
+		hdfsHttpProxyTest.testUploadFileDataWithException();
 	}
 }

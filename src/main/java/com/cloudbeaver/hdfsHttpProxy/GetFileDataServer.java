@@ -63,16 +63,8 @@ public class GetFileDataServer extends HttpServlet{
     	ServletInputStream mRead;
 		try {
 			mRead = req.getInputStream();
-			boolean b = checkFileExist(path);
-	    	if(b){
-	    		if(fileInfoMap.containsKey(filename)){
-	    			appendFile(mRead,path,filename);
-	    		}
-	    		else{
-	    			logger.error(filename + " exists in hdfs but it isn't in fileInfoMap!");
-	    		}
-	    	}
-	    	else{
+			boolean doesFileExist = checkFileExist(path);
+	    	if(!doesFileExist){
 	    		if(!fileInfoMap.containsKey(filename)){
 	    			createFile(mRead,path,filename);
 	    		}
@@ -80,6 +72,12 @@ public class GetFileDataServer extends HttpServlet{
 	    			logger.error(filename + " doesn't exist in hdfs but it is in fileInfoMap!");
 	    		}
 	    	}
+	    	if(fileInfoMap.containsKey(filename)){
+    			appendFile(mRead,path,filename);
+    		}
+    		else{
+    			logger.error(filename + " exists in hdfs but it isn't in fileInfoMap!");
+    		}
 	    	coreSys.close();
 	    	mRead.close();
 		} catch (IOException e) {
@@ -144,6 +142,7 @@ public class GetFileDataServer extends HttpServlet{
 			fsout = coreSys.create(hdfsPath);
 	 		readCount = mRead.read(fileInfoBean.buffer);
 	 		while(readCount != -1 && readCount < BUFFER_SIZE) {
+	 			logger.info("read, readCount:" + readCount);
 	 			len = mRead.read(fileInfoBean.buffer, readCount, BUFFER_SIZE - readCount);
 	 			if(len != -1){
 	 				readCount += len;
@@ -153,29 +152,14 @@ public class GetFileDataServer extends HttpServlet{
 	 				break;
 	 			}
 	 		}
+	 		if(readCount == -1){
+	 			logger.info("readCount :" + readCount);
+	 			return;
+	 		}
 	 		fsout.write(fileInfoBean.buffer, 0, readCount);
 	 		logger.info("upload data:" + fileInfoBean.getBuffer());
 			fileInfoBean = updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + readCount);
 	        fsout.close();
-
-	        readCount = 0;
-			fsout = coreSys.append(hdfsPath);
-	 		while(readCount < BUFFER_SIZE && (len = mRead.read(fileInfoBean.buffer, readCount, BUFFER_SIZE - readCount)) != -1){
-	 			readCount += len;
-	 			fileInfoBean = updateFileInfoMap(filename, fileInfoBean.buffer, readCount, fileInfoBean.offset);
-	 			if(readCount == BUFFER_SIZE){
-	 				fsout.write(fileInfoBean.buffer, 0, readCount);
-	 				logger.info("upload data:" + fileInfoBean.getBuffer());
-	 				fileInfoBean = updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + readCount);
-	 				readCount = 0;
-	 			}
-	    	}
-	 		if(readCount > 0){
-	 			fsout.write(fileInfoBean.buffer, 0, readCount);
-	 			logger.info("upload data:" + fileInfoBean.getBuffer());
- 				updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + readCount);
-	 		}
-	 		fsout.close();
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("create file in HDFS failed!");

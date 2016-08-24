@@ -21,8 +21,15 @@ public class HdfsHttpProxy {
 	private static int READ_BUFFER_SIZE = 1024 * 1024;
 //	private static int READ_BUFFER_SIZE = 100;
 	private static String contentType = "application/octet-stream";
+	private static int UPLOAD_RETRY_TIMES = 16;
+	private long UPLOAD_ERROR_SLEEP_TIME = 5000;
+	protected boolean EXCEPTION_TEST_MODE = false;
 
-	public static String startUploadFileData(String urlString, byte[] data, int len) throws IOException{
+	public HdfsHttpProxy(boolean exceptionTestMode) {
+		this.EXCEPTION_TEST_MODE = exceptionTestMode;
+	}
+
+	public String startUploadFileData(String urlString, byte[] data, int len) throws IOException{
 		BufferedReader br = null;
 		HttpURLConnection urlConnection = null;
 		try {
@@ -37,18 +44,26 @@ public class HdfsHttpProxy {
 	        urlConnection.setRequestProperty("Content-Length", "" + data.length);
 	        urlConnection.setConnectTimeout(20000);
 	        urlConnection.setDoInput(true);
+	        urlConnection.setDoOutput(true);
 	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
 
 	        if (data != null) {
-		        urlConnection.setDoOutput(true);
-		        DataOutputStream out=new DataOutputStream((urlConnection.getOutputStream()));
-		        out.write(data, 0, len);
+		        DataOutputStream out = new DataOutputStream((urlConnection.getOutputStream()));
+		        out.write(data,0,len/2);
+		        out.flush();
+		        logger.info("write half of the data");
+		        if(EXCEPTION_TEST_MODE){
+		        	throw new IOException();
+		        }
+		        out.write(data, len/2, len - len/2);
+		        logger.info("write left half of the data");
 		        out.flush();
 		        out.close();
 			}
-	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+
 	        String line = "";
 	        StringBuilder sb = new StringBuilder();
+	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 	        while ((line = in.readLine()) != null) {
 	            sb.append(line);
 	        }
@@ -91,37 +106,71 @@ public class HdfsHttpProxy {
             while(readCount < READ_BUFFER_SIZE && (len = in.read(readBuf, readCount, READ_BUFFER_SIZE - readCount)) != -1){
             	readCount += len;
 	 			if(readCount == READ_BUFFER_SIZE){
-	 				startUploadFileData(url, readBuf, READ_BUFFER_SIZE);
+	 				for (int i = 0; i < UPLOAD_RETRY_TIMES ; i++) {
+	 					try {
+	 						logger.info("start to upload file to server");
+	 						startUploadFileData(url, readBuf, readCount);
+	 						logger.info("finish upload file to server");	 						
+	 						break;
+	 					} catch (IOException e) {
+	 						BeaverUtils.PrintStackTrace(e);
+	 						logger.error("upload file data error. msg:" + e.getMessage());
+	 						BeaverUtils.sleep(UPLOAD_ERROR_SLEEP_TIME );
+	 					}	
+	 				}
 	 				readCount = 0;
 	 			}
 	    	}
             if(readCount > 0){
-            	startUploadFileData(url, readBuf, readCount);
+            	for (int i = 0; i < UPLOAD_RETRY_TIMES ; i++) {
+ 					try {
+ 						logger.info("start to upload file to server");
+ 						startUploadFileData(url, readBuf, readCount);
+ 						logger.info("finish upload file to server");	 						
+ 						break;
+ 					} catch (IOException e) {
+ 						BeaverUtils.PrintStackTrace(e);
+ 						logger.error("upload file data error. msg:" + e.getMessage());
+ 						BeaverUtils.sleep(UPLOAD_ERROR_SLEEP_TIME );
+ 					}	
+ 				}
             }
             in.close();
-        } catch (Exception e){
+        } catch (IOException e){
         	BeaverUtils.PrintStackTrace(e);
 			logger.error("read data from local failed!");
         }
 	}
 
-	public void uploadFileData(String filename, String url, int size) throws IOException{
+	public void uploadFileDataWithLength(String filename, String url, int size){
 		int totalSize = 0;
-		String name = filename.substring(filename.lastIndexOf("/")+1);
-		String json = BeaverUtils.doGet(fileInfoUrl);
-		Map<String, FileInfoBean> fileInfoMap = jsonToMap(json);
-		try{
-			RandomAccessFile in = new RandomAccessFile(filename,"r"); 
+		String name = filename.substring(filename.lastIndexOf("/")+1);		
+		RandomAccessFile in;
+		try {
+			String json = BeaverUtils.doGet(fileInfoUrl);
+			Map<String, FileInfoBean> fileInfoMap = jsonToMap(json);
+			in = new RandomAccessFile(filename,"r");
 			if(!fileInfoMap.isEmpty() && fileInfoMap.containsKey(name)){
 				in.seek(fileInfoMap.get(name).offset);
 			}
-            byte [] readBuf = new byte[READ_BUFFER_SIZE];
-            int readCount = 0;
-            int len = 0;
-            while(readCount < READ_BUFFER_SIZE && (len = in.read(readBuf, readCount, READ_BUFFER_SIZE - readCount)) != -1){
-            	readCount += len;
+	        byte [] readBuf = new byte[READ_BUFFER_SIZE];
+	        int readCount = 0;
+	        int len = 0;
+	        while(readCount < READ_BUFFER_SIZE && (len = in.read(readBuf, readCount, READ_BUFFER_SIZE - readCount)) != -1){
+	        	readCount += len;
 	 			if(readCount == READ_BUFFER_SIZE){
-	 				startUploadFileData(url, readBuf, readCount);
+	 				for (int i = 0; i < UPLOAD_RETRY_TIMES ; i++) {
+	 					try {
+	 						logger.info("start to upload file to server");
+	 						startUploadFileData(url, readBuf, readCount);
+	 						logger.info("finish upload file to server");	 						
+	 						break;
+	 					} catch (IOException e) {
+	 						BeaverUtils.PrintStackTrace(e);
+	 						logger.error("upload file data error. msg:" + e.getMessage());
+	 						BeaverUtils.sleep(UPLOAD_ERROR_SLEEP_TIME );
+	 					}	
+	 				}
 	 				totalSize += readCount;
 	 				readCount = 0;
 	 				if(totalSize >= size){
@@ -129,21 +178,34 @@ public class HdfsHttpProxy {
 	 				}
 	 			}
 	    	}
-            if(totalSize < size && readCount > 0){
-            	startUploadFileData(url, readBuf, readCount);
-            	totalSize += readCount;
-            }
-            in.close();
-        } catch (Exception e){
-        	BeaverUtils.PrintStackTrace(e);
-			logger.error("read data from local failed!");
-        }
+	        if(totalSize < size && readCount > 0){
+	        	for (int i = 0; i < UPLOAD_RETRY_TIMES ; i++) {
+ 					try {
+ 						logger.info("start to upload file to server");
+ 						startUploadFileData(url, readBuf, readCount);
+ 						logger.info("finish upload file to server");	 						
+ 						break;
+ 					} catch (IOException e) {
+ 						BeaverUtils.PrintStackTrace(e);
+ 						logger.error("upload file data error. msg:" + e.getMessage());
+ 						BeaverUtils.sleep(UPLOAD_ERROR_SLEEP_TIME );
+ 					}	
+ 				}
+	        	totalSize += readCount;
+	        }
+	        in.close();
+		} catch (IOException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("could not open file or seek to offset!");
+		} 
+			
+        
 	}
 
 	public static void main(String[] args) {
 		String filename = "/home/beaver/Documents/test/hadoop/test.txt";
 		String url = "http://localhost:8090/uploaddata?filename=" + filename.substring(filename.lastIndexOf("/")+1);
-		HdfsHttpProxy hdfsHttpProxy = new HdfsHttpProxy();
+		HdfsHttpProxy hdfsHttpProxy = new HdfsHttpProxy(false);
 		try {
 			hdfsHttpProxy.uploadFileData(filename.substring(filename.lastIndexOf("/")+1), url);
 		} catch (IOException e) {
