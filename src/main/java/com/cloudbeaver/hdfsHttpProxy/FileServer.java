@@ -39,12 +39,12 @@ public class FileServer{
 		}
     }
 
-    public static void startFileServer() throws Exception{
+    public static void startFileServer(){
 		FileServer fileServer = new FileServer();
 		fileServer.start();
 	}
 
-	public static void main(String[] args) throws Exception{
+	public static void main(String[] args){
 		startFileServer();
 	}
 }

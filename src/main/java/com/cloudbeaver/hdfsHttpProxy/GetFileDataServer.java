@@ -1,7 +1,6 @@
 package com.cloudbeaver.hdfsHttpProxy;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.ServletException;
@@ -10,43 +9,18 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.util.BeaverCommonUtil;
 import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 
 @WebServlet("/uploaddata")
 public class GetFileDataServer extends HttpServlet{
 	private static Logger logger = Logger.getLogger(GetFileDataServer.class);
-//	public static int BUFFER_SIZE = 50;
-	public static int BUFFER_SIZE = 512 * 1024;
-	private static String rootPath = new String("hdfs://localhost:9000/test/");
+	protected boolean EXCEPTION_TEST_MODE = false;
+	public static int BUFFER_SIZE = FileInfoBean.BUFFER_SIZE;
+	private HdfsHelper hdfsHelper = new HdfsHelper();
 	private static Map<String, FileInfoBean> fileInfoMap = new HashMap<String, FileInfoBean>();
-    private FileSystem coreSys=null;
-	private static  Configuration conf = new Configuration();
-	{
-		try {
-			conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsHttpProxy.class));
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-	}
 
-	public void initFileSystemObject(String path){
-		try {
-			conf.setBoolean("dfs.support.append", true);
-			coreSys=FileSystem.get(URI.create(rootPath), conf);
-        } catch (IOException e) {
-        	BeaverUtils.PrintStackTrace(e);
-        	logger.error("init FileSystem failed:"+e.getLocalizedMessage());
-        }
-	}
-
-	public Map<String, FileInfoBean> getFileInfo() {
+	public static Map<String, FileInfoBean> getFileInfo() {
 		return fileInfoMap;
 	}
 
@@ -58,28 +32,27 @@ public class GetFileDataServer extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp){
     	String filename = req.getParameter("filename");
-    	String path = rootPath + filename;
-    	initFileSystemObject(path);
+    	hdfsHelper.initFileSystemObject();
     	ServletInputStream mRead;
 		try {
 			mRead = req.getInputStream();
-			boolean doesFileExist = checkFileExist(path);
+			boolean doesFileExist = hdfsHelper.checkFileExist(filename);
 	    	if(!doesFileExist){
 	    		if(!fileInfoMap.containsKey(filename)){
-	    			createFile(mRead,path,filename);
+	    			createFile(mRead, filename);
 	    		}
 	    		else{
 	    			logger.error(filename + " doesn't exist in hdfs but it is in fileInfoMap!");
 	    		}
 	    	}
 	    	if(fileInfoMap.containsKey(filename)){
-    			appendFile(mRead,path,filename);
+    			appendFile(mRead, filename);
     		}
     		else{
     			logger.error(filename + " exists in hdfs but it isn't in fileInfoMap!");
     		}
-	    	coreSys.close();
 	    	mRead.close();
+	    	hdfsHelper.tearDownConnection();
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("upload data to HDFS failed!");
@@ -95,54 +68,82 @@ public class GetFileDataServer extends HttpServlet{
 		return fileInfoBean;
 	}
 
-    public void appendFile(ServletInputStream mRead, String path, String filename) {
-    	Path hdfsPath = new Path(path);
-    	logger.info(hdfsPath);
+    public FileInfoBean uploadExistedData(FileInfoBean fileInfoBean, ServletInputStream mRead, String filename) {
+    	int len = 0;
+    	int readCount = fileInfoBean.bufferSize;
+		try {
+			while(readCount < BUFFER_SIZE && (len = mRead.read(fileInfoBean.buffer, readCount, BUFFER_SIZE - readCount)) != -1){
+				readCount += len;
+				if(readCount == BUFFER_SIZE){
+					hdfsHelper.appendFile(filename, fileInfoBean.buffer, 0, readCount);
+					logger.info("upload data:" + fileInfoBean.getBuffer());
+					fileInfoBean = updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + readCount - fileInfoBean.bufferSize);
+					readCount = 0;
+					break;
+				}
+			}
+			if(readCount > 0){
+				hdfsHelper.appendFile(filename, fileInfoBean.buffer, 0, readCount);
+				logger.info("upload data:" + fileInfoBean.getBuffer());
+				if(readCount == BUFFER_SIZE){
+					fileInfoBean = updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset);
+				}
+				else{
+					fileInfoBean = updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + readCount - fileInfoBean.bufferSize);
+				}
+			}
+		} catch (IOException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("append existed data to HDFS failed!");
+		}
+		return fileInfoBean;
+		
+	}
+
+    public void appendFile(ServletInputStream mRead, String filename) {
     	int readCount = 0;
     	int len = 0;
     	FileInfoBean fileInfoBean = fileInfoMap.get(filename);
     	try {
-    		FSDataOutputStream fsout = coreSys.append(hdfsPath);
     		if(fileInfoBean.bufferSize > 0){
-    			fsout.write(fileInfoBean.buffer, 0, fileInfoBean.bufferSize);
-    			logger.info("upload data:" + fileInfoBean.getBuffer());
- 				fileInfoBean = updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + fileInfoBean.bufferSize);
+    			fileInfoBean = uploadExistedData(fileInfoBean, mRead, filename);
     		}
 	 		while(readCount < BUFFER_SIZE && (len = mRead.read(fileInfoBean.buffer, readCount, BUFFER_SIZE - readCount)) != -1){
+//	 		while(readCount < BUFFER_SIZE && (len = mRead.read(fileInfoBean.buffer, readCount, 25)) != -1){
 	 			readCount += len;
 	 			fileInfoBean = updateFileInfoMap(filename, fileInfoBean.buffer, readCount, fileInfoBean.offset);
+
+	 			if(EXCEPTION_TEST_MODE){
+	 				updateFileInfoMap(filename, fileInfoBean.buffer, readCount, fileInfoBean.offset + readCount);
+	 				return ;
+	 			}
+
 	 			if(readCount == BUFFER_SIZE){
-	 				fsout.write(fileInfoBean.buffer, 0, readCount);
+	 				hdfsHelper.appendFile(filename, fileInfoBean.buffer, 0, readCount);
 	 				logger.info("upload data:" + fileInfoBean.getBuffer());
 	 				fileInfoBean = updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + readCount);
 	 				readCount = 0;
 	 			}
 	    	}
 	 		if(readCount > 0){
-	 			fsout.write(fileInfoBean.buffer, 0, readCount);
+	 			hdfsHelper.appendFile(filename, fileInfoBean.buffer, 0, readCount);
 	 			logger.info("upload data:" + fileInfoBean.getBuffer());
  				updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + readCount);
 	 		}
-	 		fsout.close();
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("append data to HDFS failed!");
 		}
 	}
 
-    public void createFile(ServletInputStream mRead, String path, String filename) {
-    	Path hdfsPath = new Path(path);
-    	logger.info(hdfsPath);
-	    FSDataOutputStream fsout = null;
+    public void createFile(ServletInputStream mRead, String filename) {
     	int readCount = 0;
     	int len = 0;
     	FileInfoBean fileInfoBean = new FileInfoBean();
     	fileInfoMap.put(filename, fileInfoBean);
     	try {
-			fsout = coreSys.create(hdfsPath);
 	 		readCount = mRead.read(fileInfoBean.buffer);
 	 		while(readCount != -1 && readCount < BUFFER_SIZE) {
-	 			logger.info("read, readCount:" + readCount);
 	 			len = mRead.read(fileInfoBean.buffer, readCount, BUFFER_SIZE - readCount);
 	 			if(len != -1){
 	 				readCount += len;
@@ -153,21 +154,15 @@ public class GetFileDataServer extends HttpServlet{
 	 			}
 	 		}
 	 		if(readCount == -1){
-	 			logger.info("readCount :" + readCount);
+	 			logger.info("read, readCount:" + readCount);
 	 			return;
 	 		}
-	 		fsout.write(fileInfoBean.buffer, 0, readCount);
+	 		hdfsHelper.createFile(filename, fileInfoBean.buffer, 0, readCount);
 	 		logger.info("upload data:" + fileInfoBean.getBuffer());
 			fileInfoBean = updateFileInfoMap(filename, new byte[BUFFER_SIZE], 0, fileInfoBean.offset + readCount);
-	        fsout.close();
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("create file in HDFS failed!");
 		}
 	}
-
-	public boolean checkFileExist(String path) throws IOException {
-        Path f = new Path(path);
-        return coreSys.exists(f);
-    }
 }

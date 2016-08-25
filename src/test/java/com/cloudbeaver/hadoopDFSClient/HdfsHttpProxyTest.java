@@ -16,13 +16,15 @@ import org.junit.Test;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.hdfsHttpProxy.HdfsHttpProxy;
 
-public class HdfsHttpProxyTest {
+public class HdfsHttpProxyTest extends HdfsHttpProxy{
 	private static Logger logger = Logger.getLogger(HdfsHttpProxyTest.class);
 	private static String filename = "/home/beaver/Documents/test/hadoop/harry.txt";
 //	private static String filename = "/home/beaver/Documents/test/hadoop/test.txt";
 	private static String urlPrefix = "http://localhost:8090/uploaddata?filename=";
 	private static String hdfsPrefix = "hdfs://localhost:9000/test/";
+	private static String fileInfoUrl = "http://localhost:8090/fileinfo";
 	private static int UPLOAD_SIZE = 1024 * 1024;
+//	private static int UPLOAD_SIZE = 100;
 	private FileSystem coreSys=null;
 	private  Configuration conf = new Configuration();
 	{
@@ -37,27 +39,11 @@ public class HdfsHttpProxyTest {
 	@Test
 	public void testUploadFileData(){
 		String url = urlPrefix + filename.substring(filename.lastIndexOf("/")+1);
-		HdfsHttpProxy hdfsHttpProxy = new HdfsHttpProxy(false);
+		EXCEPTION_TEST_MODE = false;
 		try {
-			for(int i = 0; i < 7; i++){
-				hdfsHttpProxy.uploadFileDataWithLength(filename,url,UPLOAD_SIZE);
+			for(int i = 0; i < 10; i++){
+				uploadFileDataWithLength(filename,url,UPLOAD_SIZE);
 			}
-			logger.info("upload data to HDFS succeed!");
-			String hdfsData = getMd5ByString(readFromHdfs(filename.substring(filename.lastIndexOf("/")+1)));
-			String localData = getMd5ByString(readFromLocal(filename));
-			Assert.assertEquals(hdfsData, localData);
-		} catch (FileNotFoundException e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.error("upload data to server failed!");
-		}		
-	}
-
-	@Test
-	public void testUploadFileDataWithException(){
-		String url = urlPrefix + filename.substring(filename.lastIndexOf("/")+1);
-		HdfsHttpProxy hdfsHttpProxy = new HdfsHttpProxy(false);
-		try {
-			hdfsHttpProxy.uploadFileData(filename,url);
 			logger.info("upload data to HDFS succeed!");
 			String hdfsData = getMd5ByString(readFromHdfs(filename.substring(filename.lastIndexOf("/")+1)));
 			String localData = getMd5ByString(readFromLocal(filename));
@@ -65,7 +51,7 @@ public class HdfsHttpProxyTest {
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("upload data to server failed!");
-		}		
+		}
 	}
 
 	public String readFromLocal(String localFile) throws FileNotFoundException{
@@ -110,9 +96,8 @@ public class HdfsHttpProxyTest {
         return DigestUtils.md5Hex(target);
     }
 
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) {
 		HdfsHttpProxyTest hdfsHttpProxyTest = new HdfsHttpProxyTest();
-//		hdfsHttpProxyTest.testUploadFileData();
-		hdfsHttpProxyTest.testUploadFileDataWithException();
+		hdfsHttpProxyTest.testUploadFileData();
 	}
 }

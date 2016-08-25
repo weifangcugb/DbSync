@@ -1,5 +1,7 @@
 package com.cloudbeaver;
 
+import java.io.File;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -7,11 +9,13 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.fileUploader.FileUploader;
+import com.cloudbeaver.hdfsHttpProxy.FileServer;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.cloudbeaver.server.brokermonitor.BrokerMonitorWebServer;
 import com.cloudbeaver.server.consumer.SyncConsumer;
@@ -107,6 +111,17 @@ public class App {
                     	break;
                     default:
                     	throw new ParseException("module name is wrong");
+                }
+	  		}
+
+            if (commandLine.hasOption('p')) {
+            	String moduleName = commandLine.getOptionValue('m');
+                switch (moduleName) {
+                    case "fileServer":
+                    	FileServer.startFileServer();
+                    	break;
+                    default:
+                    	throw new ParseException("server name is wrong");
                 }
 	  		}
 		} catch (ParseException e) {

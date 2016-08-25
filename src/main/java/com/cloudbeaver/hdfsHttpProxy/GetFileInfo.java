@@ -23,8 +23,7 @@ public class GetFileInfo extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp){
-    	GetFileDataServer getFileDataServer = new GetFileDataServer();
-    	Map<String, FileInfoBean> fileInfoMap = getFileDataServer.getFileInfo();
+    	Map<String, FileInfoBean> fileInfoMap = GetFileDataServer.getFileInfo();
     	JSONObject json = JSONObject.fromObject(fileInfoMap);
 //    	System.out.println(json.toString());
 
@@ -43,5 +42,4 @@ public class GetFileInfo extends HttpServlet{
 
 	public static void main(String[] args) {
 	}
-
 }
