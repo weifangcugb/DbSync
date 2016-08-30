@@ -10,9 +10,9 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import com.cloudbeaver.client.common.BeaverUtils;
 
-public class FileServer{
-	private static Logger logger = Logger.getLogger(FileServer.class);
-	private static final int HTTP_PORT = 8090;
+public class HdfsProxyServer{
+	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
+	private static final int HTTP_PORT = 8811;
 
     public void start(){
         Server server = new Server();
@@ -23,7 +23,7 @@ public class FileServer{
 
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
-        context.addServlet(GetFileDataServer.class, "/uploaddata");
+        context.addServlet(HdfsProxyServlet.class, "/uploaddata");
         context.addServlet(GetFileInfo.class, "/fileinfo");
 
         HandlerCollection handlers = new HandlerCollection();
@@ -35,16 +35,16 @@ public class FileServer{
             server.join();
 		} catch (Exception e) {
 			BeaverUtils.PrintStackTrace(e);
-			logger.fatal("mock server can't start");
+			logger.fatal("hdfs proxy server can't start");
 		}
     }
 
-    public static void startFileServer(){
-		FileServer fileServer = new FileServer();
-		fileServer.start();
+    public static void startHdfsProxyServer(){
+		HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();
+		hdfsProxyServer.start();
 	}
 
 	public static void main(String[] args){
-		startFileServer();
+		startHdfsProxyServer();
 	}
 }

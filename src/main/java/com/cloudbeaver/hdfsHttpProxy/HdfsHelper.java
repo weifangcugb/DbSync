@@ -20,7 +20,7 @@ public class HdfsHelper {
 	private static  Configuration conf = new Configuration();
 	{
 		try {
-			conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsHttpProxy.class));
+			conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsClient.class));
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);

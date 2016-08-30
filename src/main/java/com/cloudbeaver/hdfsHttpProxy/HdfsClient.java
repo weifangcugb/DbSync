@@ -15,8 +15,8 @@ import com.cloudbeaver.client.common.BeaverUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class HdfsHttpProxy {
-	private static Logger logger = Logger.getLogger(HdfsHttpProxy.class);
+public class HdfsClient {
+	private static Logger logger = Logger.getLogger(HdfsClient.class);
 	private static String fileInfoUrl = "http://localhost:8090/fileinfo";
 	private static int READ_BUFFER_SIZE = 1024 * 1024;
 //	private static int READ_BUFFER_SIZE = 100;
@@ -188,7 +188,7 @@ public class HdfsHttpProxy {
 	public static void main(String[] args) {
 		String filename = "/home/beaver/Documents/test/hadoop/test.txt";
 		String url = "http://localhost:8090/uploaddata?filename=" + filename.substring(filename.lastIndexOf("/")+1);
-		HdfsHttpProxy hdfsHttpProxy = new HdfsHttpProxy();
+		HdfsClient hdfsHttpProxy = new HdfsClient();
 		try {
 			hdfsHttpProxy.uploadFileData(filename.substring(filename.lastIndexOf("/")+1), url);
 		} catch (IOException e) {

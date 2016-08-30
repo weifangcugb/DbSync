@@ -23,7 +23,7 @@ public class GetFileInfo extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp){
-    	Map<String, FileInfoBean> fileInfoMap = GetFileDataServer.getFileInfo();
+    	Map<String, FileInfoBean> fileInfoMap = HdfsProxyServlet.getFileInfo();
     	JSONObject json = JSONObject.fromObject(fileInfoMap);
 //    	System.out.println(json.toString());
 

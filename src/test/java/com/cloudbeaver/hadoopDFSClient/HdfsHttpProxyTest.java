@@ -14,9 +14,9 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.hdfsHttpProxy.HdfsHttpProxy;
+import com.cloudbeaver.hdfsHttpProxy.HdfsClient;
 
-public class HdfsHttpProxyTest extends HdfsHttpProxy{
+public class HdfsHttpProxyTest extends HdfsClient{
 	private static Logger logger = Logger.getLogger(HdfsHttpProxyTest.class);
 	private static String filename = "/home/beaver/Documents/test/hadoop/harry.txt";
 //	private static String filename = "/home/beaver/Documents/test/hadoop/test.txt";

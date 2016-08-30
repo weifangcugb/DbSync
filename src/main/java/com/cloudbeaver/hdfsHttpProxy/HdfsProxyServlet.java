@@ -13,8 +13,8 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 
 @WebServlet("/uploaddata")
-public class GetFileDataServer extends HttpServlet{
-	private static Logger logger = Logger.getLogger(GetFileDataServer.class);
+public class HdfsProxyServlet extends HttpServlet{
+	private static Logger logger = Logger.getLogger(HdfsProxyServlet.class);
 	protected boolean EXCEPTION_TEST_MODE = false;
 	public static int BUFFER_SIZE = FileInfoBean.BUFFER_SIZE;
 	private HdfsHelper hdfsHelper = new HdfsHelper();
