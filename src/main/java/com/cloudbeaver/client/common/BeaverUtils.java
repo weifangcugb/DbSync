@@ -272,7 +272,7 @@ public class BeaverUtils {
 
 	public static void printLogExceptionAndSleep(Exception e, String msgPrefix, int sleepTime) {
 		BeaverUtils.PrintStackTrace(e);
-		logger.error(msgPrefix + " msg:" + e.getMessage());
+		logger.error(msgPrefix + ", msg:" + e.getMessage());
 		BeaverUtils.sleep(sleepTime);
 	}
 

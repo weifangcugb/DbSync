@@ -69,4 +69,29 @@ public class HdfsHelper {
         Path path = new Path(rootPath + filename);
         return coreSys.exists(path);
     }
+
+	public static void writeFile(String filename, byte[] buffer, int readCount) throws IOException {
+		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
+		Path fileFullName = new Path(rootPath + filename);
+		FSDataOutputStream fsOut = fileSystem.exists(fileFullName) ? fileSystem.append(fileFullName) : fileSystem.create(fileFullName) ;
+		fsOut.write(buffer, 0, readCount);
+		fsOut.flush();
+		fsOut.close();
+	}
+
+	public static long getFileLength(String fileName) throws IOException {
+		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
+		Path fileFullName = new Path(rootPath + fileName);
+		while(true){
+			try{
+				FSDataOutputStream fsOut = fileSystem.exists(fileFullName) ? fileSystem.append(fileFullName) : fileSystem.create(fileFullName);
+				fsOut.close();
+				break;
+			}catch (IOException e) {
+				BeaverUtils.printLogExceptionAndSleep(e, "got exception when open a stream", 5000);
+			}
+		}
+
+		return fileSystem.getFileStatus(fileFullName).getLen();
+	}
 }

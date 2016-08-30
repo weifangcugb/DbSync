@@ -2,6 +2,7 @@ package com.cloudbeaver.hdfsHttpProxy;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
@@ -9,6 +10,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 
@@ -18,7 +21,7 @@ public class HdfsProxyServlet extends HttpServlet{
 	protected boolean EXCEPTION_TEST_MODE = false;
 	public static int BUFFER_SIZE = FileInfoBean.BUFFER_SIZE;
 	private HdfsHelper hdfsHelper = new HdfsHelper();
-	private static Map<String, FileInfoBean> fileInfoMap = new HashMap<String, FileInfoBean>();
+	private static Map<String, FileInfoBean> fileInfoMap = new Hashtable<String, FileInfoBean>();
 
 	public static Map<String, FileInfoBean> getFileInfo() {
 		return fileInfoMap;
@@ -30,7 +33,32 @@ public class HdfsProxyServlet extends HttpServlet{
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp){
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+    	String filename = req.getParameter("filename");
+
+    	int bufferSize = 64 * 1024 * 1024;
+    	byte[] buffer = new byte[bufferSize];
+    	ServletInputStream servletInputStream = req.getInputStream();
+    	int readNumTillNow = 0, len = 0;
+    	while((len = servletInputStream.read(buffer, readNumTillNow, bufferSize - readNumTillNow)) != -1){
+			readNumTillNow += len;
+			if(readNumTillNow == BUFFER_SIZE){
+				HdfsHelper.writeFile(filename, buffer, readNumTillNow);
+				logger.info("upload data, file:" + filename + " size:" + readNumTillNow);
+
+//				clear buffer and read next block
+				readNumTillNow = 0;
+				BeaverUtils.clearByteArray(buffer);
+			}
+		}
+
+//    	read to the end of the file
+    	if (readNumTillNow > 0) {
+    		HdfsHelper.writeFile(filename, buffer, readNumTillNow);
+		}
+    }
+
+    protected void doPost2(HttpServletRequest req, HttpServletResponse resp){
     	String filename = req.getParameter("filename");
     	hdfsHelper.initFileSystemObject();
     	ServletInputStream mRead;
@@ -59,7 +87,7 @@ public class HdfsProxyServlet extends HttpServlet{
 		}
     }
 
-    public FileInfoBean updateFileInfoMap(String filename, byte[] buffer, int bufferSize, int offset) {
+    public FileInfoBean updateFileInfoMap(String filename, byte[] buffer, int bufferSize, long offset) {
 		FileInfoBean fileInfoBean = new FileInfoBean();
 		fileInfoBean.setBuffer(buffer);
 		fileInfoBean.setBufferSize(bufferSize);

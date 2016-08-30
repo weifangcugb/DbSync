@@ -173,7 +173,7 @@ public class HdfsClient {
 						startPos = READ_BUFFER_SIZE;
 					}
 					else {
-						startPos = fileInfoMap.get(filename).offset % READ_BUFFER_SIZE;
+						startPos = (int) (fileInfoMap.get(filename).offset % READ_BUFFER_SIZE);
 					}					
 					readCount = totalCount - startPos;
 				}
@@ -185,15 +185,49 @@ public class HdfsClient {
 		}
 	}
 
+	private void doUploadFileData(String filename, String url) {
+		while(true) {
+			try{
+//				first, sync position with web server
+				String json = BeaverUtils.doGet(fileInfoUrl);
+				Map<String, FileInfoBean> fileInfoMap = jsonToMap(json);
+				String name = filename.substring(filename.lastIndexOf("/")+1);
+				long seekPos = 0;
+
+//				then, open the url stream and write util the end of the file
+				RandomAccessFile in = new RandomAccessFile(filename,"r"); 
+				if(!fileInfoMap.isEmpty() && fileInfoMap.containsKey(filename)){
+					seekPos = fileInfoMap.get(filename).offset;
+					in.seek(seekPos);
+				}
+
+				logger.info("start to upload file, fileName:" + filename + " pos:" + seekPos);
+		        byte [] readBuf = new byte[READ_BUFFER_SIZE];
+		        int readCount = 0, len = 0;
+		        while(readCount < READ_BUFFER_SIZE && (len = in.read(readBuf, readCount, READ_BUFFER_SIZE - readCount)) != -1){
+		        	readCount += len;
+		 			if(readCount == READ_BUFFER_SIZE){
+		 				startUploadFileData(url, readBuf, 0, readCount);
+		 				readCount = 0;
+		 			}
+		    	}
+
+		        if(readCount > 0){
+		        	startUploadFileData(url,readBuf,0,readCount);
+		        }
+		
+		        in.close();
+		        break;
+			}catch(IOException e){
+				BeaverUtils.printLogExceptionAndSleep(e, "upload file exception, ", 5000);
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		String filename = "/home/beaver/Documents/test/hadoop/test.txt";
 		String url = "http://localhost:8090/uploaddata?filename=" + filename.substring(filename.lastIndexOf("/")+1);
-		HdfsClient hdfsHttpProxy = new HdfsClient();
-		try {
-			hdfsHttpProxy.uploadFileData(filename.substring(filename.lastIndexOf("/")+1), url);
-		} catch (IOException e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.error("upload data to server failed!");
-		}
+		HdfsClient hdfsHttpClient = new HdfsClient();
+		hdfsHttpClient.doUploadFileData(filename.substring(filename.lastIndexOf("/")+1), url);
 	}
 }

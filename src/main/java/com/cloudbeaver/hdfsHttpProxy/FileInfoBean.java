@@ -7,7 +7,7 @@ public class FileInfoBean {
 //	public static int BUFFER_SIZE = 50;
 	public static int BUFFER_SIZE = 123 * 1024;
 
-	public int offset;
+	public long offset;
 	public byte [] buffer;
 	public int bufferSize;
 
@@ -17,11 +17,11 @@ public class FileInfoBean {
 		bufferSize = 0;
 	}
 
-	public void setOffset(int offset) {
+	public void setOffset(long offset) {
 		this.offset = offset;
 	}
 
-	public int getOffset() {
+	public long getOffset() {
 		return this.offset;
 	}
 
