@@ -84,14 +84,16 @@ public class HdfsHelper {
 		Path fileFullName = new Path(rootPath + fileName);
 		while(true){
 			try{
-				FSDataOutputStream fsOut = fileSystem.exists(fileFullName) ? fileSystem.append(fileFullName) : fileSystem.create(fileFullName);
-				fsOut.close();
-				break;
+				if (fileSystem.exists(fileFullName)) {
+					FSDataOutputStream fsOut = fileSystem.append(fileFullName);
+					fsOut.close();
+					return fileSystem.getFileStatus(fileFullName).getLen();
+				}else{
+					return 0;
+				}
 			}catch (IOException e) {
 				BeaverUtils.printLogExceptionAndSleep(e, "got exception when open a stream", 5000);
 			}
 		}
-
-		return fileSystem.getFileStatus(fileFullName).getLen();
 	}
 }
