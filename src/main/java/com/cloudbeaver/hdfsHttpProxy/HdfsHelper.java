@@ -17,7 +17,7 @@ public class HdfsHelper {
 
 	private static String rootPath = new String("hdfs://localhost:9000/test/");
 	private static  Configuration conf = new Configuration();
-	{
+	static {
 		try {
 			conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsClient.class));
 		} catch (IOException e) {
@@ -27,7 +27,6 @@ public class HdfsHelper {
 	}
 
 	public static void writeFile(String filename, byte[] buffer, int readCount) throws IOException {
-		conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsClient.class));
 		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
 		Path fileFullName = new Path(rootPath + filename);
 		FSDataOutputStream fsOut = fileSystem.exists(fileFullName) ? fileSystem.append(fileFullName) : fileSystem.create(fileFullName) ;
@@ -37,7 +36,6 @@ public class HdfsHelper {
 	}
 
 	public static long getFileLength(String fileName) throws IOException {
-		conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsClient.class));
 		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
 		Path fileFullName = new Path(rootPath + fileName);
 		while(true){

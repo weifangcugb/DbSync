@@ -13,9 +13,7 @@ import com.cloudbeaver.client.common.BeaverUtils;
 @WebServlet("/uploaddata")
 public class HdfsProxyServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(HdfsProxyServlet.class);
-	protected boolean EXCEPTION_TEST_MODE = false;
 	public static int BUFFER_SIZE = 64 * 1024 * 1024;
-	private HdfsHelper hdfsHelper = new HdfsHelper();
 
 	@Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
