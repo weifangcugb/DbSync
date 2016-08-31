@@ -1,12 +1,7 @@
 package com.cloudbeaver.hdfsHttpProxy;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.log4j.Logger;
@@ -14,67 +9,17 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 
 public class HdfsClient {
 	private static Logger logger = Logger.getLogger(HdfsClient.class);
-	private static String fileInfoUrl = "http://localhost:8090/fileinfo";
+	private static String fileInfoUrl = "http://localhost:8811/fileinfo";
 	private static int READ_BUFFER_SIZE = 1024 * 1024;
 //	private static int READ_BUFFER_SIZE = 100;
 	private static String contentType = "application/octet-stream";
 	private static int UPLOAD_RETRY_TIMES = 16;
 	private long UPLOAD_ERROR_SLEEP_TIME = 5000;
 	protected boolean EXCEPTION_TEST_MODE = false;
-
-	public String startUploadFileData(String urlString, byte[] data, int startPos, int len) throws IOException{
-		BufferedReader br = null;
-		HttpURLConnection urlConnection = null;
-		try {
-			if (urlString.indexOf("http://") == -1) {
-				urlString = "http://" + urlString;
-			}
-
-	        URL url = new URL(urlString);
-	        urlConnection = (HttpURLConnection) url.openConnection();
-	        urlConnection.setRequestMethod("POST");
-	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");
-	        urlConnection.setRequestProperty("Content-Length", "" + data.length);
-	        urlConnection.setConnectTimeout(20000);
-	        urlConnection.setDoInput(true);
-	        urlConnection.setDoOutput(true);
-	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
-
-	        if (data != null) {
-		        DataOutputStream out = new DataOutputStream((urlConnection.getOutputStream()));
-		        out.write(data, startPos, len/2);
-		        out.flush();
-		        logger.info("write half of the data");
-		        if(EXCEPTION_TEST_MODE){
-		        	throw new IOException();
-		        }
-		        out.write(data, startPos + len/2, len - len/2);
-		        logger.info("write left half of the data");
-		        out.flush();
-		        out.close();
-			}
-
-	        String line = "";
-	        StringBuilder sb = new StringBuilder();
-	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-	        while ((line = in.readLine()) != null) {
-	            sb.append(line);
-	        }
-	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + urlConnection.getResponseCode() + " reply:" + sb.toString());
-	        return sb.toString();
-		}finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					logger.error("close url reader error, msg:" + e.getMessage() + " url:" + urlString);
-				}
-			}
-		}
-	}
 
 	public Map<String, FileInfoBean> jsonToMap(String json) {
 		ObjectMapper mapper = new ObjectMapper();
@@ -88,47 +33,18 @@ public class HdfsClient {
 		return fileInfo;
 	}
 
-	public void uploadFileData(String filename, String url) throws IOException{
-		String json = BeaverUtils.doGet(fileInfoUrl);
-		Map<String, FileInfoBean> fileInfoMap = jsonToMap(json);
-		String name = filename.substring(filename.lastIndexOf("/")+1);
-		try{
-			RandomAccessFile in = new RandomAccessFile(filename,"r"); 
-			if(!fileInfoMap.isEmpty() && fileInfoMap.containsKey(filename)){
-				System.out.println(fileInfoMap.get(filename).offset);
-				in.seek(fileInfoMap.get(filename).offset);
-			}
-            byte [] readBuf = new byte[READ_BUFFER_SIZE];
-            int readCount = 0;
-            int len = 0;
-            while(readCount < READ_BUFFER_SIZE && (len = in.read(readBuf, readCount, READ_BUFFER_SIZE - readCount)) != -1){
-            	readCount += len;
-	 			if(readCount == READ_BUFFER_SIZE){
-	 				retryUploadDataToServer(name,url,readBuf,0,readCount);
-	 				readCount = 0;
-	 			}
-	    	}
-            if(readCount > 0){
-            	retryUploadDataToServer(name,url,readBuf,0,readCount);
-            }
-            in.close();
-        } catch (IOException e){
-        	BeaverUtils.PrintStackTrace(e);
-			logger.error("read data from local failed!");
-        }
-	}
-
-	public void uploadFileDataWithLength(String filename, String url, int size){
+	public void uploadFileDataWithLength(String fileFullName, String url, int size){
 		int totalSize = 0;
-		String name = filename.substring(filename.lastIndexOf("/")+1);
+		String fileName = fileFullName.substring(fileFullName.lastIndexOf("/")+1);
 		RandomAccessFile in;
+		boolean doesUploadSueeccd = true;
 		try {
-			String json = BeaverUtils.doGet(fileInfoUrl);
+			String json = BeaverUtils.doGet(fileInfoUrl+"?fileName="+fileName);
 			Map<String, FileInfoBean> fileInfoMap = jsonToMap(json);
-			in = new RandomAccessFile(filename,"r");
-			if(!fileInfoMap.isEmpty() && fileInfoMap.containsKey(name)){
-				System.out.println("offset : " + fileInfoMap.get(name).offset);
-				in.seek(fileInfoMap.get(name).offset);
+			in = new RandomAccessFile(fileFullName,"r");
+			if(!fileInfoMap.isEmpty() && fileInfoMap.containsKey(fileName)){
+				System.out.println("offset : " + fileInfoMap.get(fileName).offset);
+				in.seek(fileInfoMap.get(fileName).offset);
 			}
 	        byte [] readBuf = new byte[READ_BUFFER_SIZE];
 	        int readCount = 0;
@@ -136,7 +52,11 @@ public class HdfsClient {
 	        while(readCount < READ_BUFFER_SIZE && (len = in.read(readBuf, readCount, READ_BUFFER_SIZE - readCount)) != -1){
 	        	readCount += len;
 	 			if(readCount == READ_BUFFER_SIZE){
-	 				retryUploadDataToServer(name,url,readBuf,0,readCount);
+	 				doesUploadSueeccd = retryUploadDataToServer(fileName,url,readBuf,0,readCount);
+	 				if(!doesUploadSueeccd){
+	 					in.close();
+	 					return;
+	 				}
 	 				totalSize += readCount;
 	 				readCount = 0;
 	 				if(totalSize >= size){
@@ -145,7 +65,11 @@ public class HdfsClient {
 	 			}
 	    	}
 	        if(totalSize < size && readCount > 0){
-	        	retryUploadDataToServer(name,url,readBuf,0,readCount);
+	        	doesUploadSueeccd = retryUploadDataToServer(fileName,url,readBuf,0,readCount);
+	        	if(!doesUploadSueeccd){
+ 					in.close();
+ 					return;
+ 				}
 	        	totalSize += readCount;
 	        }
 	        in.close();
@@ -155,65 +79,55 @@ public class HdfsClient {
 		}        
 	}
 
-	public void retryUploadDataToServer(String filename, String url, byte[] readBuf, int startPos, int readCount) {
-		int totalCount = readCount;
-		for (int i = 0; i < UPLOAD_RETRY_TIMES ; i++) {
+	public boolean retryUploadDataToServer(String fileName, String url, byte[] readBuf, int startPos, int readCount) {
+		for (int i = 1; i <= UPLOAD_RETRY_TIMES ; i++) {
 			try {
 				logger.info("start to upload file to server");
 //				System.out.println(new String(readBuf, 0, readCount, "UTF-8"));
-				startUploadFileData(url, readBuf, startPos, readCount);
+				BeaverUtils.doPost(url, contentType, false, readBuf, startPos, readCount);
 				logger.info("finish upload file to server");
-				String json = BeaverUtils.doGet(fileInfoUrl);
-				Map<String, FileInfoBean> fileInfoMap = jsonToMap(json);
-				if(fileInfoMap.get(filename).bufferSize <= 0){
-					break;
-				}
-				else{
-					if(fileInfoMap.get(filename).offset % READ_BUFFER_SIZE == 0) {
-						startPos = READ_BUFFER_SIZE;
-					}
-					else {
-						startPos = (int) (fileInfoMap.get(filename).offset % READ_BUFFER_SIZE);
-					}					
-					readCount = totalCount - startPos;
-				}
+				break;
 			} catch (IOException e) {
 				BeaverUtils.PrintStackTrace(e);
 				logger.error("upload file data error. msg:" + e.getMessage());
+				if(i >= UPLOAD_RETRY_TIMES){
+					return false; 
+				}
 				BeaverUtils.sleep(UPLOAD_ERROR_SLEEP_TIME );
 			}	
 		}
+		return true;
 	}
 
-	private void doUploadFileData(String filename, String url) {
+	public void doUploadFileData(String fileFullName, String url) {
 		while(true) {
 			try{
 //				first, sync position with web server
-				String json = BeaverUtils.doGet(fileInfoUrl);
-				Map<String, FileInfoBean> fileInfoMap = jsonToMap(json);
-				String name = filename.substring(filename.lastIndexOf("/")+1);
+				String fileName = fileFullName.substring(fileFullName.lastIndexOf("/")+1);
+				String json = BeaverUtils.doGet(fileInfoUrl+"?fileName="+fileName);
+				Map<String, FileInfoBean> fileInfoMap = jsonToMap(json);				
 				long seekPos = 0;
 
 //				then, open the url stream and write util the end of the file
-				RandomAccessFile in = new RandomAccessFile(filename,"r"); 
-				if(!fileInfoMap.isEmpty() && fileInfoMap.containsKey(filename)){
-					seekPos = fileInfoMap.get(filename).offset;
+				RandomAccessFile in = new RandomAccessFile(fileFullName,"r"); 
+				if(!fileInfoMap.isEmpty() && fileInfoMap.containsKey(fileName)){
+					seekPos = fileInfoMap.get(fileName).offset;
 					in.seek(seekPos);
 				}
 
-				logger.info("start to upload file, fileName:" + filename + " pos:" + seekPos);
+				logger.info("start to upload file, fileName:" + fileName + " pos:" + seekPos);
 		        byte [] readBuf = new byte[READ_BUFFER_SIZE];
 		        int readCount = 0, len = 0;
 		        while(readCount < READ_BUFFER_SIZE && (len = in.read(readBuf, readCount, READ_BUFFER_SIZE - readCount)) != -1){
 		        	readCount += len;
 		 			if(readCount == READ_BUFFER_SIZE){
-		 				startUploadFileData(url, readBuf, 0, readCount);
+		 				BeaverUtils.doPost(url, contentType, false, readBuf, 0, readCount);
 		 				readCount = 0;
 		 			}
 		    	}
 
 		        if(readCount > 0){
-		        	startUploadFileData(url,readBuf,0,readCount);
+		        	BeaverUtils.doPost(url, contentType, false, readBuf, 0, readCount);
 		        }
 		
 		        in.close();
@@ -225,9 +139,9 @@ public class HdfsClient {
 	}
 
 	public static void main(String[] args) {
-		String filename = "/home/beaver/Documents/test/hadoop/test.txt";
-		String url = "http://localhost:8090/uploaddata?filename=" + filename.substring(filename.lastIndexOf("/")+1);
+		String filename = "/home/beaver/Documents/test/hadoop/harry.txt";
+		String url = "http://localhost:8811/uploaddata?fileName=" + filename.substring(filename.lastIndexOf("/")+1);
 		HdfsClient hdfsHttpClient = new HdfsClient();
-		hdfsHttpClient.doUploadFileData(filename.substring(filename.lastIndexOf("/")+1), url);
+		hdfsHttpClient.doUploadFileData(filename, url);
 	}
 }

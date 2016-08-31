@@ -16,7 +16,6 @@ public class HdfsHelper {
 	private static Logger logger = Logger.getLogger(HdfsHelper.class);
 
 	private static String rootPath = new String("hdfs://localhost:9000/test/");
-	private FileSystem coreSys=null;
 	private static  Configuration conf = new Configuration();
 	{
 		try {
@@ -27,50 +26,8 @@ public class HdfsHelper {
 		}
 	}
 
-	public void initFileSystemObject(){
-		try {
-			conf.setBoolean("dfs.support.append", true);
-			coreSys=FileSystem.get(URI.create(rootPath), conf);
-        } catch (IOException e) {
-        	BeaverUtils.PrintStackTrace(e);
-        	logger.error("init FileSystem failed:"+e.getLocalizedMessage());
-        }
-	}
-
-	public void tearDownConnection() throws IOException {
-		coreSys.close();
-	}
-
-	public void createFile(String filename, byte [] buffer, int startPos, int readCount){
-		Path path = new Path(rootPath + filename);
-		try {
-			FSDataOutputStream fsout = coreSys.create(path);
-			fsout.write(buffer, startPos, readCount);
-			fsout.close();
-		} catch (IOException e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.error("create file in HDFS failed!");
-		}
-	}
-
-	public void appendFile(String filename, byte [] buffer, int startPos, int readCount){
-		Path path = new Path(rootPath + filename);
-		try {
-			FSDataOutputStream fsout = coreSys.append(path);
-			fsout.write(buffer, startPos, readCount);
-			fsout.close();
-		} catch (IOException e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.error("append data to HDFS failed!");
-		}
-	}
-
-	public boolean checkFileExist(String filename) throws IOException {
-        Path path = new Path(rootPath + filename);
-        return coreSys.exists(path);
-    }
-
 	public static void writeFile(String filename, byte[] buffer, int readCount) throws IOException {
+		conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsClient.class));
 		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
 		Path fileFullName = new Path(rootPath + filename);
 		FSDataOutputStream fsOut = fileSystem.exists(fileFullName) ? fileSystem.append(fileFullName) : fileSystem.create(fileFullName) ;
@@ -80,6 +37,7 @@ public class HdfsHelper {
 	}
 
 	public static long getFileLength(String fileName) throws IOException {
+		conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsClient.class));
 		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
 		Path fileFullName = new Path(rootPath + fileName);
 		while(true){

@@ -5,7 +5,7 @@ import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
 public class FileInfoBean {
 	@JsonIgnore
 //	public static int BUFFER_SIZE = 50;
-	public static int BUFFER_SIZE = 123 * 1024;
+	public static int BUFFER_SIZE = 512 * 1024;
 
 	public long offset;
 	public byte [] buffer;

@@ -15,6 +15,7 @@ import net.sf.json.JSONObject;
 
 @WebServlet("/fileinfo")
 public class GetFileInfo extends HttpServlet{
+
 	private static Logger logger = Logger.getLogger(GetFileInfo.class);
 
 	@Override
@@ -51,24 +52,7 @@ public class GetFileInfo extends HttpServlet{
 		}
     }
 
-    protected void doPost2(HttpServletRequest req, HttpServletResponse resp){
-    	Map<String, FileInfoBean> fileInfoMap = HdfsProxyServlet.getFileInfo();
-    	JSONObject json = JSONObject.fromObject(fileInfoMap);
-//    	System.out.println(json.toString());
-
-    	resp.setHeader("Content-type", "text/html;charset=UTF-8");
-    	PrintWriter pw;
-		try {
-			pw = resp.getWriter();
-			pw.write(json.toString());
-	        pw.flush();
-	        pw.close();
-		} catch (IOException e) {
-			BeaverUtils.PrintStackTrace(e);
-			logger.error("get file info failed!");
-		}
-    }
-
 	public static void main(String[] args) {
 	}
+
 }
