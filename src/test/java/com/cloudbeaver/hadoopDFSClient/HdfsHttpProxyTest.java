@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -19,18 +20,18 @@ import com.cloudbeaver.hdfsHttpProxy.HdfsClient;
 public class HdfsHttpProxyTest extends HdfsClient{
 	private static Logger logger = Logger.getLogger(HdfsHttpProxyTest.class);
 	private static String fileFullName = "/home/beaver/Documents/test/hadoop/harry.txt";
-//	private static String filename = "/home/beaver/Documents/test/hadoop/test.txt";
+//	private static String fileFullName = "/home/beaver/Documents/test/hadoop/test.txt";
 	private static String urlPrefix = "http://localhost:8811/uploaddata?fileName=";
 //	private static String urlPrefix = "http://localhost/?filename=";
 	private static String hdfsPrefix = "hdfs://localhost:9000/test/";
 //	private static String fileInfoUrl = "http://localhost:8090/fileinfo";
-	private static int UPLOAD_SIZE = 1024 * 1024;
-//	private static int UPLOAD_SIZE = 100;
+//	private static int UPLOAD_SIZE = 1024 * 1024;
+	private static int UPLOAD_SIZE = 100;
 	private FileSystem coreSys=null;
-	private  Configuration conf = new Configuration();
-	{
+	private static  Configuration conf = new Configuration();
+	static{
 		try {
-			conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(DFSClientTest.class));
+			conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsClient.class));
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -41,11 +42,12 @@ public class HdfsHttpProxyTest extends HdfsClient{
 	public void testUploadFileDataByBatch(){
 		String fileName = fileFullName.substring(fileFullName.lastIndexOf("/")+1);
 		String url = urlPrefix + fileName;
-		EXCEPTION_TEST_MODE = false;
 		try {
 			for(int i = 0; i < 10; i++){
+				logger.info("execute " + (i+1) + " upload");
 				uploadFileDataWithLength(fileFullName,url,UPLOAD_SIZE);
-			}
+				BeaverUtils.sleep(100);
+			}		
 			logger.info("upload data to HDFS succeed!");
 			String hdfsData = getMd5ByString(readFromHdfs(fileFullName.substring(fileFullName.lastIndexOf("/")+1)));
 			String localData = getMd5ByString(readFromLocal(fileFullName));
@@ -60,7 +62,6 @@ public class HdfsHttpProxyTest extends HdfsClient{
 	public void testUploadFileData(){
 		String fileName = fileFullName.substring(fileFullName.lastIndexOf("/")+1);
 		String url = urlPrefix + fileName;
-		EXCEPTION_TEST_MODE = false;
 		try {
 			doUploadFileData(fileFullName, url);
 			logger.info("upload data to HDFS succeed!");

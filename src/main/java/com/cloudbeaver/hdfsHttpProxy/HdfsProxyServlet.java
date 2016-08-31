@@ -27,6 +27,7 @@ public class HdfsProxyServlet extends HttpServlet{
     	ServletInputStream servletInputStream = req.getInputStream();
     	int readNumTillNow = 0, len = 0;
     	while((len = servletInputStream.read(buffer, readNumTillNow, BUFFER_SIZE - readNumTillNow)) != -1){
+    		System.out.println("len = " + len);
 			readNumTillNow += len;
 			if(readNumTillNow == BUFFER_SIZE){
 				HdfsHelper.writeFile(filename, buffer, readNumTillNow);
@@ -37,10 +38,18 @@ public class HdfsProxyServlet extends HttpServlet{
 				BeaverUtils.clearByteArray(buffer);
 			}
 		}
+    	System.out.println("len = " + len);
 
 //    	read to the end of the file
     	if (readNumTillNow > 0) {
+    		logger.info("readNumTillNow = " + readNumTillNow);
+    		logger.info("Start writing data to HDFS");
     		HdfsHelper.writeFile(filename, buffer, readNumTillNow);
+//    		while(true){
+//    			System.out.println("writing " + System.currentTimeMillis());
+//    			BeaverUtils.sleep(1000);
+//    		}
+    		logger.info("Finish writing data to HDFS");
 		}
     }
 }

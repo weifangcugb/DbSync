@@ -13,9 +13,10 @@ import com.cloudbeaver.client.common.BeaverUtils;
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
 	private static final int HTTP_PORT = 8811;
+	private Server server;
 
     public void start(){
-        Server server = new Server();
+        server = new Server();
 
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(HTTP_PORT);
@@ -29,7 +30,7 @@ public class HdfsProxyServer{
         HandlerCollection handlers = new HandlerCollection();
         handlers.setHandlers(new Handler[] { context, new DefaultHandler() });
         server.setHandler(handlers);
- 
+
         try {
         	server.start();
             server.join();
@@ -38,6 +39,22 @@ public class HdfsProxyServer{
 			logger.fatal("hdfs proxy server can't start");
 		}
     }
+
+    public void stop(){
+		if (server != null) {
+			try {
+				server.stop();
+			} catch (Exception e) {
+				BeaverUtils.PrintStackTrace(e);
+				logger.error("mock server can't stop");
+			}
+		}
+	}
+
+    public static void stopHdfsProxyServer(){
+		HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();
+		hdfsProxyServer.stop();
+	}
 
     public static void startHdfsProxyServer(){
 		HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();

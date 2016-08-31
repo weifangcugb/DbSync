@@ -54,5 +54,4 @@ public class GetFileInfo extends HttpServlet{
 
 	public static void main(String[] args) {
 	}
-
 }
