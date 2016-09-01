@@ -1,4 +1,4 @@
-package com.cloudbeaver.hdfsHttpProxy;
+package com.cloudbeaver.hdfsHttpProxy.proxybean;
 
 import java.io.IOException;
 import javax.servlet.ServletException;
@@ -9,19 +9,29 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.common.HdfsHelper;
 
 @WebServlet("/uploaddata")
 public class HdfsProxyServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(HdfsProxyServlet.class);
-	public static int BUFFER_SIZE = 64 * 1024 * 1024;
+	public static int BUFFER_SIZE;
 
 	@Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	doPost(req, resp);
     }
 
-    @Override
+    public static int getBUFFER_SIZE() {
+		return BUFFER_SIZE;
+	}
+
+	public static void setBUFFER_SIZE(int bUFFER_SIZE) {
+		BUFFER_SIZE = bUFFER_SIZE;
+	}
+
+	@Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+		setBUFFER_SIZE(HdfsProxyServer.getConf().getBufferSize());
     	logger.info("start upload data to HDFS");
     	String filename = req.getParameter("fileName");
     	byte[] buffer = new byte[BUFFER_SIZE];

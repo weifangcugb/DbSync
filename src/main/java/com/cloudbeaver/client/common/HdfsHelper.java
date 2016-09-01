@@ -1,4 +1,4 @@
-package com.cloudbeaver.hdfsHttpProxy;
+package com.cloudbeaver.client.common;
 
 import java.io.IOException;
 import java.net.URI;
@@ -10,7 +10,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.BeaverCommonUtil;
 import org.apache.log4j.Logger;
 
-import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyClient;
 
 public class HdfsHelper {
 	private static Logger logger = Logger.getLogger(HdfsHelper.class);

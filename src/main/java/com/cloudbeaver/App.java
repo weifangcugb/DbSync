@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.fileUploader.FileUploader;
-import com.cloudbeaver.hdfsHttpProxy.HdfsProxyServer;
+import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServer;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.cloudbeaver.server.brokermonitor.BrokerMonitorWebServer;
 import com.cloudbeaver.server.consumer.SyncConsumer;

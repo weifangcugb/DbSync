@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.URI;
-
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -16,7 +15,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.hdfsHttpProxy.HdfsProxyClient;
+import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyClient;
 
 import net.sf.json.JSONObject;
 

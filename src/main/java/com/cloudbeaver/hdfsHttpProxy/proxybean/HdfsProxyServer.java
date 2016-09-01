@@ -1,4 +1,4 @@
-package com.cloudbeaver.hdfsHttpProxy;
+package com.cloudbeaver.hdfsHttpProxy.proxybean;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Connector;
@@ -8,24 +8,35 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.FileSystemXmlApplicationContext;
+
 import com.cloudbeaver.client.common.BeaverUtils;
 
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
-	private static final int HTTP_PORT = 8811;
+	private static HdfsProxyConf conf;
 	private Server server;
 
-    public void start(){
+    public static HdfsProxyConf getConf() {
+		return conf;
+	}
+
+	public static void setConf(HdfsProxyConf conf) {
+		HdfsProxyServer.conf = conf;
+	}
+
+	public void start(){
         server = new Server();
 
         ServerConnector connector = new ServerConnector(server);
-        connector.setPort(HTTP_PORT);
+        connector.setPort(conf.getPort());
         server.setConnectors(new Connector[] { connector });
 
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
         context.addServlet(HdfsProxyServlet.class, "/uploaddata");
-        context.addServlet(GetFileInfo.class, "/fileinfo");
+        context.addServlet(GetFileInfoServlet.class, "/fileinfo");
 
         HandlerCollection handlers = new HandlerCollection();
         handlers.setHandlers(new Handler[] { context, new DefaultHandler() });
@@ -57,6 +68,9 @@ public class HdfsProxyServer{
 	}
 
     public static void startHdfsProxyServer(){
+    	ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyConf.xml");
+    	conf = appContext.getBean("HdfsProxyConf", HdfsProxyConf.class);
+
 		HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();
 		hdfsProxyServer.start();
 	}

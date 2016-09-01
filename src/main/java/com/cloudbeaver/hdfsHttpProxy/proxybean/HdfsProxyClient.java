@@ -1,4 +1,4 @@
-package com.cloudbeaver.hdfsHttpProxy;
+package com.cloudbeaver.hdfsHttpProxy.proxybean;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;

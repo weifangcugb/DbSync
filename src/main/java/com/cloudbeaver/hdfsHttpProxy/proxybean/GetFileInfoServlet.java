@@ -1,4 +1,4 @@
-package com.cloudbeaver.hdfsHttpProxy;
+package com.cloudbeaver.hdfsHttpProxy.proxybean;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -9,12 +9,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.common.HdfsHelper;
+
 import net.sf.json.JSONObject;
 
 @WebServlet("/fileinfo")
-public class GetFileInfo extends HttpServlet{
+public class GetFileInfoServlet extends HttpServlet{
 
-	private static Logger logger = Logger.getLogger(GetFileInfo.class);
+	private static Logger logger = Logger.getLogger(GetFileInfoServlet.class);
 
 	@Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
