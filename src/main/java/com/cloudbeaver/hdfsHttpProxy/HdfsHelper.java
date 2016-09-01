@@ -19,7 +19,8 @@ public class HdfsHelper {
 	private static  Configuration conf = new Configuration();
 	static {
 		try {
-			conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsClient.class));
+			conf.set(BeaverCommonUtil.BEAVER_MODULE_TOKEN_CONF, BeaverCommonUtil.getAccessToken(HdfsProxyClient.class));
+			logger.info("HDFS conf has been set");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);

@@ -22,12 +22,13 @@ public class HdfsProxyServlet extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+    	logger.info("start upload data to HDFS");
     	String filename = req.getParameter("fileName");
     	byte[] buffer = new byte[BUFFER_SIZE];
     	ServletInputStream servletInputStream = req.getInputStream();
     	int readNumTillNow = 0, len = 0;
     	while((len = servletInputStream.read(buffer, readNumTillNow, BUFFER_SIZE - readNumTillNow)) != -1){
-    		System.out.println("len = " + len);
+    		logger.info("len = " + len);
 			readNumTillNow += len;
 			if(readNumTillNow == BUFFER_SIZE){
 				HdfsHelper.writeFile(filename, buffer, readNumTillNow);
@@ -38,7 +39,7 @@ public class HdfsProxyServlet extends HttpServlet{
 				BeaverUtils.clearByteArray(buffer);
 			}
 		}
-    	System.out.println("len = " + len);
+    	logger.info("len = " + len);
 
 //    	read to the end of the file
     	if (readNumTillNow > 0) {
