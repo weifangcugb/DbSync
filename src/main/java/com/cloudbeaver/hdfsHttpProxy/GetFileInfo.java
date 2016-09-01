@@ -24,13 +24,16 @@ public class GetFileInfo extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
     	String fileName = req.getParameter("fileName");
-    	long length = HdfsHelper.getFileLength(fileName);
+    	long length = HdfsHelper.getFileLength(fileName);    	
+    	JSONObject jsonObject = new JSONObject();
+    	jsonObject.put("file", fileName);
+    	jsonObject.put("length", length);
 
     	resp.setHeader("Content-type", "text/html;charset=UTF-8");
     	PrintWriter pw;
 		try {
 			pw = resp.getWriter();
-			pw.write(String.valueOf(length));
+			pw.write(jsonObject.toString());
 	        pw.flush();
 	        pw.close();
 		} catch (IOException e) {

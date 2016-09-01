@@ -46,7 +46,7 @@ public class HdfsHelper {
 					fsOut.close();
 					return fileSystem.getFileStatus(fileFullName).getLen();
 				}else{
-					return 0;
+					return -1;
 				}
 			}catch (IOException e) {
 				BeaverUtils.printLogExceptionAndSleep(e, "got exception when open a stream", 5000);

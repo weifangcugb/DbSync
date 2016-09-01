@@ -18,6 +18,8 @@ import org.junit.Test;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.hdfsHttpProxy.HdfsProxyClient;
 
+import net.sf.json.JSONObject;
+
 public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 	private static Logger logger = Logger.getLogger(HdfsHttpProxyClientTest.class);
 	private static String fileInfoUrl = "http://localhost:8811/fileinfo";
@@ -46,9 +48,14 @@ public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 		RandomAccessFile in;
 		boolean doesUploadSueeccd = true;
 		try {
-			String length = BeaverUtils.doGet(fileInfoUrl+"?fileName="+fileName);
 			in = new RandomAccessFile(fileFullName,"r");
-			in.seek(Long.parseLong(length));
+			long seekPos = 0;
+			String json = BeaverUtils.doGet(fileInfoUrl + "?fileName=" + fileName);
+			JSONObject jsonObject = JSONObject.fromObject(json);
+			if(fileName.equals(jsonObject.get("file")) && !jsonObject.get("length").equals(-1)){
+				 seekPos = Long.valueOf(jsonObject.get("length").toString());
+			}
+			in.seek(seekPos);
 	        byte [] readBuf = new byte[UPLOAD_SIZE];
 	        int readCount = 0;
 	        int len = 0;
@@ -181,7 +188,7 @@ public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 
 	public static void main(String[] args) {
 		HdfsHttpProxyClientTest hdfsHttpProxyTest = new HdfsHttpProxyClientTest();
-		hdfsHttpProxyTest.testUploadFileDataByBatch();
-//		hdfsHttpProxyTest.testUploadFileData();
+//		hdfsHttpProxyTest.testUploadFileDataByBatch();
+		hdfsHttpProxyTest.testUploadFileData();
 	}
 }
