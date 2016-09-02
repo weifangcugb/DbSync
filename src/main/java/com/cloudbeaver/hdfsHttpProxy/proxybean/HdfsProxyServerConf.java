@@ -1,6 +1,6 @@
 package com.cloudbeaver.hdfsHttpProxy.proxybean;
 
-public class HdfsProxyConf {
+public class HdfsProxyServerConf {
 	private int port;
 	private static int bufferSize;
 
@@ -17,6 +17,6 @@ public class HdfsProxyConf {
 	}
 
 	public static void setBufferSize(int bufferSize) {
-		HdfsProxyConf.bufferSize = bufferSize;
+		HdfsProxyServerConf.bufferSize = bufferSize;
 	}
 }

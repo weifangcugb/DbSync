@@ -12,18 +12,18 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyConf;
+import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServerConf;
 
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
-	private static HdfsProxyConf conf;
+	private static HdfsProxyServerConf conf;
 	private Server server;
 
-    public static HdfsProxyConf getConf() {
+    public static HdfsProxyServerConf getConf() {
 		return conf;
 	}
 
-	public static void setConf(HdfsProxyConf conf) {
+	public static void setConf(HdfsProxyServerConf conf) {
 		HdfsProxyServer.conf = conf;
 	}
 
@@ -70,7 +70,7 @@ public class HdfsProxyServer{
 
     public static void startHdfsProxyServer(){
     	ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyConf.xml");
-    	conf = appContext.getBean("HdfsProxyConf", HdfsProxyConf.class);
+    	conf = appContext.getBean("HdfsProxyConf", HdfsProxyServerConf.class);
 
 		HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();
 		hdfsProxyServer.start();
