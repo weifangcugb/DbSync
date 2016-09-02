@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -46,6 +47,9 @@ public class BeaverUtils {
 	public static boolean DEBUG_MODE = true;
 
 	private static SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+
+	private static final PostStringUploader postStringUploader = new PostStringUploader();
+	private static final PostFileUploader postFileUploader = new PostFileUploader();
 
 	public static void PrintStackTrace(Exception e) {
 		if (DEBUG_MODE) {
@@ -113,14 +117,18 @@ public class BeaverUtils {
 			first = false;
 			sb.append(key).append('=').append(paraMap.get(key));
 		}
-		return doPost(webUrl, sb.toString(), contentType);
+		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader);
 	}
 
 	public static String doPost(String urlString, String flumeJson) throws IOException {
-		return doPost(urlString, flumeJson, "application/json").toString();
+		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader).toString();
 	}
 
-	private static StringBuilder doPost(String urlString, String flumeJson, String contentType) throws IOException {
+	public static String doPostBigFile(String urlString, String fileName, long seekPos) throws IOException {
+		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader).toString();
+	}
+
+	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader) throws IOException {
 		BufferedReader br = null;
 		HttpURLConnection urlConnection = null;
 		try {
@@ -132,77 +140,25 @@ public class BeaverUtils {
 	        urlConnection = (HttpURLConnection) url.openConnection();
 	        urlConnection.setRequestMethod("POST");
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
-	        urlConnection.setRequestProperty("Content-Length", "" + flumeJson.length());
+	        postUploader.setUrlConnectionProperty(urlConnection, content);
 	        urlConnection.setConnectTimeout(20000);
 	        urlConnection.setDoInput(true);
 	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
 
-	        if (flumeJson != null) {
+	        if (content != null) {
 		        urlConnection.setDoOutput(true);
-		        PrintWriter pWriter = new PrintWriter((urlConnection.getOutputStream()));
-		        pWriter.write(flumeJson);
-		        pWriter.flush();
-		        pWriter.close();				
-			}
-
-	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-	        String line = "";
-	        StringBuilder sb = new StringBuilder();
-	        while ((line = in.readLine()) != null) {
-	            sb.append(line);
-	        }
-
-	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + urlConnection.getResponseCode() + " reply:" + sb.toString());
-	        return sb;
-		}finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					logger.error("close url reader error, msg:" + e.getMessage() + " url:" + urlString);
-				}
-			}
-		}
-	}
-
-	public static StringBuilder doPost(String urlString, String contentType, boolean EXCEPTION_TEST_MODE, byte[] data, int startPos, int len) throws IOException{
-		BufferedReader br = null;
-		HttpURLConnection urlConnection = null;
-		try {
-			if (urlString.indexOf("http://") == -1) {
-				urlString = "http://" + urlString;
-			}
-
-	        URL url = new URL(urlString);
-	        urlConnection = (HttpURLConnection) url.openConnection();
-	        urlConnection.setRequestMethod("POST");
-	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");
-	        urlConnection.setRequestProperty("Content-Length", "" + data.length);
-	        urlConnection.setConnectTimeout(20000);
-	        urlConnection.setDoInput(true);
-	        urlConnection.setDoOutput(true);
-	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
-
-	        if (data != null) {
-		        DataOutputStream out = new DataOutputStream((urlConnection.getOutputStream()));
-		        out.write(data, startPos, len/2);
-		        out.flush();
-		        logger.info("write half of the data");
-		        if(EXCEPTION_TEST_MODE){
-		        	throw new IOException();
-		        }
-		        out.write(data, startPos + len/2, len - len/2);
-		        logger.info("write left half of the data");
-		        out.flush();
+		        OutputStream out = urlConnection.getOutputStream();
+		        postUploader.upload(out, content, startIdx);
 		        out.close();
 			}
 
+	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 	        String line = "";
 	        StringBuilder sb = new StringBuilder();
-	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 	        while ((line = in.readLine()) != null) {
 	            sb.append(line);
 	        }
+
 	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + urlConnection.getResponseCode() + " reply:" + sb.toString());
 	        return sb;
 		}finally {
