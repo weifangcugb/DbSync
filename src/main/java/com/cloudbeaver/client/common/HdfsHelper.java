@@ -9,8 +9,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.BeaverCommonUtil;
 import org.apache.log4j.Logger;
-
-import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyClient;
+import com.cloudbeaver.hdfsHttpProxy.HdfsProxyClient;
 
 public class HdfsHelper {
 	private static Logger logger = Logger.getLogger(HdfsHelper.class);

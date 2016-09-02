@@ -1,4 +1,4 @@
-package com.cloudbeaver.hdfsHttpProxy.proxybean;
+package com.cloudbeaver.hdfsHttpProxy;
 
 import java.io.IOException;
 import javax.servlet.ServletException;

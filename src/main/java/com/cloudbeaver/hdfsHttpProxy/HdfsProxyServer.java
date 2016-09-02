@@ -1,4 +1,4 @@
-package com.cloudbeaver.hdfsHttpProxy.proxybean;
+package com.cloudbeaver.hdfsHttpProxy;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Connector;
@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyConf;
 
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);

@@ -15,7 +15,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyClient;
+import com.cloudbeaver.hdfsHttpProxy.HdfsProxyClient;
 
 import net.sf.json.JSONObject;
 
