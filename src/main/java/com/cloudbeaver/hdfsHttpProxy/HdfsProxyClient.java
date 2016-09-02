@@ -1,14 +1,6 @@
 package com.cloudbeaver.hdfsHttpProxy;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.RandomAccessFile;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 
