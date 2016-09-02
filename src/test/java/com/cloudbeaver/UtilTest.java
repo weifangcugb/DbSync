@@ -12,6 +12,8 @@ import net.sf.json.JSONObject;
 
 import org.junit.Assert;
 import org.junit.Test;
+//import org.mindrot.jbcrypt.BCrypt;
+import org.mindrot.jbcrypt.BCrypt;
 
 import com.cloudbeaver.client.common.BeaverUtils;
 
@@ -94,8 +96,28 @@ public class UtilTest {
 		Assert.assertEquals(sign, "D5421D0BCF81CA97810541D91897075A");
 	}
 
+	@Test
+	public void testBCrypt(){
+		// Hash a password for the first time
+//		String hashed = BCrypt.hashpw("apple", BCrypt.gensalt());
+		String hashed = BCrypt.hashpw("apple", "$2a$10$E4QgvqjJQjOv8bM19vvkJu");
+//		$2a$10$E4QgvqjJQjOv8bM19vvkJuvE.1fTdhoMF8TuLUIBobBISXesmF9MO
+		System.out.println(hashed);
+		// gensalt's log_rounds parameter determines the complexity
+		// the work factor is 2**log_rounds, and the default is 10
+//		String hashed = BCrypt.hashpw(password, BCrypt.gensalt(12));
+
+		// Check that an unencrypted password matches one that has
+		// previously been hashed
+		if (BCrypt.checkpw("apple", hashed))
+			System.out.println("It matches");
+		else
+			System.out.println("It does not match");
+	}
+
 	public static void main(String[] args) throws NoSuchAlgorithmException {
 		UtilTest uTest = new UtilTest();
-		uTest.testAppSign();
+//		uTest.testAppSign();
+		uTest.testBCrypt();
 	}
 }
