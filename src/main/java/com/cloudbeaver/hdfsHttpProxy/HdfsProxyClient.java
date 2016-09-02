@@ -14,7 +14,7 @@ import net.sf.json.JSONObject;
 
 public class HdfsProxyClient {
 	private static Logger logger = Logger.getLogger(HdfsProxyClient.class);
-	private static String fileInfoUrl = "http://localhost:8811/fileinfo";
+	private static String fileInfoUrl = "http://localhost/fileinfo";
 	private static int READ_BUFFER_SIZE = 1024 * 10;
 	private static String contentType = "application/octet-stream";
 
