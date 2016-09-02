@@ -38,15 +38,15 @@ class PostFileUploader implements PostUploader{
 
 	@Override
 	public void upload(OutputStream out, String fileName, long startIdx) throws IOException {
-		RandomAccessFile in = new RandomAccessFile(fileName, "r");
-		in.seek(startIdx);
-		byte[] readBuf = new byte[READ_BUFFER_SIZE];
-		int len = 0;
-		while ((len = in.read(readBuf)) != -1) {
-			out.write(readBuf, 0, len);
-			out.flush();
-//			BeaverUtils.sleep(100);
+		try( RandomAccessFile in = new RandomAccessFile(fileName, "r") ){
+			in.seek(startIdx);
+			byte[] readBuf = new byte[READ_BUFFER_SIZE];
+			int len = 0;
+			while ((len = in.read(readBuf)) != -1) {
+				out.write(readBuf, 0, len);
+				out.flush();
+//				BeaverUtils.sleep(100);
+			}
 		}
-		in.close();
 	}
 }

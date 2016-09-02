@@ -145,9 +145,9 @@ public class BeaverUtils {
 
 	        if (content != null) {
 		        urlConnection.setDoOutput(true);
-		        OutputStream out = urlConnection.getOutputStream();
-		        postUploader.upload(out, content, startIdx);
-		        out.close();
+		        try( OutputStream out = urlConnection.getOutputStream() ){
+		        	postUploader.upload(out, content, startIdx);
+		        }
 			}
 
 	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
