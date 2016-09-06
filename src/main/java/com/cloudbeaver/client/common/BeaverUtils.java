@@ -15,8 +15,11 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +33,12 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -48,6 +57,21 @@ public class BeaverUtils {
 
 	private static final PostStringUploader postStringUploader = new PostStringUploader();
 	private static final PostFileUploader postFileUploader = new PostFileUploader();
+
+	private static TrustManager myX509TrustManager = new X509TrustManager() {
+		@Override 
+		public X509Certificate[] getAcceptedIssuers() { 
+			return null; 
+		} 
+
+		@Override 
+		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
+		} 
+
+		@Override 
+		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
+		} 
+	};
 
 	public static void PrintStackTrace(Exception e) {
 		if (DEBUG_MODE) {
@@ -128,14 +152,24 @@ public class BeaverUtils {
 
 	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader) throws IOException {
 		BufferedReader br = null;
-		HttpURLConnection urlConnection = null;
+		StringBuilder sb = new StringBuilder();
+		HttpsURLConnection urlConnection = null;
 		try {
-			if (urlString.indexOf("http://") == -1) {
-				urlString = "http://" + urlString;
+			if (urlString.indexOf("https://") == -1 && urlString.indexOf("http://") == -1) {
+				urlString = "https://" + urlString;
 			}
 
+			SSLContext sslcontext = SSLContext.getInstance("TLS"); 
+			sslcontext.init(null, new TrustManager[]{myX509TrustManager}, null);
+
 	        URL url = new URL(urlString);
-	        urlConnection = (HttpURLConnection) url.openConnection();
+	        urlConnection = (HttpsURLConnection) url.openConnection();
+	        urlConnection.setSSLSocketFactory(sslcontext.getSocketFactory());
+	        urlConnection.setHostnameVerifier(new HostnameVerifier() {
+	            public boolean verify(String hostname, SSLSession session) {
+	              return true;
+	            }
+	        });
 	        urlConnection.setRequestMethod("POST");
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
 	        postUploader.setUrlConnectionProperty(urlConnection, content);
@@ -152,13 +186,13 @@ public class BeaverUtils {
 
 	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 	        String line = "";
-	        StringBuilder sb = new StringBuilder();
 	        while ((line = in.readLine()) != null) {
 	            sb.append(line);
 	        }
 
 	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + urlConnection.getResponseCode() + " reply:" + sb.toString());
-	        return sb;
+		} catch (NoSuchAlgorithmException | KeyManagementException e) {
+			logger.error("connect to url error, msg:" + e.getMessage() + " url:" + urlString);
 		}finally {
 			if (br != null) {
 				try {
@@ -168,6 +202,7 @@ public class BeaverUtils {
 				}
 			}
 		}
+        return sb;
 	}
 
 	/*

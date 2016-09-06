@@ -15,6 +15,7 @@ public class HdfsProxyClient {
 	private String fileInfoUrl;
 	private String userName;
 	private String passWd;
+	private String tableUrl;
 
 	public void doUploadFileData(String fileFullName, String urlString) {
 		ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyClientInfoConf.xml");
@@ -22,11 +23,13 @@ public class HdfsProxyClient {
 		fileInfoUrl = hdfsProxyInfoConf.getFileInfoUrl();
 		userName = hdfsProxyInfoConf.getUserName();
 		passWd = hdfsProxyInfoConf.getPassWd();
+		tableUrl = hdfsProxyInfoConf.getTableUrl();
 		while(true) {
 			try{
 				JSONObject jsonObject = new JSONObject();
 		    	jsonObject.put("userName", userName);
 		    	jsonObject.put("passWd", passWd);
+		    	jsonObject.put("tableUrl", tableUrl);
 
 //				first, sync position with web server
 		        long seekPos = 0;
@@ -36,6 +39,9 @@ public class HdfsProxyClient {
 				jsonObject = JSONObject.fromObject(json);
 				if(fileName.equals(jsonObject.get("fileName")) && !jsonObject.get("length").equals(-1)){
 					 seekPos = Long.valueOf(jsonObject.get("length").toString());
+				}
+				else if(!fileName.equals(jsonObject.get("fileName"))){
+					throw new IllegalArgumentException("file doesn't match");
 				}
 
 //				then, open the url stream and write util the end of the file
@@ -50,7 +56,7 @@ public class HdfsProxyClient {
 
 	public static void main(String[] args) {
 		String filename = "/home/beaver/Documents/test/hadoop/harry.txt";
-		String url = "http://localhost:8811/uploaddata?fileName=" + filename.substring(filename.lastIndexOf("/") + 1);
+		String url = "https://localhost:8811/uploaddata?fileName=" + filename.substring(filename.lastIndexOf("/") + 1);
 		HdfsProxyClient hdfsHttpClient = new HdfsProxyClient();
 		hdfsHttpClient.doUploadFileData(filename, url);
 	}

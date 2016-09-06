@@ -8,10 +8,10 @@
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"> 
  
 	<bean id="HdfsProxyClientInfoConf" class="com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyClientInfoConf">
-    	<property name="fileInfoUrl" value="http://localhost/fileinfo" />
+    	<property name="fileInfoUrl" value="https://localhost/getFileInfo" />
     	<property name="userName" value="power@power.com" />
     	<property name="passWd" value="apple"/>
-    	<property name="tableId" value="upload://table/db5a8742-6460-11e6-bba9-09259609bdc7/0f2vxj_HBA2xzBdu " />
+    	<property name="tableUrl" value="upload://table/db5a8742-6460-11e6-bba9-09259609bdc7/0f2vxj_HBA2xzBdu " />
     </bean>
 
 </beans>

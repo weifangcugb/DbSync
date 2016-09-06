@@ -21,10 +21,10 @@ import net.sf.json.JSONObject;
 
 public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 	private static Logger logger = Logger.getLogger(HdfsHttpProxyClientTest.class);
-	private static String fileInfoUrl = "http://localhost/fileinfo";
+	private static String fileInfoUrl = "https://localhost/getFileInfo";
 	private static String fileFullName = "/home/beaver/Documents/test/hadoop/harry.txt";
 //	private static String fileFullName = "/home/beaver/Documents/test/hadoop/test.txt";
-	private static String urlPrefix = "http://localhost/uploaddata?fileName=";
+	private static String urlPrefix = "https://localhost/uploadData?fileName=";
 	private static String hdfsPrefix = "hdfs://localhost:9000/test/";
 	private static int UPLOAD_SIZE = 1024 * 1024;
 	private static int UPLOAD_RETRY_TIMES = 16;

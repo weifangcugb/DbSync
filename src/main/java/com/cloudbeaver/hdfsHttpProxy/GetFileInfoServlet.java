@@ -23,10 +23,9 @@ import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.HdfsHelper;
 import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
-
 import net.sf.json.JSONObject;
 
-@WebServlet("/fileinfo")
+@WebServlet("/getFileInfo")
 public class GetFileInfoServlet extends HttpServlet{
 
 	private static Logger logger = Logger.getLogger(GetFileInfoServlet.class);
@@ -49,6 +48,7 @@ public class GetFileInfoServlet extends HttpServlet{
         String fileName = jsonObject.get("fileName").toString();
         String userName = jsonObject.get("userName").toString();
         String passWd = jsonObject.get("passWd").toString();
+        String tableUrl = jsonObject.get("tableUrl").toString();
 
         DatabaseBean dbBean = new DatabaseBean();
         dbBean.setDb("beaver_web_development");
@@ -56,20 +56,17 @@ public class GetFileInfoServlet extends HttpServlet{
         dbBean.setDbPassword("123456");
         dbBean.setType("postgresDB");
         dbBean.setDbUrl("jdbc:postgresql://localhost/beaver_web_development");
-        try {
+    	try {
 			Connection conn = SqlHelper.getConn(dbBean);
 			Statement st = conn.createStatement();
 			String sql = "select * from \"Users\" where email = '" + userName + "';";
 			System.out.println(sql);
 			ResultSet rs = st.executeQuery(sql);
-			String salt = null;	
 			String password = null;
 			while (rs.next()){
-				salt = rs.getString("salt");
 				password = rs.getString("password");
-				String hashed = BCrypt.hashpw(passWd, salt);
-				logger.info("password = " + hashed);
-				if(hashed.equals(password)){
+				logger.info("password = " + password);
+				if(BCrypt.checkpw(passWd, password)){
 					logger.info("user matches");
 				}
 				else{
@@ -77,8 +74,9 @@ public class GetFileInfoServlet extends HttpServlet{
 				}
 			}
 		} catch (BeaverFatalException | SQLException e1) {
-			BeaverUtils.PrintStackTrace(e1);
-			logger.error("connect to database failed");
+			logger.error("connect to database failed!");
+			BeaverUtils.printLogExceptionAndSleep(e1, "connect to database failed!", 5000);
+			return ;
 		}
 
     	long length = HdfsHelper.getFileLength(fileName);

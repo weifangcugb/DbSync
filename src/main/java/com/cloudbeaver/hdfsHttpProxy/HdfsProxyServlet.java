@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.HdfsHelper;
 
-@WebServlet("/uploaddata")
+@WebServlet("/uploadData")
 public class HdfsProxyServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(HdfsProxyServlet.class);
 	public static int BUFFER_SIZE;

@@ -4,16 +4,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
-import java.net.HttpURLConnection;
+import javax.net.ssl.HttpsURLConnection;
 
 interface PostUploader {
-	void setUrlConnectionProperty(HttpURLConnection urlConnection, String content);
+	void setUrlConnectionProperty(HttpsURLConnection urlConnection, String content);
 	void upload(OutputStream out, String content, long startIdx) throws IOException;
 }
 
 class PostStringUploader implements PostUploader{
 	@Override
-	public void setUrlConnectionProperty(HttpURLConnection urlConnection, String content) {
+	public void setUrlConnectionProperty(HttpsURLConnection urlConnection, String content) {
 		urlConnection.setRequestProperty("Content-Length", "" + content.length());		
 	}
 
@@ -30,7 +30,7 @@ class PostFileUploader implements PostUploader{
 	private static int READ_BUFFER_SIZE = 1024 * 10;
 
 	@Override
-	public void setUrlConnectionProperty(HttpURLConnection urlConnection, String content) {
+	public void setUrlConnectionProperty(HttpsURLConnection urlConnection, String content) {
 //      urlConnection.setUseCaches(false);
 		urlConnection.setChunkedStreamingMode(0);
 //      urlConnection.connect();
