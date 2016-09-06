@@ -2,16 +2,12 @@ package com.cloudbeaver.hdfsHttpProxy;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.handler.DefaultHandler;
-import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.springframework.context.ApplicationContext;
@@ -36,9 +32,12 @@ public class HdfsProxyServer{
 	public void start(){
         server = new Server();
 
+        ServerConnector http_connector = new ServerConnector(server);
+        http_connector.setPort(conf.getHttp_port());
+
         HttpConfiguration https_config = new HttpConfiguration();
         https_config.setSecureScheme("https");
-        https_config.setSecurePort(conf.getPort());
+        https_config.setSecurePort(conf.getHttps_port());
         https_config.setOutputBufferSize(10485760);
         https_config.setRequestHeaderSize(10485760);
         https_config.addCustomizer(new SecureRequestCustomizer());
@@ -48,10 +47,10 @@ public class HdfsProxyServer{
         sslContextFactory.setKeyStorePassword("OBF:19iy19j019j219j419j619j8");
         sslContextFactory.setKeyManagerPassword("OBF:19iy19j019j219j419j619j8");
 
-        ServerConnector connector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory,"http/1.1"), new HttpConnectionFactory(https_config));
-        connector.setPort(conf.getPort());
-        connector.setIdleTimeout(500000);
-        server.setConnectors(new Connector[]{ connector });
+        ServerConnector https_connector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory,"http/1.1"), new HttpConnectionFactory(https_config));
+        https_connector.setPort(conf.getHttps_port());
+        https_connector.setIdleTimeout(500000);
+        server.setConnectors(new Connector[]{ http_connector, https_connector });
 
         WebAppContext webApp = new WebAppContext();
         webApp.setContextPath("/");

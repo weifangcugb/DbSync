@@ -8,7 +8,8 @@
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"> 
  
 	<bean id="HdfsProxyConf" class="com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServerConf">
-    	<property name="port" value="8811" />
+    	<property name="http_port" value="8833" />
+    	<property name="https_port" value="8811" />
     	<property name="bufferSize" value="102400" />
     </bean>
 
