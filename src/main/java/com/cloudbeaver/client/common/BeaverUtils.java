@@ -15,6 +15,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -46,6 +47,19 @@ import org.apache.log4j.Logger;
 //import com.sun.image.codec.jpeg.JPEGCodec;
 //import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
+class beaverTrustManager implements X509TrustManager{
+	@Override 
+	public X509Certificate[] getAcceptedIssuers() {
+		return null; 
+	}
+	@Override 
+	public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
+	}
+	@Override 
+	public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
+	}
+}
+
 public class BeaverUtils {
 	private static Logger logger = Logger.getLogger(BeaverUtils.class);
 
@@ -57,21 +71,6 @@ public class BeaverUtils {
 
 	private static final PostStringUploader postStringUploader = new PostStringUploader();
 	private static final PostFileUploader postFileUploader = new PostFileUploader();
-
-	private static TrustManager myX509TrustManager = new X509TrustManager() {
-		@Override 
-		public X509Certificate[] getAcceptedIssuers() { 
-			return null; 
-		} 
-
-		@Override 
-		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
-		} 
-
-		@Override 
-		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
-		} 
-	};
 
 	public static void PrintStackTrace(Exception e) {
 		if (DEBUG_MODE) {
@@ -139,47 +138,66 @@ public class BeaverUtils {
 			first = false;
 			sb.append(key).append('=').append(paraMap.get(key));
 		}
-		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader);
+		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader, false);
 	}
 
 	public static String doPost(String urlString, String flumeJson) throws IOException {
-		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader).toString();
+		return doPost(urlString, flumeJson, false).toString();
+	}
+
+	public static String doPost(String urlString, String flumeJson, boolean useHttps) throws IOException {
+		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader, useHttps).toString();
 	}
 
 	public static String doPostBigFile(String urlString, String fileName, long seekPos) throws IOException {
-		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader).toString();
+		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader, false).toString();
 	}
 
-	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader) throws IOException {
+	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader, boolean useHttps) throws IOException {
 		BufferedReader br = null;
 		StringBuilder sb = new StringBuilder();
-		HttpsURLConnection urlConnection = null;
 		try {
 			if (urlString.indexOf("https://") == -1 && urlString.indexOf("http://") == -1) {
 				urlString = "https://" + urlString;
 			}
 			URL url = new URL(urlString);
 
-			SSLContext sslcontext = SSLContext.getInstance("TLS"); 
-			sslcontext.init(null, new TrustManager[]{myX509TrustManager}, null);
-	        urlConnection.setSSLSocketFactory(sslcontext.getSocketFactory());
-	        urlConnection.setHostnameVerifier(new HostnameVerifier() {
-	            public boolean verify(String hostname, SSLSession session) {
-	              return true;
-	            }
-	        });
-
-	        urlConnection.setRequestMethod("POST");
+			URLConnection urlConnection = url.openConnection();
+			urlConnection.setDoInput(true);
+			urlConnection.setConnectTimeout(20000);
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
-	        postUploader.setUrlConnectionProperty(urlConnection, content);
-	        urlConnection.setConnectTimeout(20000);
-	        urlConnection.setDoInput(true);
-	        urlConnection = (HttpsURLConnection) url.openConnection();
 	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
 
+			if (useHttps) {
+				HttpsURLConnection httpsURLConnection = (HttpsURLConnection) urlConnection;
+
+				try{
+					SSLContext sslcontext = SSLContext.getInstance("TLS"); 
+					sslcontext.init(null, new TrustManager[]{new beaverTrustManager()}, null);
+					httpsURLConnection.setSSLSocketFactory(sslcontext.getSocketFactory());
+					httpsURLConnection.setHostnameVerifier(new HostnameVerifier() {
+			            public boolean verify(String hostname, SSLSession session) {
+			              return true;
+			            }
+			        });
+				} catch(NoSuchAlgorithmException | KeyManagementException e) {
+					PrintStackTrace(e);
+					throw new IOException(e.getMessage());
+				}
+
+		        httpsURLConnection.setRequestMethod("POST");
+		        postUploader.setUrlConnectionProperty(httpsURLConnection, content);
+			} else {
+				HttpURLConnection httpURLConnection = (HttpURLConnection) urlConnection;
+
+				httpURLConnection.setRequestMethod("POST");
+		        postUploader.setUrlConnectionProperty(httpURLConnection, content);
+			}
+
 	        if (content != null) {
-		        urlConnection.setDoOutput(true);
-		        try( OutputStream out = urlConnection.getOutputStream() ){
+	        	urlConnection.setDoOutput(true);
+
+				try( OutputStream out = urlConnection.getOutputStream() ){
 		        	postUploader.upload(out, content, startIdx);
 		        }
 			}
@@ -190,9 +208,13 @@ public class BeaverUtils {
 	            sb.append(line);
 	        }
 
-	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + urlConnection.getResponseCode() + " reply:" + sb.toString());
-		} catch (NoSuchAlgorithmException | KeyManagementException e) {
-			logger.error("connect to url error, msg:" + e.getMessage() + " url:" + urlString);
+	        int responseCode = -1;
+	        if (useHttps) {
+				responseCode = ((HttpsURLConnection)urlConnection).getResponseCode();
+			} else {
+				responseCode = ((HttpURLConnection)urlConnection).getResponseCode();
+			}
+	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + responseCode + " reply:" + sb.toString());
 		}finally {
 			if (br != null) {
 				try {

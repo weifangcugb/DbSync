@@ -4,17 +4,24 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.net.HttpURLConnection;
+import java.net.URLConnection;
+
 import javax.net.ssl.HttpsURLConnection;
 
 interface PostUploader {
-	void setUrlConnectionProperty(HttpsURLConnection urlConnection, String content);
+	void setUrlConnectionProperty(URLConnection urlConnection, String content);
 	void upload(OutputStream out, String content, long startIdx) throws IOException;
 }
 
 class PostStringUploader implements PostUploader{
 	@Override
-	public void setUrlConnectionProperty(HttpsURLConnection urlConnection, String content) {
-		urlConnection.setRequestProperty("Content-Length", "" + content.length());		
+	public void setUrlConnectionProperty(URLConnection urlConnection, String content) {
+		if (urlConnection instanceof HttpsURLConnection) {
+			((HttpsURLConnection)urlConnection).setRequestProperty("Content-Length", "" + content.length());
+		}else{
+			((HttpURLConnection)urlConnection).setRequestProperty("Content-Length", "" + content.length());
+		}
 	}
 
 	@Override
@@ -23,17 +30,20 @@ class PostStringUploader implements PostUploader{
         pWriter.write(content);
         pWriter.flush();
 	}
-
 }
 
 class PostFileUploader implements PostUploader{
-	private static int READ_BUFFER_SIZE = 1024 * 10;
+	static final int READ_BUFFER_SIZE = 1024 * 10;
+	static final int LOCAL_CHUNK_SIZE = 1024 * 1024;
 
 	@Override
-	public void setUrlConnectionProperty(HttpsURLConnection urlConnection, String content) {
-//      urlConnection.setUseCaches(false);
-		urlConnection.setChunkedStreamingMode(0);
-//      urlConnection.connect();
+	public void setUrlConnectionProperty(URLConnection urlConnection, String content) {
+		if (urlConnection instanceof HttpsURLConnection) {
+//	      urlConnection.setUseCaches(false);
+			((HttpsURLConnection)urlConnection).setChunkedStreamingMode(LOCAL_CHUNK_SIZE);
+		} else {
+			((HttpURLConnection)urlConnection).setChunkedStreamingMode(LOCAL_CHUNK_SIZE);
+		}
 	}
 
 	@Override
