@@ -158,23 +158,23 @@ public class BeaverUtils {
 			if (urlString.indexOf("https://") == -1 && urlString.indexOf("http://") == -1) {
 				urlString = "https://" + urlString;
 			}
+			URL url = new URL(urlString);
 
 			SSLContext sslcontext = SSLContext.getInstance("TLS"); 
 			sslcontext.init(null, new TrustManager[]{myX509TrustManager}, null);
-
-	        URL url = new URL(urlString);
-	        urlConnection = (HttpsURLConnection) url.openConnection();
 	        urlConnection.setSSLSocketFactory(sslcontext.getSocketFactory());
 	        urlConnection.setHostnameVerifier(new HostnameVerifier() {
 	            public boolean verify(String hostname, SSLSession session) {
 	              return true;
 	            }
 	        });
+
 	        urlConnection.setRequestMethod("POST");
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
 	        postUploader.setUrlConnectionProperty(urlConnection, content);
 	        urlConnection.setConnectTimeout(20000);
 	        urlConnection.setDoInput(true);
+	        urlConnection = (HttpsURLConnection) url.openConnection();
 	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
 
 	        if (content != null) {
