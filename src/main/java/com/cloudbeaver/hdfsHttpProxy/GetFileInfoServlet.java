@@ -61,7 +61,7 @@ public class GetFileInfoServlet extends HttpServlet{
         dbBean.setDbUrl("jdbc:postgresql://localhost/beaver_web_development");
         String uploadKey = null;
     	try {
-			Connection conn = SqlHelper.getDBConnectionTryOnce(dbBean);
+			Connection conn = SqlHelper.getDBConnectionNoRetry(dbBean);
 			Statement st = conn.createStatement();
 			String sql = "select \"email\", \"password\", \"ownerId\",\"linkId\",\"uploadKey\" "
 					+ "from \"Tables\" t, \"Files\" f, \"Users\" u "

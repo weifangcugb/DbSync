@@ -30,7 +30,7 @@ public class GetTaskServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(GetTaskServlet.class);
 	private static String getTaskApi = "/api/business/sync/";
 	private static MultiDatabaseBean databaseBeans;
-	private static String tableId = null;
+	private static String clientId = null;
 	private static String PROJECT_ABSOLUTE_PATH = System.getProperty("user.dir");
 	public static long now = System.currentTimeMillis();
 	public static long fiveDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 5 - 8 * 3600 * 1000;
@@ -46,6 +46,8 @@ public class GetTaskServlet extends HttpServlet{
 		map.put("JfkhDB", "oracle");
 		map.put("DocumentDBForSqlite", "sqlite");
 		map.put("DocumentFiles", "file");
+		map.put("VideoMeetingDB", "sqlserver");
+		map.put("HelpDB", "sqlserver");
 	}
 
 //	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj2\",\"tables\":"
@@ -186,10 +188,16 @@ public class GetTaskServlet extends HttpServlet{
 //			+ "{\"db\":\"TalkDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"qqdh/getTalkList\",\"starttime\":\"0\"},{\"table\":\"qqdh/getQqdh\",\"starttime\":\"0\"}]},"
 //			+ "{\"db\":\"PrasDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pras/getResult\",\"starttime\":\"0\"},{\"table\":\"pras/getTable\",\"starttime\":\"0\"}]}]}";
 
+	/*
+	 * web service db
+	 */
 	private static String youDiInitJson = "{\"databases\":[{\"db\":\"MeetingDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pias/getItlist\",\"starttime\":\"" + fiveDayBefore + "\"}]},"
 			+ "{\"db\":\"TalkDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"qqdh/getTalkList\",\"starttime\":\"" + fiveDayBefore + "\"},{\"table\":\"qqdh/getQqdh\",\"starttime\":\"" + fiveDayBefore + "\"}]},"
 			+ "{\"db\":\"PrasDB\",\"rowversion\":\"starttime\",\"tables\":[{\"table\":\"pras/getResult\",\"starttime\":\"" + fiveDayBefore + "\"},{\"table\":\"pras/getTable\",\"starttime\":\"" + fiveDayBefore + "\"}]}]}";
-	
+
+	/*
+	 * oracle db
+	 */
 	private static String zhongCiInitJson = "{\"databases\":[{\"db\":\"JfkhDB\",\"rowversion\":\"ID\",\"tables\":["
 			+ "{\"table\":\"BZ_KHBZ_JBSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_JJJSP\",\"ID\":\"0\"},"
 			+ "{\"table\":\"BZ_JFKH_DRECORDSUB\",\"join\":[\"BZ_JFKH_DRECORD\"],\"key\":\"BZ_JFKH_DRECORDSUB.PID=BZ_JFKH_DRECORD.ID\",\"ID\":\"0\"},"
@@ -199,28 +207,51 @@ public class GetTaskServlet extends HttpServlet{
 			+ "{\"table\":\"BZ_KHBZ_LJTQSP\",\"join_subtable\":[\"BZ_KHBZ_LJTQSPSUB\"],\"key\":\"BZ_KHBZ_LJTQSP.ID=BZ_KHBZ_LJTQSPSUB.PID\",\"ID\":\"0\"},"
 			+ "{\"table\":\"BZ_KHBZ_TXLJTQSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZCFSP\",\"ID\":\"0\"},{\"table\":\"BZ_KHBZ_XZJLSP\",\"ID\":\"0\"}]}]}";
 
+	/*
+	 * sql server 2008
+	 */
+	private static String bangjiaoInitJson = "{\"databases\":["
+			+ "{\"db\":\"VideoMeetingDB\",\"rowversion\":\"id\",\"tables\":["
+				+ "{\"table\":\"MeetingApplies\",\"id\":\"" + 0 + "\"}, \"join\":[\"UserAccounts\", \"Prisoner\", \"Users\", \"Departments\", \"Jails\"],"
+					+ "\"key\":\" MeetingApplies.PrisonerFk = Prisoner.UserFk and MeetingApplies.CreateUserFk = UserAccounts.Id "
+						+ "and Prisoner.UserFk = Users.Id and Users.DepartmentFk = Departments.Id and Users.JailFk = Jails.Id\"]},"
+
+			+ "{\"db\":\"HelpDB\",\"rowversion\":\"id\",\"tables\":["
+				+ "{\"table\":\"Fee_UserCharges\",\"id\":\"" + 0 + "\", \"join\":[\"UserAccounts\", \"Users\", \"Departments\", \"Jails\"]"
+					+ "\"key\":\"  Fee_UserCharges.UserFk = Users.Id and Fee_UserCharges.UserAccountFk = UserAccounts.Id "
+						+ "and Users.DepartmentFk = Departments.Id and Users.JailFk = Jails.Id\"},"
+				+ "{\"table\":\"Fee_UserDeductions\",\"id\":\"" + 0 + "\", \"join\":[\"Users\", \"Departments\", \"Jails\"]"
+					+ "\"key\":\"Fee_UserDeductions.UserFk = Users.Id and Users.DepartmentFk = Departments.Id and Users.JailFk = Jails.Id\" }"
+				
+				+ "]}"
+			+ "]}";
+
+	/*
+	 * file db
+	 */
 	private static String documentFilesInitJson = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":"
 			+ "[{\"table\":\"" + PROJECT_ABSOLUTE_PATH + "/src/resources/fileUploaderTestPics\",\"xgsj\":\"0000000000000000\"}]}]}";
 
 	public static String getTableId() {
-		return tableId;
+		return clientId;
 	}
 
 	public static MultiDatabaseBean getMultiDatabaseBean() throws JsonParseException, JsonMappingException, IOException{
-		if(databaseBeans == null && tableId != null){
+		if(databaseBeans == null && clientId != null){
 			ObjectMapper oMapper = new ObjectMapper();
-			if (tableId.endsWith("db")) {
+			if (clientId.endsWith("db")) {
 				//test all
-				databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
+//				databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
 				//for web server test
 //				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
 				//for sqlite
 //				databaseBeans = oMapper.readValue(documentDBForSqliteInitJson, MultiDatabaseBean.class);
 				//for oracle
 //				databaseBeans = oMapper.readValue(zhongCiInitJson, MultiDatabaseBean.class);
-				//for file
+				//for sql server2008
+				databaseBeans = oMapper.readValue(bangjiaoInitJson, MultiDatabaseBean.class);
 			}
-			else if(tableId.endsWith("documentfile")){
+			else if(clientId.endsWith("documentfile")){
 				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);
 			}
 		}
@@ -246,9 +277,9 @@ public class GetTaskServlet extends HttpServlet{
 
     	System.out.println("start get task succeed!");
     	
-    	tableId = url.substring(tableIdIndex + 1);
+    	clientId = url.substring(tableIdIndex + 1);
     	String json;
-    	if (tableId.endsWith("db")) {
+    	if (clientId.endsWith("db")) {
     		databaseBeans = getMultiDatabaseBean();
     		for(int i = 0; i < databaseBeans.getDatabases().size(); i++){
     			DatabaseBean dBean = databaseBeans.getDatabases().get(i);
@@ -286,7 +317,7 @@ public class GetTaskServlet extends HttpServlet{
     		logger.info("task from server："+json);
 //    		json = zhongCiInitJson;
 //    		System.out.println("task from server："+json);
-    	}else if (tableId.endsWith("documentfile")) {
+    	}else if (clientId.endsWith("documentfile")) {
 //    		json = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":[{\"table\":\"c://罪犯媒体/像片\",\"xgsj\":\"0000000000000000\"}]}]}";
     		databaseBeans = getMultiDatabaseBean();
     		for(int i = 0; i < databaseBeans.getDatabases().size(); i++){

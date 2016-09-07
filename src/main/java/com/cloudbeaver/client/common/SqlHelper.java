@@ -21,10 +21,10 @@ public class SqlHelper {
      */
     private static Hashtable<String, Connection> conMap = new Hashtable<String, Connection>();
 
-    public static Connection getConn(DatabaseBean dbBean) throws BeaverFatalException {
+    public static Connection getConnKeepTrying(DatabaseBean dbBean) throws BeaverFatalException {
             while (FixedNumThreadPool.isRunning()) {
             	try{
-            		return getDBConnectionTryOnce(dbBean);
+            		return getDBConnectionNoRetry(dbBean);
             	}catch (SQLException | ClassNotFoundException e) {
             		BeaverUtils.printLogExceptionAndSleep(e, "can't get connection", 5000);
 				}
@@ -33,7 +33,7 @@ public class SqlHelper {
             throw new BeaverFatalException("program get stop request from user, exit now");
     }
 
-    public static Connection getDBConnectionTryOnce(DatabaseBean dbBean) throws ClassNotFoundException, SQLException{
+    public static Connection getDBConnectionNoRetry(DatabaseBean dbBean) throws ClassNotFoundException, SQLException{
         if (conMap.containsKey(dbBean.getDb())) {
             return (Connection) conMap.get(dbBean.getDb());
         } else {
@@ -64,7 +64,7 @@ public class SqlHelper {
     }
 
 	private static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
-		Connection con = getConn(dbBean);
+		Connection con = getConnKeepTrying(dbBean);
 		PreparedStatement pStatement = null;
 		try {
 //			Statement statement = con.createStatement();

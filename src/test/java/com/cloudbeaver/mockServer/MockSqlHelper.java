@@ -25,7 +25,7 @@ public class MockSqlHelper extends SqlHelper{
 		String xgsj = sqlQuery.substring(startpos+dbBean.getRowversion().length()+3, endpos-2);
 		sqlQuery = sqlQuery.replace(xgsj, xgsj.substring("0x".length()));
 		
-		Connection con = getConn(dbBean);
+		Connection con = getConnKeepTrying(dbBean);
 		if (!threadPool.isRunning() || con == null) {
 //			may be an exception is better
 			return null;
