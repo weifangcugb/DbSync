@@ -22,6 +22,18 @@ public class SqlHelper {
     private static Hashtable<String, Connection> conMap = new Hashtable<String, Connection>();
 
     public static Connection getConn(DatabaseBean dbBean) throws BeaverFatalException {
+            while (FixedNumThreadPool.isRunning()) {
+            	try{
+            		return getDBConnectionTryOnce(dbBean);
+            	}catch (SQLException | ClassNotFoundException e) {
+            		BeaverUtils.printLogExceptionAndSleep(e, "can't get connection", 5000);
+				}
+			}
+
+            throw new BeaverFatalException("program get stop request from user, exit now");
+    }
+
+    public static Connection getDBConnectionTryOnce(DatabaseBean dbBean) throws ClassNotFoundException, SQLException{
         if (conMap.containsKey(dbBean.getDb())) {
             return (Connection) conMap.get(dbBean.getDb());
         } else {
@@ -37,23 +49,17 @@ public class SqlHelper {
             }
 
             logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
-            while (FixedNumThreadPool.isRunning()) {
-                try {
-    				Class.forName(driverClassName);
-    				Connection conn = null;
-    				if(dbBean.getDbUrl().startsWith("jdbc:sqlite"))
-    					conn = DriverManager.getConnection(dbBean.getDbUrl());
-    				else
-    					conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
-                    conMap.put(dbBean.getDb(), conn);
-                    return conn;
-    			} catch (ClassNotFoundException | SQLException e) {
-    				conMap.remove(dbBean.getDb());
-    				BeaverUtils.printLogExceptionAndSleep(e, "get sql connection error, msg:", 3 * 1000);
-    			}
-			}
 
-            throw new BeaverFatalException("program get stop request from user, exit now");
+			Class.forName(driverClassName);
+			Connection conn = null;
+			if (dbBean.getDbUrl().startsWith("jdbc:sqlite")) {
+				conn = DriverManager.getConnection(dbBean.getDbUrl());
+			} else {
+				conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
+			}
+			conMap.put(dbBean.getDb(), conn);
+
+			return conn;
         }
     }
 
