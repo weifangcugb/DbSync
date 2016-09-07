@@ -57,7 +57,7 @@ public class GetFileInfoServlet extends HttpServlet{
         dbBean.setType("postgresDB");
         dbBean.setDbUrl("jdbc:postgresql://localhost/beaver_web_development");
     	try {
-			Connection conn = SqlHelper.getConn(dbBean);
+			Connection conn = SqlHelper.getConnKeepTrying(dbBean);
 			Statement st = conn.createStatement();
 			String sql = "select * from \"Users\" where email = '" + userName + "';";
 			System.out.println(sql);

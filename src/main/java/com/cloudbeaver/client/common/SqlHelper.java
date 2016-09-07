@@ -21,7 +21,7 @@ public class SqlHelper {
      */
     private static Hashtable<String, Connection> conMap = new Hashtable<String, Connection>();
 
-    public static Connection getConn(DatabaseBean dbBean) throws BeaverFatalException {
+    public static Connection getConnKeepTrying(DatabaseBean dbBean) throws BeaverFatalException {
             while (FixedNumThreadPool.isRunning()) {
             	try{
             		return getDBConnectionNoRetry(dbBean);
@@ -64,7 +64,7 @@ public class SqlHelper {
     }
 
 	private static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
-		Connection con = getConn(dbBean);
+		Connection con = getConnKeepTrying(dbBean);
 		PreparedStatement pStatement = null;
 		try {
 //			Statement statement = con.createStatement();
