@@ -326,10 +326,13 @@ public class DbUploader extends CommonUploader{
 //				move to next table
 				throw new BeaverTableIsFullException();
 			}else {
-//				timestamp is like '0x111'
-		    	if (!maxXgsj.startsWith("0x")) {
-					maxXgsj = "0x" + maxXgsj;
+				if (dbBean.getRowversion().equals("xgsj")) {
+//					timestamp is like '0x111'
+			    	if (!maxXgsj.startsWith("0x")) {
+						maxXgsj = "0x" + maxXgsj;
+					}
 				}
+
 				tableBean.setXgsj(maxXgsj);
 			}
 
