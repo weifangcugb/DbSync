@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,9 +14,12 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -33,6 +37,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -138,22 +147,22 @@ public class BeaverUtils {
 			first = false;
 			sb.append(key).append('=').append(paraMap.get(key));
 		}
-		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader, false);
+		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader, false, null, 0);
 	}
 
 	public static String doPost(String urlString, String flumeJson) throws IOException {
-		return doPost(urlString, flumeJson, false).toString();
+		return doPost(urlString, flumeJson, true).toString();
 	}
 
 	public static String doPost(String urlString, String flumeJson, boolean useHttps) throws IOException {
-		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader, useHttps).toString();
+		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader, useHttps, null, 0).toString();
 	}
 
-	public static String doPostBigFile(String urlString, String fileName, long seekPos) throws IOException {
-		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader, false).toString();
+	public static String doPostBigFile(String urlString, String fileName, long seekPos, byte[] token, int len) throws IOException {
+		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader, false, token, len).toString();
 	}
 
-	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader, boolean useHttps) throws IOException {
+	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader, boolean useHttps, byte[] token, int len) throws IOException {
 		BufferedReader br = null;
 		StringBuilder sb = new StringBuilder();
 		try {
@@ -197,9 +206,19 @@ public class BeaverUtils {
 	        if (content != null) {
 	        	urlConnection.setDoOutput(true);
 
-				try( OutputStream out = urlConnection.getOutputStream() ){
-		        	postUploader.upload(out, content, startIdx);
-		        }
+	        	if(token != null){
+	        		try( DataOutputStream out = new DataOutputStream(urlConnection.getOutputStream()) ){
+	        			out.writeInt(len);
+						out.write(token, 0, len);
+						out.flush();
+			        	postUploader.upload(out, content, startIdx);
+			        }
+				}
+	        	else{
+	        		try( OutputStream out = urlConnection.getOutputStream() ){
+			        	postUploader.upload(out, content, startIdx);
+			        }
+	        	}
 			}
 
 	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
@@ -436,5 +455,76 @@ public class BeaverUtils {
 				}
 			}
 		}
+	}
+
+	/**
+	 * AES加密
+	 * 
+	 * @param bytes
+	 * @param key
+	 * @return
+	 * @throws AesSecurityException
+	 */
+	public static byte[] encryptAes(byte[] bytes, String key) throws SecurityException{
+		Key keySpec;
+	    try {
+	    	keySpec = buildAesKey(key);
+	        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+	        cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+	        return cipher.doFinal(bytes);
+	    } catch (Exception e) {
+	        logger.error(e.getMessage(), e);
+	        throw new SecurityException(e.getMessage(), e);
+	    }
+	}
+
+	/**
+	 * AES解密
+	 * 
+	 * @param bytes
+	 * @param key
+	 * @return
+	 * @throws AesSecurityException
+	 */
+	public static byte[] decryptAes(byte[] bytes, String key) throws SecurityException{
+	    Key keySpec;
+	    try {
+	        keySpec = buildAesKey(key);
+	        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+	        cipher.init(Cipher.DECRYPT_MODE, keySpec);
+	        return cipher.doFinal(bytes);
+	    } catch (Exception e) {
+	        logger.error(e.getMessage(), e);
+	        throw new SecurityException(e.getMessage(), e);
+	    }
+	}
+
+	/**
+	 * 根据字符串生成密钥字节数组 ,Aes规定为128位
+	 * 
+	 * @param keyStr 密钥字符串
+	 * 
+	 * @return
+	 * 
+	 * @throws UnsupportedEncodingException
+	 */
+	public static Key buildAesKey(String keyStr) throws UnsupportedEncodingException {
+	    byte[] key = new byte[16]; // 声明一个8位的字节数组，默认里面都是0
+	    byte[] temp = keyStr.getBytes("UTF-8"); // 将字符串转成字节数组
+
+	    /*
+	     * 执行数组拷贝 System.arraycopy(源数组，从源数组哪里开始拷贝，目标数组，拷贝多少位)
+	     */
+	    if (key.length > temp.length) {
+	        // 如果temp不够24位，则拷贝temp数组整个长度的内容到key数组中
+	        System.arraycopy(temp, 0, key, 0, temp.length);
+	    } else {
+	        // 如果temp大于24位，则拷贝temp数组24个长度的内容到key数组中
+	        System.arraycopy(temp, 0, key, 0, key.length);
+	    }
+
+	    SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+
+	    return keySpec;
 	}
 }

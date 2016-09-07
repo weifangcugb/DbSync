@@ -26,18 +26,18 @@ public class HdfsHelper {
 		}
 	}
 
-	public static void writeFile(String filename, byte[] buffer, int readCount) throws IOException {
+	public static void writeFile(String path, byte[] buffer, int readCount) throws IOException {
 		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
-		Path fileFullName = new Path(rootPath + filename);
+		Path fileFullName = new Path(path);
 		FSDataOutputStream fsOut = fileSystem.exists(fileFullName) ? fileSystem.append(fileFullName) : fileSystem.create(fileFullName) ;
 		fsOut.write(buffer, 0, readCount);
 		fsOut.flush();
 		fsOut.close();
 	}
 
-	public static long getFileLength(String fileName) throws IOException {
+	public static long getFileLength(String path) throws IOException {
 		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
-		Path fileFullName = new Path(rootPath + fileName);
+		Path fileFullName = new Path(path);
 		while(true){
 			try{
 				if (fileSystem.exists(fileFullName)) {

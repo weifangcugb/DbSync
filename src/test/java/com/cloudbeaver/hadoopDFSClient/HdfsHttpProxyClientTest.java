@@ -24,7 +24,7 @@ public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 	private static String fileInfoUrl = "https://localhost/getFileInfo";
 	private static String fileFullName = "/home/beaver/Documents/test/hadoop/harry.txt";
 //	private static String fileFullName = "/home/beaver/Documents/test/hadoop/test.txt";
-	private static String urlPrefix = "https://localhost/uploadData?fileName=";
+	private static String urlPrefix = "http://localhost/uploadData?fileName=";
 	private static String hdfsPrefix = "hdfs://localhost:9000/test/";
 	private static int UPLOAD_SIZE = 1024 * 1024;
 	private static int UPLOAD_RETRY_TIMES = 16;
@@ -93,7 +93,7 @@ public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 			try {
 				logger.info("start to upload file to server");
 //				System.out.println(new String(readBuf, 0, readCount, "UTF-8"));
-				BeaverUtils.doPostBigFile(url, contentType, startPos);
+				BeaverUtils.doPostBigFile(url, contentType, startPos, null, 0);
 				logger.info("finish upload file to server");
 				break;
 			} catch (IOException e) {
