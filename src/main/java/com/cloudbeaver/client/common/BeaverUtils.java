@@ -18,7 +18,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyManagementException;
 import java.security.MessageDigest;
@@ -37,10 +36,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
 import javax.net.ssl.HostnameVerifier;

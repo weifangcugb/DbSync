@@ -15,6 +15,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -105,7 +107,7 @@ public class GetFileInfoServlet extends HttpServlet{
     	jsonObject.put("fileName", fileName);
     	jsonObject.put("length", length);
     	jsonObject.put("errorCode", ERROR_CODE);
-    	jsonObject.put("token", org.apache.commons.codec.binary.Base64.encodeBase64String(token));
+    	jsonObject.put("token", Base64.encodeBase64String(token));
 
     	resp.setHeader("Content-type", "text/html;charset=UTF-8");
     	PrintWriter pw;
