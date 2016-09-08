@@ -93,7 +93,7 @@ public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 			try {
 				logger.info("start to upload file to server");
 //				System.out.println(new String(readBuf, 0, readCount, "UTF-8"));
-				BeaverUtils.doPostBigFile(url, contentType, startPos, null, 0);
+				BeaverUtils.doPostBigFile(url, contentType, startPos);
 				logger.info("finish upload file to server");
 				break;
 			} catch (IOException e) {

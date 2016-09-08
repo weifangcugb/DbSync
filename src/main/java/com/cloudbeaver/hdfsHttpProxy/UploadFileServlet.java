@@ -13,6 +13,8 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.HdfsHelper;
@@ -20,8 +22,8 @@ import com.cloudbeaver.client.common.HdfsHelper;
 import net.sf.json.JSONObject;
 
 @WebServlet("/uploadData")
-public class HdfsProxyServlet extends HttpServlet{
-	private static Logger logger = Logger.getLogger(HdfsProxyServlet.class);
+public class UploadFileServlet extends HttpServlet{
+	private static Logger logger = Logger.getLogger(UploadFileServlet.class);
 	public static int BUFFER_SIZE;
 
 	@Override
@@ -42,27 +44,16 @@ public class HdfsProxyServlet extends HttpServlet{
 		setBUFFER_SIZE(HdfsProxyServer.getConf().getBufferSize());
     	logger.info("start upload data to HDFS");
     	String filename = req.getParameter("fileName");
-    	byte[] buffer = new byte[BUFFER_SIZE];
-    	DataInputStream dataInputStream = new DataInputStream(req.getInputStream());
-
-    	int tokenLen = dataInputStream.readInt();
-    	byte []token = new byte[tokenLen];
-    	int readNumTillNow = 0, len = 0;
-    	while((len = dataInputStream.read(token, readNumTillNow, tokenLen - readNumTillNow)) != -1){
-    		readNumTillNow += len;
-			if(readNumTillNow == tokenLen){
-				break;
-			}
-    	}
+    	String token = req.getParameter("token");
     	logger.info("before decryption, token = " + token);
-    	token = BeaverUtils.decryptAes(token, "123456");
-    	String tokenJson = new String(token);
+    	String tokenJson = new String(BeaverUtils.decryptAes(Base64.decodeBase64(token), HdfsProxyServer.SERVER_PASSWORD));
     	logger.info("after decryption, token = " + tokenJson);
     	JSONObject jObject = JSONObject.fromObject(tokenJson);
     	String position = jObject.getString("position");
 
-    	readNumTillNow = 0;
-    	len = 0;
+    	int readNumTillNow = 0, len = 0;
+    	byte[] buffer = new byte[BUFFER_SIZE];
+    	DataInputStream dataInputStream = new DataInputStream(req.getInputStream());
     	while((len = dataInputStream.read(buffer, readNumTillNow, BUFFER_SIZE - readNumTillNow)) != -1){
     		logger.info("len = " + len);
 			readNumTillNow += len;

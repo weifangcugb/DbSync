@@ -143,28 +143,33 @@ public class BeaverUtils {
 			first = false;
 			sb.append(key).append('=').append(paraMap.get(key));
 		}
-		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader, false, null, 0);
+		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader, false);
 	}
 
 	public static String doPost(String urlString, String flumeJson) throws IOException {
-		return doPost(urlString, flumeJson, true).toString();
+		return doPost(urlString, flumeJson, false).toString();
 	}
 
 	public static String doPost(String urlString, String flumeJson, boolean useHttps) throws IOException {
-		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader, useHttps, null, 0).toString();
+		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader, useHttps).toString();
 	}
 
-	public static String doPostBigFile(String urlString, String fileName, long seekPos, byte[] token, int len) throws IOException {
-		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader, false, token, len).toString();
+	public static String doPostBigFile(String urlString, String fileName, long seekPos) throws IOException {
+		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader, false).toString();
 	}
 
-	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader, boolean useHttps, byte[] token, int len) throws IOException {
+	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader, boolean useHttps) throws IOException {
 		BufferedReader br = null;
 		StringBuilder sb = new StringBuilder();
 		try {
-			if (urlString.indexOf("https://") == -1 && urlString.indexOf("http://") == -1) {
-				urlString = "https://" + urlString;
+			if (!(urlString.startsWith("https://") || urlString.startsWith("http://"))) {
+				if (useHttps) {
+					urlString = "https://" + urlString;
+				} else {
+					urlString = "http://" + urlString;
+				}
 			}
+
 			URL url = new URL(urlString);
 
 			URLConnection urlConnection = url.openConnection();
@@ -201,20 +206,9 @@ public class BeaverUtils {
 
 	        if (content != null) {
 	        	urlConnection.setDoOutput(true);
-
-	        	if(token != null){
-	        		try( DataOutputStream out = new DataOutputStream(urlConnection.getOutputStream()) ){
-	        			out.writeInt(len);
-						out.write(token, 0, len);
-						out.flush();
-			        	postUploader.upload(out, content, startIdx);
-			        }
-				}
-	        	else{
-	        		try( OutputStream out = urlConnection.getOutputStream() ){
-			        	postUploader.upload(out, content, startIdx);
-			        }
-	        	}
+        		try( DataOutputStream out = new DataOutputStream(urlConnection.getOutputStream()) ){
+		        	postUploader.upload(out, content, startIdx);
+		        }
 			}
 
 	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));

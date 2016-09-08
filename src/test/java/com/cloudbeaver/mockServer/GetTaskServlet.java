@@ -212,16 +212,17 @@ public class GetTaskServlet extends HttpServlet{
 	 */
 	private static String bangjiaoInitJson = "{\"databases\":["
 			+ "{\"db\":\"VideoMeetingDB\",\"rowversion\":\"id\",\"tables\":["
-				+ "{\"table\":\"MeetingApplies\",\"id\":\"" + 0 + "\"}, \"join\":[\"UserAccounts\", \"Prisoner\", \"Users\", \"Departments\", \"Jails\"],"
+				+ "{\"table\":\"MeetingApplies\",\"ID\":\"" + 0 + "\", \"join\":[\"UserAccounts\", \"Prisoner\", \"Users\", \"Departments\", \"Jails\"],"
 					+ "\"key\":\" MeetingApplies.PrisonerFk = Prisoner.UserFk and MeetingApplies.CreateUserFk = UserAccounts.Id "
-						+ "and Prisoner.UserFk = Users.Id and Users.DepartmentFk = Departments.Id and Users.JailFk = Jails.Id\"]},"
+						+ "and Prisoner.UserFk = Users.Id and Users.DepartmentFk = Departments.Id and Users.JailFk = Jails.Id\"}"
+				+"]}"
 
-			+ "{\"db\":\"HelpDB\",\"rowversion\":\"id\",\"tables\":["
-				+ "{\"table\":\"Fee_UserCharges\",\"id\":\"" + 0 + "\", \"join\":[\"UserAccounts\", \"Users\", \"Departments\", \"Jails\"]"
-					+ "\"key\":\"  Fee_UserCharges.UserFk = Users.Id and Fee_UserCharges.UserAccountFk = UserAccounts.Id "
-						+ "and Users.DepartmentFk = Departments.Id and Users.JailFk = Jails.Id\"},"
-				+ "{\"table\":\"Fee_UserDeductions\",\"id\":\"" + 0 + "\", \"join\":[\"Users\", \"Departments\", \"Jails\"]"
-					+ "\"key\":\"Fee_UserDeductions.UserFk = Users.Id and Users.DepartmentFk = Departments.Id and Users.JailFk = Jails.Id\" }"
+			+ ",{\"db\":\"HelpDB\",\"rowversion\":\"id\",\"tables\":["
+				+ "{\"table\":\"Fee_UserCharges\",\"ID\":\"" + 0 + "\", \"join\":[\"Fee_UserAccounts\", \"Users\", \"Departments\"],"
+					+ "\"key\":\"  Fee_UserCharges.UserFk = Users.Id and Fee_UserCharges.UserAccountFk = Fee_UserAccounts.Id "
+						+ "and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Fee_UserDeductions\",\"ID\":\"" + 0 + "\", \"join\":[\"Users\", \"Departments\"],"
+					+ "\"key\":\"Fee_UserDeductions.UserFk = Users.Id and Users.DepartmentFk = Departments.Id\" }"
 				
 				+ "]}"
 			+ "]}";

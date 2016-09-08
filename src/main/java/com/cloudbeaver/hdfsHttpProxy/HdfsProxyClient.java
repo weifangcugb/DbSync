@@ -8,15 +8,19 @@ import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyClientInfoConf;
+import com.cloudbeaver.client.common.CommonUploader;
+import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyClientConf;
 import net.sf.json.JSONObject;
 
 public class HdfsProxyClient {
 	private static Logger logger = Logger.getLogger(HdfsProxyClient.class);
 
+	private static final String CONF_BEAN = "HdfsProxyClientConf";
+	private static final String CONF_FILE = CommonUploader.CONF_FILE_DIR + "HdfsProxyClientConf.xml";
+
 	public void doUploadFileData(String fileFullName, String urlString) {
-		ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyClientInfoConf.xml");
-		HdfsProxyClientInfoConf hdfsProxyInfoConf = appContext.getBean("HdfsProxyClientInfoConf", HdfsProxyClientInfoConf.class);
+		ApplicationContext appContext = new FileSystemXmlApplicationContext(CONF_FILE);
+		HdfsProxyClientConf hdfsProxyInfoConf = appContext.getBean(CONF_BEAN, HdfsProxyClientConf.class);
 
 		while(true) {
 			try{
@@ -28,34 +32,20 @@ public class HdfsProxyClient {
 				jsonObject.put("fileName", fileName);
 
 //				first, sync position with web server
-		        long seekPos = 0;
-		        byte[] token = null;
 				String json = BeaverUtils.doPost(hdfsProxyInfoConf.getFileInfoUrl(), jsonObject.toString(), true);
 				jsonObject = JSONObject.fromObject(json);
-				if(jsonObject.containsKey("fileName") && jsonObject.containsKey("length") && jsonObject.containsKey("errorCode") && jsonObject.containsKey("token")){
-					if(jsonObject.get("errorCode").equals(0)){
-						token = Base64.decodeBase64(jsonObject.getString("token"));
-						logger.info("token = " + token);
-						if(fileName.equals(jsonObject.get("fileName")) && jsonObject.getLong("length") > -1){
-							 seekPos = jsonObject.getLong("length");
-						} else if(!fileName.equals(jsonObject.get("fileName"))){
-							throw new IllegalArgumentException("file doesn't match");
-						}
-					} else if(jsonObject.get("errorCode").equals(5)){
-						throw new SQLException("connect to database failed");
-					}
+				if(jsonObject.containsKey("fileName") && jsonObject.containsKey("length") && jsonObject.containsKey("errorCode") 
+						&& jsonObject.containsKey("token") && jsonObject.getInt("errorCode") == 0 
+						&& fileName.equals(jsonObject.get("fileName")) && jsonObject.getLong("length") > -1){
+					BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), fileFullName, jsonObject.getLong("length"));
+					break;
 				} else {
-					throw new IllegalArgumentException("missing argument filename or length or errorCode or token");
+					if(jsonObject.get("errorCode").equals(5)){
+						throw new SQLException("connect to database failed");
+					}else{
+						throw new IOException("missing argument filename or length or errorCode or token or server response error");
+					}
 				}
-
-//				then, open the url stream and write util the end of the file
-				if(token != null){
-					BeaverUtils.doPostBigFile(urlString, fileFullName, seekPos, token, token.length);
-				} else{
-					throw new IllegalArgumentException("token is null");
-				}
-
-				break;
 			}catch(IOException | SQLException e){
 				logger.error("upload file failed");
 				BeaverUtils.printLogExceptionAndSleep(e, "upload file failed", 5000);

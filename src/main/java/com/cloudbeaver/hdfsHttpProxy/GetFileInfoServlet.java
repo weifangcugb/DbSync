@@ -82,7 +82,6 @@ public class GetFileInfoServlet extends HttpServlet{
 				else{
 					throw new IOException("user does not match");
 				}
-				
 			}
 		} catch (SQLException | ClassNotFoundException e1) {
 			logger.error("connect to database failed!");
@@ -101,7 +100,7 @@ public class GetFileInfoServlet extends HttpServlet{
     		tokenJson.put("passWd", passWd);
     		tokenJson.put("position", hdfsPrefix + fileName);
     		logger.info("before encryption, token = " + tokenJson.toString());
-    		token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), "123456");
+    		token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), HdfsProxyServer.SERVER_PASSWORD );
     		logger.info("after encryption, token = " + token);
     	}
     	jsonObject.put("fileName", fileName);

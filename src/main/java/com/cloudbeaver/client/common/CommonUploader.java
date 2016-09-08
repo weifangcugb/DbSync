@@ -1,12 +1,6 @@
 package com.cloudbeaver.client.common;
 
 public abstract class CommonUploader extends FixedNumThreadPool{
-//	private final static String CONF_FILE_PREFIX = "/opt/dbsync/";
-	private static final String CONF_FILE_PREFIX = "conf/";
-	public static final String CONF_DBSYNC_DB_FILENAME = CONF_FILE_PREFIX + "SyncClient_DB.properties";
-	public static final String CONF_DBSYNC_FILE_FILENAME = CONF_FILE_PREFIX + "SyncClient_File.properties";
-	public static final String CONF_KAFKA_CONSUMER_FILE_NAME = CONF_FILE_PREFIX + "SyncConsumer.properties";
-
 	public static final int DB_QEURY_LIMIT_DB = 50;
 	public static final int DB_QEURY_LIMIT_WEB_SERVICE = 50;
 
@@ -28,8 +22,20 @@ public abstract class CommonUploader extends FixedNumThreadPool{
 	public static final String DB_TYPE_WEB_SERVICE = "webservice";
 	public static final String DB_EMPTY_ROW_VERSION = "0";
 
+	public static String CONF_FILE_DIR = "conf/";
+	public static String CONF_DBSYNC_DB_FILENAME = CONF_FILE_DIR + "SyncClient_DB.properties";
+	public static String CONF_DBSYNC_FILE_FILENAME = CONF_FILE_DIR + "SyncClient_File.properties";
+	public static String CONF_KAFKA_CONSUMER_FILE_NAME = CONF_FILE_DIR + "SyncConsumer.properties";
+
     protected static String clientId;
 	protected static String prisonId;
+
+	public static void setConfDir(String confDir){
+		CONF_FILE_DIR = confDir;
+		CONF_DBSYNC_DB_FILENAME = CONF_FILE_DIR + "SyncClient_DB.properties";
+		CONF_DBSYNC_FILE_FILENAME = CONF_FILE_DIR + "SyncClient_File.properties";
+		CONF_KAFKA_CONSUMER_FILE_NAME = CONF_FILE_DIR + "SyncConsumer.properties";
+	}
 
 	public static String getPrisonId() {
 		return prisonId;

@@ -19,6 +19,8 @@ import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServerConf;
 
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
+	public static String SERVER_PASSWORD = "123456";
+
 	private static HdfsProxyServerConf conf;
 	private Server server;
 
@@ -59,7 +61,7 @@ public class HdfsProxyServer{
         WebAppContext webApp = new WebAppContext();
         webApp.setContextPath("/");
         webApp.setResourceBase(".");
-        webApp.addServlet(HdfsProxyServlet.class, "/uploadData");
+        webApp.addServlet(UploadFileServlet.class, "/uploadData");
         webApp.addServlet(GetFileInfoServlet.class, "/getFileInfo");
         webApp.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "true");
         webApp.setInitParameter("org.eclipse.jetty.servlet.Default.useFileMappedBuffer", "false");

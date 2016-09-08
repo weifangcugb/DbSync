@@ -1,6 +1,6 @@
 package com.cloudbeaver.hdfsHttpProxy.proxybean;
 
-public class HdfsProxyClientInfoConf {
+public class HdfsProxyClientConf {
 	private String fileInfoUrl;
 	private String userName;
 	private String passWd;
