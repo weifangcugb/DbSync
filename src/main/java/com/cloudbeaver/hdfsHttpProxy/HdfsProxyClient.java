@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.CommonUploader;
+import com.cloudbeaver.client.common.BeaverUtils.ErrCode;
 import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyClientConf;
 import net.sf.json.JSONObject;
 
@@ -33,13 +34,13 @@ public class HdfsProxyClient {
 //				first, sync position with web server
 				String json = BeaverUtils.doPost(hdfsProxyInfoConf.getFileInfoUrl(), jsonObject.toString(), true);
 				jsonObject = JSONObject.fromObject(json);
-				if(jsonObject.containsKey("fileName") && jsonObject.containsKey("length") && jsonObject.containsKey("errorCode") 
-						&& jsonObject.containsKey("token") && jsonObject.getInt("errorCode") == 0 
-						&& fileName.equals(jsonObject.get("fileName")) && jsonObject.getLong("length") > -1){
-					BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), fileFullName, jsonObject.getLong("length"));
+				if(jsonObject.containsKey("errorCode") && jsonObject.getInt("errorCode") == 0 && jsonObject.containsKey("fileName") 
+						&& jsonObject.containsKey("offset") && jsonObject.containsKey("token")
+						&& fileName.equals(jsonObject.get("fileName")) && jsonObject.getLong("offset") > -1){
+					BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), fileFullName, jsonObject.getLong("offset"));
 					break;
 				} else {
-					if(jsonObject.get("errorCode").equals(5)){
+					if(jsonObject.getInt("errorCode") == ErrCode.SQL_ERROR.ordinal()){
 						throw new SQLException("connect to database failed");
 					}else{
 						throw new IOException("missing argument filename or length or errorCode or token or server response error");
