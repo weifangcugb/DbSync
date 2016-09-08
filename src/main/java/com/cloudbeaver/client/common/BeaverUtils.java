@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -67,6 +66,21 @@ class beaverTrustManager implements X509TrustManager{
 
 public class BeaverUtils {
 	private static Logger logger = Logger.getLogger(BeaverUtils.class);
+
+	public enum ErrCode{
+		OK("all things ok"),
+		SQL_ERROR("can't execute sql query"),
+		USER_NOT_EXIST("user doesn't exist"),
+		PASS_CHECK_ERROR("password is wrong");
+
+		private String errMsg;
+		ErrCode(String errMsg) {
+			this.errMsg = errMsg;
+		}
+		public String getErrMsg(){
+			return errMsg;
+		}
+	}
 
 	public static String DEFAULT_CHARSET = "utf-8";
 

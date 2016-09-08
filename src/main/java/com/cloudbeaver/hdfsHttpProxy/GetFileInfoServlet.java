@@ -1,22 +1,19 @@
 package com.cloudbeaver.hdfsHttpProxy;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.security.Key;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -28,7 +25,6 @@ import net.sf.json.JSONObject;
 
 @WebServlet("/getFileInfo")
 public class GetFileInfoServlet extends HttpServlet{
-
 	private static Logger logger = Logger.getLogger(GetFileInfoServlet.class);
 	private static String hdfsPrefix = "hdfs://localhost:9000/test/";
 
@@ -39,80 +35,66 @@ public class GetFileInfoServlet extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
-    	BufferedReader br = new BufferedReader(new InputStreamReader((ServletInputStream) req.getInputStream()));
-    	StringBuilder sb = new StringBuilder();
-    	String line = null;
-    	int ERROR_CODE = 0;
-        while ((line = br.readLine()) != null) {
-            sb.append(line);
-        }
-        String json = sb.toString();
-        JSONObject jsonObject = JSONObject.fromObject(json);
-        String fileName = jsonObject.get("fileName").toString();
-        String userName = jsonObject.get("userName").toString();
-        String passWd = jsonObject.get("passWd").toString();
-        String tableUrl = jsonObject.get("tableUrl").toString();
-        logger.info("TableUrl = " + tableUrl);
+        JSONObject reqJson = JSONObject.fromObject(IOUtils.toString(req.getInputStream()));
+        String fileName = reqJson.getString("fileName");
+        String userName = reqJson.getString("userName");
+        String passWd = reqJson.getString("passWd");
+        String tableUrl = reqJson.getString("tableUrl");
         String tableId = tableUrl.substring(tableUrl.lastIndexOf("/")+1);
 
-        DatabaseBean dbBean = new DatabaseBean();
-        dbBean.setDb("beaver_web_development");
-        dbBean.setDbUserName("beaver");
-        dbBean.setDbPassword("123456");
-        dbBean.setType("postgresDB");
-        dbBean.setDbUrl("jdbc:postgresql://localhost/beaver_web_development");
-        String uploadKey = null;
+        JSONObject respJson = new JSONObject();
     	try {
+    		DatabaseBean dbBean = new DatabaseBean();
+            dbBean.setDb(HdfsProxyServer.conf.getDbName());
+            dbBean.setDbUserName(HdfsProxyServer.conf.getDbUser());
+            dbBean.setDbPassword(HdfsProxyServer.conf.getDbPass());
+            dbBean.setType(HdfsProxyServer.conf.getDbType());
+            dbBean.setDbUrl(HdfsProxyServer.conf.getDbUrl());
+
 			Connection conn = SqlHelper.getDBConnectionNoRetry(dbBean);
 			Statement st = conn.createStatement();
 			String sql = "select \"email\", \"password\", \"ownerId\",\"linkId\",\"uploadKey\" "
 					+ "from \"Tables\" t, \"Files\" f, \"Users\" u "
 					+ "where t.id = f.\"linkId\" and u.id = f.\"ownerId\" and t.id = '" + tableId + "';";
-			logger.info("sql = " + sql);
 			ResultSet rs = st.executeQuery(sql);
 			String password = null;
 			String email = null;
-			while (rs.next()){
+			if(rs.next()){
 				password = rs.getString("password");
 				email = rs.getString("email");
-				uploadKey = rs.getString("uploadKey");
-				if(email.equals(userName) && BCrypt.checkpw(passWd, password)){
-					logger.info("user matches");
+				String uploadKey = rs.getString("uploadKey");
+				if( email.equals(userName) && BCrypt.checkpw(passWd, password) ){
+		    		long length = HdfsHelper.getFileLength(hdfsPrefix + fileName);
+
+		    		JSONObject tokenJson = new JSONObject();
+		    		tokenJson.put("uploadKey", uploadKey);
+		    		tokenJson.put("userName", userName);
+		    		tokenJson.put("passWd", passWd);
+		    		tokenJson.put("position", hdfsPrefix + fileName);
+		    		tokenJson.put("offset", length);
+		    		byte[] token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), HdfsProxyServer.SERVER_PASSWORD );
+
+		    		respJson.put("errorCode", BeaverUtils.ErrCode.OK);
+		    		respJson.put("fileName", fileName);
+		    		respJson.put("offset", length);
+		    		respJson.put("token", Base64.encodeBase64String(token));
+				} else {
+					respJson.put("errorCode", BeaverUtils.ErrCode.PASS_CHECK_ERROR);
 				}
-				else{
-					throw new IOException("user does not match");
-				}
+			} else {
+				respJson.put("errorCode", BeaverUtils.ErrCode.USER_NOT_EXIST);
 			}
 		} catch (SQLException | ClassNotFoundException e1) {
 			logger.error("connect to database failed!");
 			BeaverUtils.printLogExceptionAndSleep(e1, "connect to database failed!", 5000);
-			ERROR_CODE = 5;
+			respJson.put("errorCode", BeaverUtils.ErrCode.SQL_ERROR);
 		}
-
-    	byte [] token = null;
-    	jsonObject = new JSONObject();
-    	long length = Integer.MIN_VALUE;
-    	if(ERROR_CODE == 0){
-    		length = HdfsHelper.getFileLength(hdfsPrefix + fileName);
-    		JSONObject tokenJson = new JSONObject();
-    		tokenJson.put("uploadKey", uploadKey);
-    		tokenJson.put("userName", userName);
-    		tokenJson.put("passWd", passWd);
-    		tokenJson.put("position", hdfsPrefix + fileName);
-    		logger.info("before encryption, token = " + tokenJson.toString());
-    		token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), HdfsProxyServer.SERVER_PASSWORD );
-    		logger.info("after encryption, token = " + token);
-    	}
-    	jsonObject.put("fileName", fileName);
-    	jsonObject.put("length", length);
-    	jsonObject.put("errorCode", ERROR_CODE);
-    	jsonObject.put("token", Base64.encodeBase64String(token));
 
     	resp.setHeader("Content-type", "text/html;charset=UTF-8");
     	PrintWriter pw;
 		try {
 			pw = resp.getWriter();
-			pw.write(jsonObject.toString());
+			pw.write(respJson.toString());
 	        pw.flush();
 	        pw.close();
 		} catch (IOException e) {
@@ -120,7 +102,4 @@ public class GetFileInfoServlet extends HttpServlet{
 			logger.error("get file info failed!");
 		}
     }
-
-	public static void main(String[] args) {
-	}
 }

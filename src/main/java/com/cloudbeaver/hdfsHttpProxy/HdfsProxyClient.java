@@ -3,7 +3,6 @@ package com.cloudbeaver.hdfsHttpProxy;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
@@ -16,7 +15,7 @@ public class HdfsProxyClient {
 	private static Logger logger = Logger.getLogger(HdfsProxyClient.class);
 
 	private static final String CONF_BEAN = "HdfsProxyClientConf";
-	private static final String CONF_FILE = CommonUploader.CONF_FILE_DIR + "HdfsProxyClientConf.xml";
+	private static final String CONF_FILE = CommonUploader.CONF_FILE_DIR + CONF_BEAN + ".xml";
 
 	public void doUploadFileData(String fileFullName, String urlString) {
 		ApplicationContext appContext = new FileSystemXmlApplicationContext(CONF_FILE);

@@ -31,17 +31,8 @@ public class UploadFileServlet extends HttpServlet{
     	doPost(req, resp);
     }
 
-    public static int getBUFFER_SIZE() {
-		return BUFFER_SIZE;
-	}
-
-	public static void setBUFFER_SIZE(int bUFFER_SIZE) {
-		BUFFER_SIZE = bUFFER_SIZE;
-	}
-
 	@Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
-		setBUFFER_SIZE(HdfsProxyServer.getConf().getBufferSize());
     	logger.info("start upload data to HDFS");
     	String filename = req.getParameter("fileName");
     	String token = req.getParameter("token");

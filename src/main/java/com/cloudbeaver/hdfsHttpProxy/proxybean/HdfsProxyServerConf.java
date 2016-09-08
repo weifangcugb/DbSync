@@ -1,31 +1,104 @@
 package com.cloudbeaver.hdfsHttpProxy.proxybean;
 
 public class HdfsProxyServerConf {
-	private int http_port;
-	private int https_port;
-	private static int bufferSize;
+	private int httpPort;
+	private int httpsPort;
+	private int bufferSize;
+	private String dbName;
+	private String dbUser;
+	private String dbPass;
+	private String dbUrl;
+	private String dbType;
+	private String keyStorePath;
+	private String keyStorePass;
 
-	public int getHttp_port() {
-		return http_port;
+	public int getHttpPort() {
+		assert(httpPort > 0);
+		return httpPort;
 	}
 
-	public void setHttp_port(int http_port) {
-		this.http_port = http_port;
+	public void setHttpPort(int http_port) {
+		this.httpPort = http_port;
 	}
 
-	public int getHttps_port() {
-		return https_port;
+	public int getHttpsPort() {
+		assert(httpsPort > 0);
+		return httpsPort;
 	}
 
-	public void setHttps_port(int https_port) {
-		this.https_port = https_port;
+	public void setHttpsPort(int https_port) {
+		this.httpsPort = https_port;
 	}
 
-	public static int getBufferSize() {
+	public int getBufferSize() {
+		assert(bufferSize > 1024);
 		return bufferSize;
 	}
 
-	public static void setBufferSize(int bufferSize) {
-		HdfsProxyServerConf.bufferSize = bufferSize;
+	public void setBufferSize(int bufferSize) {
+		this.bufferSize = bufferSize;
+	}
+
+	public String getDbName() {
+		assert(dbName != null);
+		return dbName;
+	}
+
+	public void setDbName(String dbName) {
+		this.dbName = dbName;
+	}
+
+	public String getDbUser() {
+		assert(dbUser != null);
+		return dbUser;
+	}
+
+	public void setDbUser(String dbUser) {
+		this.dbUser = dbUser;
+	}
+
+	public String getDbPass() {
+		assert(dbPass != null);
+		return dbPass;
+	}
+
+	public void setDbPass(String dbPass) {
+		this.dbPass = dbPass;
+	}
+
+	public String getDbUrl() {
+		assert(dbUrl != null);
+		return dbUrl;
+	}
+
+	public void setDbUrl(String dbUrl) {
+		this.dbUrl = dbUrl;
+	}
+
+	public String getDbType() {
+		assert(dbType != null);
+		return dbType;
+	}
+
+	public void setDbType(String dbType) {
+		this.dbType = dbType;
+	}
+
+	public String getKeyStorePath() {
+		assert(keyStorePath != null);
+		return keyStorePath;
+	}
+
+	public void setKeyStorePath(String keyStorePath) {
+		this.keyStorePath = keyStorePath;
+	}
+
+	public String getKeyStorePass() {
+		assert(keyStorePass != null);
+		return keyStorePass;
+	}
+
+	public void setKeyStorePass(String keyStorePass) {
+		this.keyStorePass = keyStorePass;
 	}
 }

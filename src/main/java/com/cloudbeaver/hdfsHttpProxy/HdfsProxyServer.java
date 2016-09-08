@@ -19,42 +19,33 @@ import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServerConf;
 
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
-	public static String SERVER_PASSWORD = "123456";
-
-	private static HdfsProxyServerConf conf;
+	static String SERVER_PASSWORD = "123456";
+	static HdfsProxyServerConf conf;
 	private Server server;
-
-    public static HdfsProxyServerConf getConf() {
-		return conf;
-	}
-
-	public static void setConf(HdfsProxyServerConf conf) {
-		HdfsProxyServer.conf = conf;
-	}
 
 	public void start(){
         server = new Server();
 
-        HttpConfiguration http_config = new HttpConfiguration();
-        http_config.setSecureScheme("https");
-        http_config.setSecurePort(conf.getHttps_port());
-        http_config.setOutputBufferSize(10485760);
-        http_config.setRequestHeaderSize(10485760);
+        HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.setSecureScheme("https");
+        httpConfig.setSecurePort(conf.getHttpsPort());
+        httpConfig.setOutputBufferSize(10485760);
+        httpConfig.setRequestHeaderSize(10485760);
 
-        ServerConnector http_connector = new ServerConnector(server, new HttpConnectionFactory(http_config));
-        http_connector.setPort(conf.getHttp_port());
+        ServerConnector http_connector = new ServerConnector(server, new HttpConnectionFactory(httpConfig));
+        http_connector.setPort(conf.getHttpPort());
         http_connector.setIdleTimeout(30000);
 
         SslContextFactory sslContextFactory = new SslContextFactory();
-        sslContextFactory.setKeyStorePath("src/resources/https/keystore");
-        sslContextFactory.setKeyStorePassword("OBF:19iy19j019j219j419j619j8");
-        sslContextFactory.setKeyManagerPassword("OBF:19iy19j019j219j419j619j8");
+        sslContextFactory.setKeyStorePath(HdfsProxyServer.conf.getKeyStorePath());
+        sslContextFactory.setKeyStorePassword(HdfsProxyServer.conf.getKeyStorePass());
+        sslContextFactory.setKeyManagerPassword(HdfsProxyServer.conf.getKeyStorePass());
 
-        HttpConfiguration https_config = new HttpConfiguration(http_config);
+        HttpConfiguration https_config = new HttpConfiguration(httpConfig);
         https_config.addCustomizer(new SecureRequestCustomizer());
 
         ServerConnector https_connector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory,"http/1.1"), new HttpConnectionFactory(https_config));
-        https_connector.setPort(conf.getHttps_port());
+        https_connector.setPort(conf.getHttpsPort());
         https_connector.setIdleTimeout(500000);
         server.setConnectors(new Connector[]{ http_connector, https_connector });
 
@@ -63,7 +54,7 @@ public class HdfsProxyServer{
         webApp.setResourceBase(".");
         webApp.addServlet(UploadFileServlet.class, "/uploadData");
         webApp.addServlet(GetFileInfoServlet.class, "/getFileInfo");
-        webApp.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "true");
+        webApp.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "false");
         webApp.setInitParameter("org.eclipse.jetty.servlet.Default.useFileMappedBuffer", "false");
         server.setHandler(webApp);
 
@@ -93,17 +84,8 @@ public class HdfsProxyServer{
 	}
 
     public static void startHdfsProxyServer(){
-    	ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyConf.xml");
-    	conf = appContext.getBean("HdfsProxyConf", HdfsProxyServerConf.class);
-    	logger.info("Http port = " + conf.getHttp_port());
-    	logger.info("Https port = " + conf.getHttps_port());
-    	logger.info("Buffer size = " + conf.getBufferSize());
-    	Assert.assertNotNull("Http port is null", conf.getHttp_port());
-    	Assert.assertNotNull("Https port is null", conf.getHttps_port());
-    	Assert.assertNotNull("Buffer size is null", conf.getBufferSize());
-    	Assert.assertTrue("Http port is less than 0", conf.getHttp_port() > 0);
-    	Assert.assertTrue("Https port is less than 0", conf.getHttps_port() > 0);
-    	Assert.assertTrue("Buffer size is less than 0", conf.getBufferSize() > 0);
+    	ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyServerConf.xml");
+    	conf = appContext.getBean("HdfsProxyServerConf", HdfsProxyServerConf.class);
 
 		HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();
 		hdfsProxyServer.start();
