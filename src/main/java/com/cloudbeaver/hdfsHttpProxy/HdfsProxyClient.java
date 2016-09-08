@@ -27,7 +27,7 @@ public class HdfsProxyClient {
 				JSONObject jsonObject = new JSONObject();
 		    	jsonObject.put("userName", hdfsProxyInfoConf.getUserName());
 		    	jsonObject.put("passWd", hdfsProxyInfoConf.getPassWd());
-		    	jsonObject.put("tableUrl", hdfsProxyInfoConf.getTableUrl());
+		    	jsonObject.put("tableId", BeaverUtils.getTableIdFromUploadUrl(hdfsProxyInfoConf.getTableUrl()));
 		    	String fileName = fileFullName.substring(fileFullName.lastIndexOf("/")+1);
 				jsonObject.put("fileName", fileName);
 

@@ -39,19 +39,17 @@ public class GetFileInfoServlet extends HttpServlet{
         String fileName = reqJson.getString("fileName");
         String userName = reqJson.getString("userName");
         String passWd = reqJson.getString("passWd");
-        String tableUrl = reqJson.getString("tableUrl");
-        String tableId = tableUrl.substring(tableUrl.lastIndexOf("/")+1);
+        String tableId = reqJson.getString("tableId");
 
         JSONObject respJson = new JSONObject();
-    	try {
-    		DatabaseBean dbBean = new DatabaseBean();
-            dbBean.setDb(HdfsProxyServer.conf.getDbName());
-            dbBean.setDbUserName(HdfsProxyServer.conf.getDbUser());
-            dbBean.setDbPassword(HdfsProxyServer.conf.getDbPass());
-            dbBean.setType(HdfsProxyServer.conf.getDbType());
-            dbBean.setDbUrl(HdfsProxyServer.conf.getDbUrl());
+		DatabaseBean dbBean = new DatabaseBean();
+        dbBean.setDb(HdfsProxyServer.conf.getDbName());
+        dbBean.setDbUserName(HdfsProxyServer.conf.getDbUser());
+        dbBean.setDbPassword(HdfsProxyServer.conf.getDbPass());
+        dbBean.setType(HdfsProxyServer.conf.getDbType());
+        dbBean.setDbUrl(HdfsProxyServer.conf.getDbUrl());
 
-			Connection conn = SqlHelper.getDBConnectionNoRetry(dbBean);
+    	try (Connection conn = SqlHelper.getDBConnectionNoRetry(dbBean)) {
 			Statement st = conn.createStatement();
 			String sql = "select \"email\", \"password\", \"ownerId\",\"linkId\",\"uploadKey\" "
 					+ "from \"Tables\" t, \"Files\" f, \"Users\" u "
@@ -74,20 +72,20 @@ public class GetFileInfoServlet extends HttpServlet{
 		    		tokenJson.put("offset", length);
 		    		byte[] token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), HdfsProxyServer.SERVER_PASSWORD );
 
-		    		respJson.put("errorCode", BeaverUtils.ErrCode.OK);
+		    		respJson.put("errorCode", BeaverUtils.ErrCode.OK.ordinal());
 		    		respJson.put("fileName", fileName);
 		    		respJson.put("offset", length);
 		    		respJson.put("token", Base64.encodeBase64String(token));
 				} else {
-					respJson.put("errorCode", BeaverUtils.ErrCode.PASS_CHECK_ERROR);
+					respJson.put("errorCode", BeaverUtils.ErrCode.PASS_CHECK_ERROR.ordinal());
 				}
 			} else {
-				respJson.put("errorCode", BeaverUtils.ErrCode.USER_NOT_EXIST);
+				respJson.put("errorCode", BeaverUtils.ErrCode.USER_NOT_EXIST.ordinal());
 			}
 		} catch (SQLException | ClassNotFoundException e1) {
 			logger.error("connect to database failed!");
 			BeaverUtils.printLogExceptionAndSleep(e1, "connect to database failed!", 5000);
-			respJson.put("errorCode", BeaverUtils.ErrCode.SQL_ERROR);
+			respJson.put("errorCode", BeaverUtils.ErrCode.SQL_ERROR.ordinal());
 		}
 
     	resp.setHeader("Content-type", "text/html;charset=UTF-8");

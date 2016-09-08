@@ -531,4 +531,9 @@ public class BeaverUtils {
 
 	    return keySpec;
 	}
+
+	public static Object getTableIdFromUploadUrl(String tableUrl) {
+//		example: upload://table/db5a8742-6460-11e6-bba9-09259609bdc7/0f2vxj_HBA2xzBdu
+		return tableUrl.substring("upload://table/".length(), tableUrl.lastIndexOf('/'));
+	}
 }
