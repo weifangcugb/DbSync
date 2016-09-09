@@ -2,6 +2,7 @@ package com.cloudbeaver.hdfsHttpProxy;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -70,12 +71,14 @@ public class GetFileInfoServlet extends HttpServlet{
 		    		tokenJson.put("passWd", passWd);
 		    		tokenJson.put("position", hdfsPrefix + fileName);
 		    		tokenJson.put("offset", length);
+		    		logger.info("before encryption, token = " + tokenJson);
 		    		byte[] token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), HdfsProxyServer.SERVER_PASSWORD );
+		    		logger.info("after encryption, token = " + token);
 
 		    		respJson.put("errorCode", BeaverUtils.ErrCode.OK.ordinal());
 		    		respJson.put("fileName", fileName);
 		    		respJson.put("offset", length);
-		    		respJson.put("token", Base64.encodeBase64String(token));
+		    		respJson.put("token", URLEncoder.encode(Base64.encodeBase64String(token)));
 				} else {
 					respJson.put("errorCode", BeaverUtils.ErrCode.PASS_CHECK_ERROR.ordinal());
 				}

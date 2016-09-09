@@ -461,14 +461,6 @@ public class BeaverUtils {
 		}
 	}
 
-	/**
-	 * AES加密
-	 * 
-	 * @param bytes
-	 * @param key
-	 * @return
-	 * @throws AesSecurityException
-	 */
 	public static byte[] encryptAes(byte[] bytes, String key) throws SecurityException{
 		Key keySpec;
 	    try {
@@ -482,14 +474,6 @@ public class BeaverUtils {
 	    }
 	}
 
-	/**
-	 * AES解密
-	 * 
-	 * @param bytes
-	 * @param key
-	 * @return
-	 * @throws AesSecurityException
-	 */
 	public static byte[] decryptAes(byte[] bytes, String key) throws SecurityException{
 	    Key keySpec;
 	    try {
@@ -503,32 +487,15 @@ public class BeaverUtils {
 	    }
 	}
 
-	/**
-	 * 根据字符串生成密钥字节数组 ,Aes规定为128位
-	 * 
-	 * @param keyStr 密钥字符串
-	 * 
-	 * @return
-	 * 
-	 * @throws UnsupportedEncodingException
-	 */
 	public static Key buildAesKey(String keyStr) throws UnsupportedEncodingException {
-	    byte[] key = new byte[16]; // 声明一个8位的字节数组，默认里面都是0
-	    byte[] temp = keyStr.getBytes("UTF-8"); // 将字符串转成字节数组
-
-	    /*
-	     * 执行数组拷贝 System.arraycopy(源数组，从源数组哪里开始拷贝，目标数组，拷贝多少位)
-	     */
+	    byte[] key = new byte[16];
+	    byte[] temp = keyStr.getBytes("UTF-8");
 	    if (key.length > temp.length) {
-	        // 如果temp不够24位，则拷贝temp数组整个长度的内容到key数组中
 	        System.arraycopy(temp, 0, key, 0, temp.length);
 	    } else {
-	        // 如果temp大于24位，则拷贝temp数组24个长度的内容到key数组中
 	        System.arraycopy(temp, 0, key, 0, key.length);
 	    }
-
 	    SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
-
 	    return keySpec;
 	}
 

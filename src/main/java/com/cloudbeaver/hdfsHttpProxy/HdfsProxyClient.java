@@ -33,11 +33,17 @@ public class HdfsProxyClient {
 
 //				first, sync position with web server
 				String json = BeaverUtils.doPost(hdfsProxyInfoConf.getFileInfoUrl(), jsonObject.toString(), true);
+				logger.info("json = " + json);
 				jsonObject = JSONObject.fromObject(json);
 				if(jsonObject.containsKey("errorCode") && jsonObject.getInt("errorCode") == 0 && jsonObject.containsKey("fileName") 
 						&& jsonObject.containsKey("offset") && jsonObject.containsKey("token")
-						&& fileName.equals(jsonObject.get("fileName")) && jsonObject.getLong("offset") > -1){
-					BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), fileFullName, jsonObject.getLong("offset"));
+						&& fileName.equals(jsonObject.get("fileName")) && jsonObject.getLong("offset") >= -1){
+					if(jsonObject.getLong("offset") == -1){
+						BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), fileFullName, 0);
+					}
+					else{
+						BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), fileFullName, jsonObject.getLong("offset"));
+					}
 					break;
 				} else {
 					if(jsonObject.getInt("errorCode") == ErrCode.SQL_ERROR.ordinal()){
@@ -55,7 +61,7 @@ public class HdfsProxyClient {
 
 	public static void main(String[] args) {
 		String filename = "/home/beaver/Documents/test/hadoop/harry.txt";
-		String url = "https://localhost:8811/uploaddata?fileName=" + filename.substring(filename.lastIndexOf("/") + 1);
+		String url = "http://localhost:8811/uploaddata?fileName=" + filename.substring(filename.lastIndexOf("/") + 1);
 		HdfsProxyClient hdfsHttpClient = new HdfsProxyClient();
 		hdfsHttpClient.doUploadFileData(filename, url);		
 	}

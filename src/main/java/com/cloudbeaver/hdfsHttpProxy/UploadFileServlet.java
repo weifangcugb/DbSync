@@ -2,12 +2,7 @@ package com.cloudbeaver.hdfsHttpProxy;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -24,7 +19,7 @@ import net.sf.json.JSONObject;
 @WebServlet("/uploadData")
 public class UploadFileServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(UploadFileServlet.class);
-	public static int BUFFER_SIZE;
+	public static int BUFFER_SIZE = HdfsProxyServer.conf.getBufferSize();
 
 	@Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -36,9 +31,7 @@ public class UploadFileServlet extends HttpServlet{
     	logger.info("start upload data to HDFS");
     	String filename = req.getParameter("fileName");
     	String token = req.getParameter("token");
-    	logger.info("before decryption, token = " + token);
     	String tokenJson = new String(BeaverUtils.decryptAes(Base64.decodeBase64(token), HdfsProxyServer.SERVER_PASSWORD));
-    	logger.info("after decryption, token = " + tokenJson);
     	JSONObject jObject = JSONObject.fromObject(tokenJson);
     	String position = jObject.getString("position");
 
@@ -71,10 +64,4 @@ public class UploadFileServlet extends HttpServlet{
     		logger.info("Finish writing data to HDFS");
 		}
     }
-
-	public Key getKey(String keyContent) throws NoSuchAlgorithmException {
-    	KeyGenerator kgen = KeyGenerator.getInstance("AES");  
-        kgen.init(128, new SecureRandom(keyContent.getBytes())); 
-        return new SecretKeySpec(kgen.generateKey().getEncoded(), "AES");
-	}
 }
