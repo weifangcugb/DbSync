@@ -27,7 +27,7 @@ class PostStringUploader implements PostUploader{
 	@Override
 	public void upload(OutputStream out, String content, long startIdx) throws IOException {
         PrintWriter pWriter = new PrintWriter(out);
-        pWriter.write(content);
+        pWriter.write(startIdx > 0 ? content.substring((int)startIdx) : content);
         pWriter.flush();
 	}
 }
@@ -47,9 +47,12 @@ class PostFileUploader implements PostUploader{
 	}
 
 	@Override
-	public void upload(OutputStream out, String fileName, long startIdx) throws IOException {
+	public void upload(OutputStream out, String fileName, long offset) throws IOException {
 		try( RandomAccessFile in = new RandomAccessFile(fileName, "r") ){
-			in.seek(startIdx);
+			if (offset > 0) {
+				in.seek(offset);
+			}
+
 			byte[] readBuf = new byte[READ_BUFFER_SIZE];
 			int len = 0;
 			while ((len = in.read(readBuf)) != -1) {

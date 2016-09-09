@@ -27,12 +27,14 @@ public class HdfsHelper {
 	}
 
 	public static void writeFile(String path, byte[] buffer, int readCount) throws IOException {
+		logger.info("start to write hdfs file, path:" + path + " len:" + readCount);
 		FileSystem fileSystem = FileSystem.get(URI.create(rootPath), conf);
 		Path fileFullName = new Path(path);
 		FSDataOutputStream fsOut = fileSystem.exists(fileFullName) ? fileSystem.append(fileFullName) : fileSystem.create(fileFullName) ;
 		fsOut.write(buffer, 0, readCount);
 		fsOut.flush();
 		fsOut.close();
+		logger.info("finish writing hdfs file, path:" + path + " len:" + readCount);
 	}
 
 	public static long getFileLength(String path) throws IOException {
@@ -51,5 +53,9 @@ public class HdfsHelper {
 				BeaverUtils.printLogExceptionAndSleep(e, "got exception when open a stream", 5000);
 			}
 		}
+	}
+
+	public static String getRealPathWithTableId(String tableId) {
+		return tableId;
 	}
 }

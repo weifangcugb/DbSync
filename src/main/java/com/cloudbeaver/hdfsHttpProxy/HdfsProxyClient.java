@@ -18,32 +18,23 @@ public class HdfsProxyClient {
 	private static final String CONF_BEAN = "HdfsProxyClientConf";
 	private static final String CONF_FILE = CommonUploader.CONF_FILE_DIR + CONF_BEAN + ".xml";
 
-	public void doUploadFileData(String fileFullName, String urlString) {
+	public void doUploadFileData(String localFileName, String urlString) {
 		ApplicationContext appContext = new FileSystemXmlApplicationContext(CONF_FILE);
 		HdfsProxyClientConf hdfsProxyInfoConf = appContext.getBean(CONF_BEAN, HdfsProxyClientConf.class);
 
 		while(true) {
 			try{
+//				first, sync position with web server
 				JSONObject jsonObject = new JSONObject();
 		    	jsonObject.put("userName", hdfsProxyInfoConf.getUserName());
-		    	jsonObject.put("passWd", hdfsProxyInfoConf.getPassWd());
+		    	jsonObject.put("passWord", hdfsProxyInfoConf.getPassWd());
 		    	jsonObject.put("tableId", BeaverUtils.getTableIdFromUploadUrl(hdfsProxyInfoConf.getTableUrl()));
-		    	String fileName = fileFullName.substring(fileFullName.lastIndexOf("/")+1);
-				jsonObject.put("fileName", fileName);
-
-//				first, sync position with web server
 				String json = BeaverUtils.doPost(hdfsProxyInfoConf.getFileInfoUrl(), jsonObject.toString(), true);
-				logger.info("json = " + json);
+
 				jsonObject = JSONObject.fromObject(json);
-				if(jsonObject.containsKey("errorCode") && jsonObject.getInt("errorCode") == 0 && jsonObject.containsKey("fileName") 
-						&& jsonObject.containsKey("offset") && jsonObject.containsKey("token")
-						&& fileName.equals(jsonObject.get("fileName")) && jsonObject.getLong("offset") >= -1){
-					if(jsonObject.getLong("offset") == -1){
-						BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), fileFullName, 0);
-					}
-					else{
-						BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), fileFullName, jsonObject.getLong("offset"));
-					}
+				if(jsonObject.containsKey("errorCode") && jsonObject.getInt("errorCode") == 0 && jsonObject.containsKey("offset") 
+						&& jsonObject.containsKey("token") && jsonObject.getLong("offset") >= 0){	
+					BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), localFileName, jsonObject.getLong("offset"));
 					break;
 				} else {
 					if(jsonObject.getInt("errorCode") == ErrCode.SQL_ERROR.ordinal()){

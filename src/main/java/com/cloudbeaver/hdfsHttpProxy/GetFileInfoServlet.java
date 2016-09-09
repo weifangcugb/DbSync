@@ -22,6 +22,8 @@ import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.HdfsHelper;
 import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
+
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 @WebServlet("/getFileInfo")
@@ -37,50 +39,39 @@ public class GetFileInfoServlet extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
         JSONObject reqJson = JSONObject.fromObject(IOUtils.toString(req.getInputStream()));
-        String fileName = reqJson.getString("fileName");
         String userName = reqJson.getString("userName");
-        String passWd = reqJson.getString("passWd");
+        String password = reqJson.getString("passWord");
         String tableId = reqJson.getString("tableId");
 
         JSONObject respJson = new JSONObject();
-		DatabaseBean dbBean = new DatabaseBean();
-        dbBean.setDb(HdfsProxyServer.conf.getDbName());
-        dbBean.setDbUserName(HdfsProxyServer.conf.getDbUser());
-        dbBean.setDbPassword(HdfsProxyServer.conf.getDbPass());
-        dbBean.setType(HdfsProxyServer.conf.getDbType());
-        dbBean.setDbUrl(HdfsProxyServer.conf.getDbUrl());
-
+        DatabaseBean dbBean = HdfsProxyServer.getDataBaseBeanFromConf();
     	try (Connection conn = SqlHelper.getDBConnection(dbBean)) {
-			Statement st = conn.createStatement();
-			String sql = "select \"email\", \"password\", \"ownerId\",\"linkId\",\"uploadKey\" "
-					+ "from \"Tables\" t, \"Files\" f, \"Users\" u "
-					+ "where t.id = f.\"linkId\" and u.id = f.\"ownerId\" and t.id = '" + tableId + "';";
-			ResultSet rs = st.executeQuery(sql);
-			String password = null;
-			String email = null;
-			if(rs.next()){
-				password = rs.getString("password");
-				email = rs.getString("email");
-				String uploadKey = rs.getString("uploadKey");
-				if( email.equals(userName) && BCrypt.checkpw(passWd, password) ){
-		    		long length = HdfsHelper.getFileLength(hdfsPrefix + fileName);
+			JSONArray resultArray = SqlHelper.execSimpleQuery(HdfsProxyServer.getSQLFromTableId(tableId), dbBean, conn);
+			if(resultArray.size() > 0){
+				for(int i = 0; i < resultArray.size(); i++){
+					JSONObject jObject = resultArray.getJSONObject(i);
+					if( jObject.getString("email").equals(userName) && BCrypt.checkpw(jObject.getString("password"), password) ){
+			    		long length = HdfsHelper.getFileLength(hdfsPrefix + HdfsHelper.getRealPathWithTableId(tableId));
+			    		if (length == -1) {
+							length = 0;
+						}
 
-		    		JSONObject tokenJson = new JSONObject();
-		    		tokenJson.put("uploadKey", uploadKey);
-		    		tokenJson.put("userName", userName);
-		    		tokenJson.put("passWd", passWd);
-		    		tokenJson.put("position", hdfsPrefix + fileName);
-		    		tokenJson.put("offset", length);
-		    		logger.info("before encryption, token = " + tokenJson);
-		    		byte[] token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), HdfsProxyServer.SERVER_PASSWORD );
-		    		logger.info("after encryption, token = " + token);
+			    		JSONObject tokenJson = new JSONObject();
+			    		tokenJson.put("tableId", tableId);
+			    		tokenJson.put("uploadKey", jObject.getString("uploadKey"));
+			    		tokenJson.put("username", userName);
+			    		tokenJson.put("passWord", password);
+			    		tokenJson.put("location", hdfsPrefix + HdfsHelper.getRealPathWithTableId(tableId));
+			    		tokenJson.put("offset", length);
+			    		tokenJson.put("requestTime", System.currentTimeMillis());
 
-		    		respJson.put("errorCode", BeaverUtils.ErrCode.OK.ordinal());
-		    		respJson.put("fileName", fileName);
-		    		respJson.put("offset", length);
-		    		respJson.put("token", URLEncoder.encode(Base64.encodeBase64String(token), BeaverUtils.DEFAULT_CHARSET));
-				} else {
-					respJson.put("errorCode", BeaverUtils.ErrCode.PASS_CHECK_ERROR.ordinal());
+			    		byte[] token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), HdfsProxyServer.SERVER_PASSWORD );
+			    		respJson.put("token", URLEncoder.encode(Base64.encodeBase64String(token), BeaverUtils.DEFAULT_CHARSET));
+			    		respJson.put("errorCode", BeaverUtils.ErrCode.OK.ordinal());
+			    		respJson.put("offset", length);
+					} else {
+						respJson.put("errorCode", BeaverUtils.ErrCode.PASS_CHECK_ERROR.ordinal());
+					}
 				}
 			} else {
 				respJson.put("errorCode", BeaverUtils.ErrCode.USER_NOT_EXIST.ordinal());
@@ -88,7 +79,7 @@ public class GetFileInfoServlet extends HttpServlet{
 		} catch(SQLException  e) {
 			respJson.put("errorCode", BeaverUtils.ErrCode.SQL_ERROR.ordinal());
 			BeaverUtils.printLogExceptionWithoutSleep(e, "connect to database failed");
-		} catch(ClassNotFoundException e) {
+		} catch(ClassNotFoundException | SecurityException e) {
 			respJson.put("errorCode", BeaverUtils.ErrCode.OTHER_ERROR.ordinal());
 			BeaverUtils.printLogExceptionWithoutSleep(e, "class not fount, server fatal error");
 		}

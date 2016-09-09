@@ -62,6 +62,28 @@ public class SqlHelper {
 		return conn;
     }
 
+    public static JSONArray execSimpleQuery(String sqlQuery, DatabaseBean dbBean, Connection con) throws ClassNotFoundException, SQLException{
+    	PreparedStatement pStatement = con.prepareStatement(sqlQuery);
+    	ResultSet rs = pStatement.executeQuery();
+
+    	JSONArray resultArray = new JSONArray();
+    	while (rs.next()) {
+    		JSONObject jsonObj = new JSONObject();
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName =metaData.getColumnLabel(i).trim();
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value == null ? "" : value.trim());
+            }
+
+            resultArray.add(jsonObj);
+		}
+
+    	return resultArray;
+    }
+
 	private static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
 		Connection con = getCachedConnKeepTrying(dbBean);
 		try {

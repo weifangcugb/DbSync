@@ -14,12 +14,15 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServerConf;
 
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
 	static String SERVER_PASSWORD = "123456";
 	static HdfsProxyServerConf conf;
+	public static long TOKEN_EXPIRE_INTERVAL = 300 * 1000;
+
 	private Server server;
 
 	public void start(){
@@ -65,6 +68,23 @@ public class HdfsProxyServer{
 			logger.fatal("hdfs proxy server can't start");
 		}
     }
+
+	public static DatabaseBean getDataBaseBeanFromConf() {
+		DatabaseBean dbBean = new DatabaseBean();
+        dbBean.setDb(HdfsProxyServer.conf.getDbName());
+        dbBean.setDbUserName(HdfsProxyServer.conf.getDbUser());
+        dbBean.setDbPassword(HdfsProxyServer.conf.getDbPass());
+        dbBean.setType(HdfsProxyServer.conf.getDbType());
+        dbBean.setDbUrl(HdfsProxyServer.conf.getDbUrl());
+
+        return dbBean;
+	}
+
+	public static String getSQLFromTableId(String tableId){
+		return "select \"email\", \"password\", \"ownerId\",\"linkId\",\"uploadKey\" "
+				+ "from \"Tables\" t, \"Files\" f, \"Users\" u "
+				+ "where t.id = f.\"linkId\" and u.id = f.\"ownerId\" and t.id = '" + tableId + "';";
+	}
 
     public void stop(){
 		if (server != null) {
