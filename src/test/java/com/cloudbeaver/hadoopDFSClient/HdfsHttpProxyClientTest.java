@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.common.HdfsHelper;
 import com.cloudbeaver.hdfsHttpProxy.HdfsProxyClient;
 
 import net.sf.json.JSONObject;
@@ -26,6 +27,7 @@ public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 //	private static String fileFullName = "/home/beaver/Documents/test/hadoop/test.txt";
 	private static String urlPrefix = "http://localhost/uploadData?fileName=";
 	private static String hdfsPrefix = "hdfs://localhost:9000/test/";
+	private String tableId = "db5a8742-6460-11e6-bba9-09259609bdc7";
 	private static int UPLOAD_SIZE = 1024 * 1024;
 	private static int UPLOAD_RETRY_TIMES = 16;
 	private long UPLOAD_ERROR_SLEEP_TIME = 5000;
@@ -134,7 +136,7 @@ public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 		try {
 			doUploadFileData(fileFullName, url);
 			logger.info("upload data to HDFS succeed!");
-			String hdfsData = getMd5ByString(readFromHdfs(fileFullName.substring(fileFullName.lastIndexOf("/")+1)));
+			String hdfsData = getMd5ByString(readFromHdfs(HdfsHelper.getRealPathWithTableId(tableId)));
 			String localData = getMd5ByString(readFromLocal(fileFullName));
 			Assert.assertEquals(hdfsData, localData);
 		} catch (IOException e) {

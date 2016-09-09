@@ -9,10 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -55,6 +53,9 @@ public class DbUploaderTest extends DbUploader{
 		DB2TypeMap.put("PrasDB", "webservice");
 		DB2TypeMap.put("JfkhDB", "oracle");
 		DB2TypeMap.put("DocumentDBForSqlite", "sqlite");
+		DB2TypeMap.put("DocumentFiles", "file");
+		DB2TypeMap.put("VideoMeetingDB", "sqlserver");
+		DB2TypeMap.put("HelpDB", "sqlserver");
 	}
 
 	private static MockWebServer mockServer = new MockWebServer();
@@ -83,8 +84,8 @@ public class DbUploaderTest extends DbUploader{
 		throw new Exception("get BeaverFatalException during testing");
 	}
 
-	@Test
-//	@Ignore
+//	@Test
+	@Ignore
 	public void testGetMsgForSqlserverStep() throws Exception {
 		setup();
 		MultiDatabaseBean olddbs = getDbBeans();
@@ -151,8 +152,8 @@ public class DbUploaderTest extends DbUploader{
 		}
 	}
 
-	@Test
-//	@Ignore
+//	@Test
+	@Ignore
     public void testGetMsgForSqlserver() throws Exception {
         setup();
         int num = getThreadNum();
@@ -177,7 +178,7 @@ public class DbUploaderTest extends DbUploader{
 		int num = getDbBeans().getDatabases().size();
 		MultiDatabaseBean newdbs = olddbs;
 		for(int j = 0; j < MAX_LOOP_NUM; j++){
-			isEqulas(olddbs, newdbs);			
+			isEqulas(olddbs, newdbs);
 			for (int index = 0; index < num; index++) {
 				DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
 				if (dbBean == null) {
@@ -303,8 +304,8 @@ public class DbUploaderTest extends DbUploader{
 		}
 	}
 
-	@Test
-//	@Ignore
+//	@Test
+	@Ignore
     public void testGetMsgForWeb() throws Exception {
         setup();
         int num = getThreadNum();
@@ -321,8 +322,8 @@ public class DbUploaderTest extends DbUploader{
         }
 	}
 
-	@Test
-//	@Ignore
+//	@Test
+	@Ignore
 	public void testGetMsgForWebSync() throws Exception {
         setup();
         int num = getThreadNum();
@@ -362,8 +363,8 @@ public class DbUploaderTest extends DbUploader{
         }
 	}
 
-	@Test
-//	@Ignore
+//	@Test
+	@Ignore
 	public void	testGetMsgForOraleStep() throws SQLException, BeaverFatalException, JsonProcessingException, IOException {
 		setup();
 		MultiDatabaseBean olddbs = getDbBeans();
@@ -430,8 +431,8 @@ public class DbUploaderTest extends DbUploader{
 		}
 	}
 
-	@Test(timeout = 5 * 60 * 1000) 
-//	@Ignore
+//	@Test(timeout = 5 * 60 * 1000) 
+	@Ignore
     public void testGetMsgForOracle() throws BeaverFatalException {
         setup();
         int num = getThreadNum();
@@ -448,21 +449,15 @@ public class DbUploaderTest extends DbUploader{
         }
 	}
 
-//    @Test
-	@Ignore
+    @Test
+//	@Ignore
     public void testGetMsgProduct() throws BeaverFatalException{
         setup();
         int num = getThreadNum();
         for (int index = 0; index < num; index++) {
             DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
-            if (dbBean == null) {
+            if (dbBean == null || dbBean.getType().equals(DbUploader.DB_TYPE_SQL_SQLITE)) {
                 continue;
-            }
-            if(dbBean.getType().equals(DB_TYPE_SQL_SQLITE)){
-            	continue;
-            }
-            else if(dbBean.getType().equals(DB_TYPE_SQL_ORACLE)){
-            	continue;
             }
             else{
             	doTask(dbBean);
@@ -473,20 +468,20 @@ public class DbUploaderTest extends DbUploader{
 
 	public static void main(String[] args) {
 		DbUploaderTest appTest = new DbUploaderTest();
-//		appTest.setUpServers();
+		appTest.setUpServers();
 
 		try {
 //			appTest.testGetMsgForSqlserverStep();
 //			appTest.testGetMsgForSqlserver();
 //			appTest.testGetMsgForWeb();
 //			appTest.testGetMsgForWebSync();
-			appTest.testGetMsgForOracle();
+//			appTest.testGetMsgForOracle();
 //			appTest.testGetMsgForOraleStep();
-//			appTest.testGetMsgForSqlite();
-//			appTest.testGetMsgProduct();
+			appTest.testGetMsgForSqlite();
+			appTest.testGetMsgProduct();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-//		appTest.tearDownServers();
+		appTest.tearDownServers();
 	}
 }

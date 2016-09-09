@@ -34,7 +34,7 @@ public class DbUploader extends CommonUploader{
 	private static final int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 
     private static Map<String, String> appKeySecret = new HashMap<String, String>();
-    {
+    static {
     	String appPreDefKey = "20150603";
     	String appPreDefSecret = "7454739E907F5595AE61D84B8547F574";
     	appKeySecret.put(appPreDefKey, appPreDefSecret);

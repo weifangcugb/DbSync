@@ -22,9 +22,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import scala.collection.mutable.ArrayBuilder.ofBoolean;
-import scala.sys.process.ProcessBuilderImpl.AndBuilder;
-
 @WebServlet("/api/business/sync/*")
 public class GetTaskServlet extends HttpServlet{
 	private static Logger logger = Logger.getLogger(GetTaskServlet.class);
@@ -163,7 +160,43 @@ public class GetTaskServlet extends HttpServlet{
 			+ "{\"table\":\"hj\",\"join\":[\"hj_fb\"],\"key\":\"hj.hjid=hj_fb.hjid\",\"xgsj\":\"0\"},{\"table\":\"khjf\",\"xgsj\":\"0\"},{\"table\":\"khjf_sd\",\"xgsj\":\"0\"},"
 			+ "{\"table\":\"khf\",\"xgsj\":\"0\"},{\"table\":\"thdj\",\"xgsj\":\"0\"},{\"table\":\"wp_bgzb\",\"join\":[\"wp_bgbc\"],\"key\":"
 			+ "\"wp_bgzb.bh=wp_bgbc.bh AND wp_bgzb.djrq=wp_bgbc.djrq\",\"xgsj\":\"0\"},{\"table\":\"wwzk\",\"xgsj\":\"0\"},{\"table\":\"wwjc\",\"xgsj\":\"0\"},"
-			+ "{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\",\"xgsj\":\"0\"},{\"table\":\"sndd\",\"xgsj\":\"0\"}]}]}";
+			+ "{\"table\":\"wwbx\",\"join\":[\"wwzk\"],\"key\":\"wwbx.bh=wwzk.bh AND wwbx.pzrq=wwzk.pzrq\",\"xgsj\":\"0\"},{\"table\":\"sndd\",\"xgsj\":\"0\"}]},"
+			+ "{\"db\":\"VideoMeetingDB\",\"rowversion\":\"id\",\"tables\":"
+			+ "[{\"table\":\"MeetingApplies\",\"ID\":\"" + 0 + "\", \"join\":[\"UserAccounts\", \"Prisoner\", \"Users\", \"Departments\", \"Jails\"],"
+			+ "\"key\":\" MeetingApplies.PrisonerFk = Prisoner.UserFk and MeetingApplies.CreateUserFk = UserAccounts.Id and Prisoner.UserFk = Users.Id and Users.DepartmentFk = Departments.Id and Users.JailFk = Jails.Id\"}]},"
+			+ "{\"db\":\"HelpDB\",\"rowversion\":\"id\",\"tables\":"
+			+ "[{\"table\":\"Fee_UserCharges\",\"ID\":\"" + 0 + "\", \"join\":[\"Fee_UserAccounts\", \"Users\", \"Departments\"],"
+			+ "\"key\":\"  Fee_UserCharges.UserFk = Users.Id and Fee_UserCharges.UserAccountFk = Fee_UserAccounts.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Fee_UserDeductions\",\"ID\":\"" + 0 + "\", \"join\":[\"Users\", \"Departments\"],\"key\":\"Fee_UserDeductions.UserFk = Users.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Contacts\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"Contacts.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id and Contacts.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Sms_SmsSendBoxes\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"Sms_SmsSendBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id and Sms_SmsSendBoxes.FailureReasonFk = CommonCodes.Id and Sms_SmsSendBoxes.FeelingFk = CommonCodes.Id "
+			+ "and Sms_SmsSendBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Sms_SmsReceiveBoxes\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"Sms_SmsReceiveBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id and Sms_SmsReceiveBoxes.FailureReasonFk = CommonCodes.Id "
+			+ "and Sms_SmsReceiveBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"ClassRoom_Histories\",\"ID\":\"" + 0 + "\", \"join\":[\"ClassRoom_Videos\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"ClassRoom_Histories.UserFk = Users.Id and ClassRoom_Histories.VideoFk = ClassRoom_Videos.Id and ClassRoom_Videos.TypeFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"ClassRoom_StudyNotes\",\"ID\":\"" + 0 + "\", \"join\":[\"ClassRoom_Videos\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"ClassRoom_StudyNotes.UserFk = Users.Id and ClassRoom_StudyNotes.VideoFk = ClassRoom_Videos.Id and ClassRoom_Videos.TypeFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Library_BookHistories\",\"ID\":\"" + 0 + "\", \"join\":[\"Library_Books\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"Library_BookHistories.UserFk = Users.Id and Library_BookHistories.BookFk = Library_Books.Id and Library_Books.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Library_BookReviews\",\"ID\":\"" + 0 + "\", \"join\":[\"Library_Books\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"Library_BookReviews.UserFk = Users.Id and Library_BookReviews.BookFk = Library_Books.Id and Library_Books.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Vod_VideoHistories\",\"ID\":\"" + 0 + "\", \"join\":[\"Vod_Videos\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"Vod_VideoHistories.UserFk = Users.Id and Vod_VideoHistories.VideoFk = Vod_Videos.Id and Vod_Videos.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Vod_VideoReviews\",\"ID\":\"" + 0 + "\", \"join\":[\"Vod_Videos\", \"Users\", \"Departments\", \"CommonCodes\"],"
+			+ "\"key\":\"Vod_VideoReviews.UserFk = Users.Id and Vod_VideoReviews.VideoFk = Vod_Videos.Id and Vod_Videos.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Terminal_TerminalApplications\",\"ID\":\"" + 0 + "\", \"join\":[\"Terminal_SubscribeInfos\", \"TerminalApplications_SubscribeInfos\", "
+			+ "\"Terminal_TerminalInfos\", \"Terminal_TerminalModels\", \"Users\", \"Departments\"],"
+			+ "\"key\":\"Terminal_TerminalApplications.UserFk = Users.Id and Terminal_TerminalApplications.TerminalFk = Terminal_TerminalInfos.Id "
+			+ "and Terminal_TerminalApplications.TerminalModelFk = Terminal_TerminalModels.Id and TerminalApplications_SubscribeInfos.SubscribeInfoFk = Terminal_SubscribeInfos.Id "
+			+ "and TerminalApplications_SubscribeInfos.TerminalApplicationFk = Terminal_TerminalApplications.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"Messages\",\"ID\":\"" + 0 + "\", \"join\":[\"Users\", \"Departments\"],\"key\":\"Messages.UserFk = Users.Id and Users.DepartmentFk = Departments.Id\"},"
+			+ "{\"table\":\"RainGlass_UserEmotions\",\"ID\":\"" + 0 + "\", \"join\":[\"RainGlass_Emotions\", \"RainGlass_EmotionPersuasions\", \"Users\", \"Departments\"],"
+			+ "\"key\":\"RainGlass_UserEmotions.UserFk = Users.Id and RainGlass_UserEmotions.EmotionFk = RainGlass_Emotions.Id "
+			+ "and RainGlass_Emotions.Id = RainGlass_EmotionPersuasions.EmotionFk and Users.DepartmentFk = Departments.Id\"}]}]}";
 
 //	private static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj\",\"tables\":["
 //		+ "{\"table\":\"da_jbxx\",\"xgsj\":\"0\"},{\"table\":\"da_jl\",\"xgsj\":\"0\"},{\"table\":\"da_qklj\",\"xgsj\":\"0\"},"
@@ -222,8 +255,46 @@ public class GetTaskServlet extends HttpServlet{
 					+ "\"key\":\"  Fee_UserCharges.UserFk = Users.Id and Fee_UserCharges.UserAccountFk = Fee_UserAccounts.Id "
 						+ "and Users.DepartmentFk = Departments.Id\"},"
 				+ "{\"table\":\"Fee_UserDeductions\",\"ID\":\"" + 0 + "\", \"join\":[\"Users\", \"Departments\"],"
-					+ "\"key\":\"Fee_UserDeductions.UserFk = Users.Id and Users.DepartmentFk = Departments.Id\" }"
-				
+					+ "\"key\":\"Fee_UserDeductions.UserFk = Users.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Contacts\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"Contacts.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id "
+						+ "and Contacts.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Sms_SmsSendBoxes\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"Sms_SmsSendBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id "
+						+ "and Sms_SmsSendBoxes.FailureReasonFk = CommonCodes.Id and Sms_SmsSendBoxes.FeelingFk = CommonCodes.Id "
+							+ "and Sms_SmsSendBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Sms_SmsReceiveBoxes\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"Sms_SmsReceiveBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id "
+						+ "and Sms_SmsReceiveBoxes.FailureReasonFk = CommonCodes.Id and Sms_SmsReceiveBoxes.RelationFk = CommonCodes.Id "
+							+ "and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"ClassRoom_Histories\",\"ID\":\"" + 0 + "\", \"join\":[\"ClassRoom_Videos\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"ClassRoom_Histories.UserFk = Users.Id and ClassRoom_Histories.VideoFk = ClassRoom_Videos.Id "
+						+ "and ClassRoom_Videos.TypeFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"ClassRoom_StudyNotes\",\"ID\":\"" + 0 + "\", \"join\":[\"ClassRoom_Videos\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"ClassRoom_StudyNotes.UserFk = Users.Id and ClassRoom_StudyNotes.VideoFk = ClassRoom_Videos.Id "
+						+ "and ClassRoom_Videos.TypeFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Library_BookHistories\",\"ID\":\"" + 0 + "\", \"join\":[\"Library_Books\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"Library_BookHistories.UserFk = Users.Id and Library_BookHistories.BookFk = Library_Books.Id "
+						+ "and Library_Books.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Library_BookReviews\",\"ID\":\"" + 0 + "\", \"join\":[\"Library_Books\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"Library_BookReviews.UserFk = Users.Id and Library_BookReviews.BookFk = Library_Books.Id "
+						+ "and Library_Books.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Vod_VideoHistories\",\"ID\":\"" + 0 + "\", \"join\":[\"Vod_Videos\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"Vod_VideoHistories.UserFk = Users.Id and Vod_VideoHistories.VideoFk = Vod_Videos.Id "
+						+ "and Vod_Videos.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Vod_VideoReviews\",\"ID\":\"" + 0 + "\", \"join\":[\"Vod_Videos\", \"Users\", \"Departments\", \"CommonCodes\"],"
+					+ "\"key\":\"Vod_VideoReviews.UserFk = Users.Id and Vod_VideoReviews.VideoFk = Vod_Videos.Id "
+						+ "and Vod_Videos.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Terminal_TerminalApplications\",\"ID\":\"" + 0 + "\", \"join\":[\"Terminal_SubscribeInfos\", \"TerminalApplications_SubscribeInfos\", "
+					+ "\"Terminal_TerminalInfos\", \"Terminal_TerminalModels\", \"Users\", \"Departments\"],"
+						+ "\"key\":\"Terminal_TerminalApplications.UserFk = Users.Id and Terminal_TerminalApplications.TerminalFk = Terminal_TerminalInfos.Id "
+							+ "and Terminal_TerminalApplications.TerminalModelFk = Terminal_TerminalModels.Id and TerminalApplications_SubscribeInfos.SubscribeInfoFk = Terminal_SubscribeInfos.Id "
+								+ "and TerminalApplications_SubscribeInfos.TerminalApplicationFk = Terminal_TerminalApplications.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"Messages\",\"ID\":\"" + 0 + "\", \"join\":[\"Users\", \"Departments\"],"
+					+ "\"key\":\"Messages.UserFk = Users.Id and Users.DepartmentFk = Departments.Id\"},"
+				+ "{\"table\":\"RainGlass_UserEmotions\",\"ID\":\"" + 0 + "\", \"join\":[\"RainGlass_Emotions\", \"RainGlass_EmotionPersuasions\", \"Users\", \"Departments\"],"
+					+ "\"key\":\"RainGlass_UserEmotions.UserFk = Users.Id and RainGlass_UserEmotions.EmotionFk = RainGlass_Emotions.Id "
+						+ "and RainGlass_Emotions.Id = RainGlass_EmotionPersuasions.EmotionFk and Users.DepartmentFk = Departments.Id\"}"
 				+ "]}"
 			+ "]}";
 
@@ -242,7 +313,7 @@ public class GetTaskServlet extends HttpServlet{
 			ObjectMapper oMapper = new ObjectMapper();
 			if (clientId.endsWith("db")) {
 				//test all
-//				databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
+				databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
 				//for web server test
 //				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
 				//for sqlite
@@ -250,7 +321,7 @@ public class GetTaskServlet extends HttpServlet{
 				//for oracle
 //				databaseBeans = oMapper.readValue(zhongCiInitJson, MultiDatabaseBean.class);
 				//for sql server2008
-				databaseBeans = oMapper.readValue(bangjiaoInitJson, MultiDatabaseBean.class);
+//				databaseBeans = oMapper.readValue(bangjiaoInitJson, MultiDatabaseBean.class);
 			}
 			else if(clientId.endsWith("documentfile")){
 				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);

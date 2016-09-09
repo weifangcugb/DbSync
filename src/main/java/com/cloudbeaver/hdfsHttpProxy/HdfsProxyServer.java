@@ -22,7 +22,7 @@ public class HdfsProxyServer{
 	static String SERVER_PASSWORD = "123456";
 	static HdfsProxyServerConf conf;
 	public static long TOKEN_EXPIRE_INTERVAL = 300 * 1000;
-
+	private static HdfsProxyServer hdfsProxyServer;
 	private Server server;
 
 	public void start(){
@@ -98,16 +98,18 @@ public class HdfsProxyServer{
 	}
 
     public static void stopHdfsProxyServer(){
-		HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();
-		hdfsProxyServer.stop();
+		HdfsProxyServer hServer = new HdfsProxyServer();
+		hServer = hdfsProxyServer;
+		hServer.stop();
 	}
 
     public static void startHdfsProxyServer(){
     	ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyServerConf.xml");
     	conf = appContext.getBean("HdfsProxyServerConf", HdfsProxyServerConf.class);
 
-		HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();
-		hdfsProxyServer.start();
+		HdfsProxyServer hServer = new HdfsProxyServer();
+		hdfsProxyServer = hServer;
+		hServer.start();
 	}
 
 	public static void main(String[] args){

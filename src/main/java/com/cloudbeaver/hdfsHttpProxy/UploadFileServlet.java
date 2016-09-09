@@ -77,8 +77,8 @@ public class UploadFileServlet extends HttpServlet{
 			if(resultArray.size() > 0){
 				for(int i = 0; i < resultArray.size(); i++){
 					JSONObject jObject = resultArray.getJSONObject(i);
-					if ( jObject.getString("email").equals(userName) && BCrypt.checkpw(jObject.getString("password"), password)
-						&& jObject.getString("uploadKey").equals(uploadKey) && System.currentTimeMillis() > (requestTime + HdfsProxyServer.TOKEN_EXPIRE_INTERVAL)) {
+					if ( jObject.getString("email").equals(userName) && BCrypt.checkpw(password, jObject.getString("password"))
+						&& jObject.getString("uploadKey").equals(uploadKey) && System.currentTimeMillis() < (requestTime + HdfsProxyServer.TOKEN_EXPIRE_INTERVAL)) {
 						return BeaverUtils.ErrCode.OK;
 					}
 				}

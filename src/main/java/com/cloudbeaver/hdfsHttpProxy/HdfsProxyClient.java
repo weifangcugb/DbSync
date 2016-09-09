@@ -37,9 +37,9 @@ public class HdfsProxyClient {
 					BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), localFileName, jsonObject.getLong("offset"));
 					break;
 				} else {
-					if(jsonObject.getInt("errorCode") == ErrCode.SQL_ERROR.ordinal()){
+					if(jsonObject.getInt("errorCode") == ErrCode.SQL_ERROR.ordinal()) {
 						throw new SQLException("connect to database failed");
-					}else{
+					} else {
 						throw new IOException("missing argument filename or length or errorCode or token or server response error");
 					}
 				}
@@ -52,7 +52,7 @@ public class HdfsProxyClient {
 
 	public static void main(String[] args) {
 		String filename = "/home/beaver/Documents/test/hadoop/harry.txt";
-		String url = "http://localhost:8811/uploaddata?fileName=" + filename.substring(filename.lastIndexOf("/") + 1);
+		String url = "http://localhost:8833/uploaddata?fileName=" + filename.substring(filename.lastIndexOf("/") + 1);
 		HdfsProxyClient hdfsHttpClient = new HdfsProxyClient();
 		hdfsHttpClient.doUploadFileData(filename, url);		
 	}

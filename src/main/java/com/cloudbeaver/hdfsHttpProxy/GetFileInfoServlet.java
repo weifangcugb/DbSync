@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -50,7 +48,7 @@ public class GetFileInfoServlet extends HttpServlet{
 			if(resultArray.size() > 0){
 				for(int i = 0; i < resultArray.size(); i++){
 					JSONObject jObject = resultArray.getJSONObject(i);
-					if( jObject.getString("email").equals(userName) && BCrypt.checkpw(jObject.getString("password"), password) ){
+					if( jObject.getString("email").equals(userName) && BCrypt.checkpw(password, jObject.getString("password")) ){
 			    		long length = HdfsHelper.getFileLength(hdfsPrefix + HdfsHelper.getRealPathWithTableId(tableId));
 			    		if (length == -1) {
 							length = 0;
@@ -60,7 +58,7 @@ public class GetFileInfoServlet extends HttpServlet{
 			    		tokenJson.put("tableId", tableId);
 			    		tokenJson.put("uploadKey", jObject.getString("uploadKey"));
 			    		tokenJson.put("username", userName);
-			    		tokenJson.put("passWord", password);
+			    		tokenJson.put("password", password);
 			    		tokenJson.put("location", hdfsPrefix + HdfsHelper.getRealPathWithTableId(tableId));
 			    		tokenJson.put("offset", length);
 			    		tokenJson.put("requestTime", System.currentTimeMillis());

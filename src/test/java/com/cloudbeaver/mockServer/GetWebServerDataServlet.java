@@ -72,7 +72,6 @@ public class GetWebServerDataServlet extends HttpServlet{
     		pageno = req.getParameter("pageno");
     	}
 //    	System.out.println("pageno = "+pageno);
-    	
     	if(!DbUploader.getAppKeySecret().containsKey(appkey)){
     		System.out.println(appkey);
     		throw new ServletException("AppKey is invalid!");
