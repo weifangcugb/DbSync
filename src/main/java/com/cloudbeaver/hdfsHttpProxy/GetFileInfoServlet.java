@@ -50,9 +50,7 @@ public class GetFileInfoServlet extends HttpServlet{
         dbBean.setType(HdfsProxyServer.conf.getDbType());
         dbBean.setDbUrl(HdfsProxyServer.conf.getDbUrl());
 
-        Connection conn = null;
-    	try{
-    		conn = SqlHelper.getDBConnectionNoRetry(dbBean);
+    	try (Connection conn = SqlHelper.getDBConnection(dbBean)) {
 			Statement st = conn.createStatement();
 			String sql = "select \"email\", \"password\", \"ownerId\",\"linkId\",\"uploadKey\" "
 					+ "from \"Tables\" t, \"Files\" f, \"Users\" u "
@@ -80,7 +78,7 @@ public class GetFileInfoServlet extends HttpServlet{
 		    		respJson.put("errorCode", BeaverUtils.ErrCode.OK.ordinal());
 		    		respJson.put("fileName", fileName);
 		    		respJson.put("offset", length);
-		    		respJson.put("token", URLEncoder.encode(Base64.encodeBase64String(token)));
+		    		respJson.put("token", URLEncoder.encode(Base64.encodeBase64String(token), BeaverUtils.DEFAULT_CHARSET));
 				} else {
 					respJson.put("errorCode", BeaverUtils.ErrCode.PASS_CHECK_ERROR.ordinal());
 				}
@@ -88,7 +86,6 @@ public class GetFileInfoServlet extends HttpServlet{
 				respJson.put("errorCode", BeaverUtils.ErrCode.USER_NOT_EXIST.ordinal());
 			}
 		} catch(SQLException  e) {
-			SqlHelper.closeConnection(conn, dbBean);
 			respJson.put("errorCode", BeaverUtils.ErrCode.SQL_ERROR.ordinal());
 			BeaverUtils.printLogExceptionWithoutSleep(e, "connect to database failed");
 		} catch(ClassNotFoundException e) {

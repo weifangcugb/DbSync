@@ -311,7 +311,6 @@ public class DbUploader extends CommonUploader{
 			return jArray.toString();
 		} catch (SQLException e) {
 			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
-			SqlHelper.removeConnection(dbBean);
 			throw new BeaverTableNeedRetryException();
 		}
 	}
@@ -340,7 +339,6 @@ public class DbUploader extends CommonUploader{
 			return jArray.toString();
 		} catch (SQLException e) {
 			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
-			SqlHelper.removeConnection(dbBean);
 			throw new BeaverTableNeedRetryException();
 		}
 	}

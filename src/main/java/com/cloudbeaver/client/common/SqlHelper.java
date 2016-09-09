@@ -21,10 +21,14 @@ public class SqlHelper {
      */
     private static Hashtable<String, Connection> conMap = new Hashtable<String, Connection>();
 
-    public static Connection getConnKeepTrying(DatabaseBean dbBean) throws BeaverFatalException {
+    public static Connection getCachedConnKeepTrying(DatabaseBean dbBean) throws BeaverFatalException {
             while (FixedNumThreadPool.isRunning()) {
             	try{
-            		return getDBConnectionNoRetry(dbBean);
+                    if (!conMap.containsKey(dbBean.getDb())) {
+                    	conMap.put(dbBean.getDb(), getDBConnection(dbBean));                    	
+                    }
+
+                    return (Connection) conMap.get(dbBean.getDb());
             	}catch (SQLException | ClassNotFoundException e) {
             		BeaverUtils.printLogExceptionAndSleep(e, "can't get connection", 5000);
 				}
@@ -33,43 +37,37 @@ public class SqlHelper {
             throw new BeaverFatalException("program get stop request from user, exit now");
     }
 
-    public static Connection getDBConnectionNoRetry(DatabaseBean dbBean) throws ClassNotFoundException, SQLException{
-        if (conMap.containsKey(dbBean.getDb())) {
-            return (Connection) conMap.get(dbBean.getDb());
-        } else {
-        	String driverClassName = null;
-            if (dbBean.getDbUrl().startsWith("jdbc:sqlserver")) {
-                driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-            } else if (dbBean.getDbUrl().startsWith("jdbc:oracle")) {
-                driverClassName = "oracle.jdbc.driver.OracleDriver";
-            } else if (dbBean.getDbUrl().startsWith("jdbc:sqlite")){
-            	driverClassName = "org.sqlite.JDBC";
-            } else if (dbBean.getDbUrl().startsWith("jdbc:postgresql")){
-            	driverClassName = "org.postgresql.Driver";
-            }
-
-            logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
-
-			Class.forName(driverClassName);
-			Connection conn = null;
-			if (dbBean.getDbUrl().startsWith("jdbc:sqlite")) {
-				conn = DriverManager.getConnection(dbBean.getDbUrl());
-			} else {
-				conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
-			}
-			conMap.put(dbBean.getDb(), conn);
-
-			return conn;
+    public static Connection getDBConnection(DatabaseBean dbBean) throws ClassNotFoundException, SQLException{
+    	String driverClassName = null;
+        if (dbBean.getDbUrl().startsWith("jdbc:sqlserver")) {
+            driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+        } else if (dbBean.getDbUrl().startsWith("jdbc:oracle")) {
+            driverClassName = "oracle.jdbc.driver.OracleDriver";
+        } else if (dbBean.getDbUrl().startsWith("jdbc:sqlite")){
+        	driverClassName = "org.sqlite.JDBC";
+        } else if (dbBean.getDbUrl().startsWith("jdbc:postgresql")){
+        	driverClassName = "org.postgresql.Driver";
         }
+
+        logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
+
+		Class.forName(driverClassName);
+		Connection conn = null;
+		if (dbBean.getDbUrl().startsWith("jdbc:sqlite")) {
+			conn = DriverManager.getConnection(dbBean.getDbUrl());
+		} else {
+			conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
+		}
+
+		return conn;
     }
 
 	private static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
-		Connection con = getConnKeepTrying(dbBean);
-		PreparedStatement pStatement = null;
+		Connection con = getCachedConnKeepTrying(dbBean);
 		try {
 //			Statement statement = con.createStatement();
 //			ResultSet rs = statement.executeQuery(sqlQuery);
-			pStatement = con.prepareStatement(sqlQuery);
+			PreparedStatement pStatement = con.prepareStatement(sqlQuery);
 	        //s.setQueryTimeout(10);
 	        ResultSet rs = pStatement.executeQuery();
 
@@ -103,13 +101,7 @@ public class SqlHelper {
 
 	        return maxXgsjUtilNow;
 		} finally {
-			if (pStatement != null) {
-				try {
-					pStatement.close();	
-				} catch (Exception e) {
-					BeaverUtils.PrintStackTrace(e);
-				}
-			}
+			removeCachedConnection(dbBean);
 		}
 	}
 
@@ -146,13 +138,12 @@ public class SqlHelper {
 		return execSqlQuery(sqlQuery, dbBean, null);
 	}
 
-	public static void removeConnection(DatabaseBean dBean) {
+	public static void removeCachedConnection(DatabaseBean dBean) {
+		closeConnection(conMap.get(dBean.getDb()));
 		conMap.remove(dBean.getDb());
 	}
 
-	public static void closeConnection(Connection conn, DatabaseBean dBean) {
-		conMap.remove(dBean.getDb());
-
+	public static void closeConnection(Connection conn) {
 		if (conn != null) {
 			try {
 				conn.close();
