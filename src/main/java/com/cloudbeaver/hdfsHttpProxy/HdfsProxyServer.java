@@ -16,7 +16,6 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServerConf;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
