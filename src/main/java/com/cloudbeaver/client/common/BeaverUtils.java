@@ -71,7 +71,8 @@ public class BeaverUtils {
 		OK("all things ok"),
 		SQL_ERROR("can't execute sql query"),
 		USER_NOT_EXIST("user doesn't exist"),
-		PASS_CHECK_ERROR("password is wrong");
+		PASS_CHECK_ERROR("password is wrong"),
+		OTHER_ERROR("other error");
 
 		private String errMsg;
 		ErrCode(String errMsg) {
@@ -357,9 +358,13 @@ public class BeaverUtils {
 	}
 
 	public static void printLogExceptionAndSleep(Exception e, String msgPrefix, int sleepTime) {
+		printLogExceptionWithoutSleep(e, msgPrefix);
+		BeaverUtils.sleep(sleepTime);
+	}
+
+	public static void printLogExceptionWithoutSleep(Exception e, String msgPrefix) {
 		BeaverUtils.PrintStackTrace(e);
 		logger.error(msgPrefix + ", msg:" + e.getMessage());
-		BeaverUtils.sleep(sleepTime);
 	}
 
 	public static String getRequestSign(Map<String, String> paraMap, String appSecret) throws NoSuchAlgorithmException {

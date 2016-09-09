@@ -49,7 +49,9 @@ public class GetFileInfoServlet extends HttpServlet{
         dbBean.setType(HdfsProxyServer.conf.getDbType());
         dbBean.setDbUrl(HdfsProxyServer.conf.getDbUrl());
 
-    	try (Connection conn = SqlHelper.getDBConnectionNoRetry(dbBean)) {
+        Connection conn = null;
+    	try{
+    		conn = SqlHelper.getDBConnectionNoRetry(dbBean);
 			Statement st = conn.createStatement();
 			String sql = "select \"email\", \"password\", \"ownerId\",\"linkId\",\"uploadKey\" "
 					+ "from \"Tables\" t, \"Files\" f, \"Users\" u "
@@ -82,10 +84,13 @@ public class GetFileInfoServlet extends HttpServlet{
 			} else {
 				respJson.put("errorCode", BeaverUtils.ErrCode.USER_NOT_EXIST.ordinal());
 			}
-		} catch (SQLException | ClassNotFoundException e1) {
-			logger.error("connect to database failed!");
-			BeaverUtils.printLogExceptionAndSleep(e1, "connect to database failed!", 5000);
+		} catch(SQLException  e) {
+			SqlHelper.closeConnection(conn, dbBean);
 			respJson.put("errorCode", BeaverUtils.ErrCode.SQL_ERROR.ordinal());
+			BeaverUtils.printLogExceptionWithoutSleep(e, "connect to database failed");
+		} catch(ClassNotFoundException e) {
+			respJson.put("errorCode", BeaverUtils.ErrCode.OTHER_ERROR.ordinal());
+			BeaverUtils.printLogExceptionWithoutSleep(e, "class not fount, server fatal error");
 		}
 
     	resp.setHeader("Content-type", "text/html;charset=UTF-8");
