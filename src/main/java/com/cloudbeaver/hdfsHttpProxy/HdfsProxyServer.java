@@ -16,13 +16,23 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServerConf;
+import com.sun.org.apache.bcel.internal.generic.NEW;
 
 public class HdfsProxyServer{
 	private static Logger logger = Logger.getLogger(HdfsProxyServer.class);
 	static String SERVER_PASSWORD = "123456";
 	static HdfsProxyServerConf conf;
 	public static long TOKEN_EXPIRE_INTERVAL = 300 * 1000;
-	private static HdfsProxyServer hdfsProxyServer;
+	public static String EMAIL = "email";
+	public static String PASSWORD = "password";
+	public static String TABLEID = "tableId";
+	public static String OFFSET = "offset";
+	public static String ERRORCODE = "errorCode";
+	public static String TOKEN = "token";
+	public static String UPLOADKEY = "uploadKey";
+	public static String LOCATION = "location";
+	public static String REQUESTTIME = "requestTime";
+	private static HdfsProxyServer hdfsProxyServer = new HdfsProxyServer();
 	private Server server;
 
 	public void start(){
@@ -98,8 +108,7 @@ public class HdfsProxyServer{
 	}
 
     public static void stopHdfsProxyServer(){
-		HdfsProxyServer hServer = new HdfsProxyServer();
-		hServer = hdfsProxyServer;
+		HdfsProxyServer hServer = hdfsProxyServer;
 		hServer.stop();
 	}
 
@@ -107,8 +116,7 @@ public class HdfsProxyServer{
     	ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyServerConf.xml");
     	conf = appContext.getBean("HdfsProxyServerConf", HdfsProxyServerConf.class);
 
-		HdfsProxyServer hServer = new HdfsProxyServer();
-		hdfsProxyServer = hServer;
+		HdfsProxyServer hServer = hdfsProxyServer;
 		hServer.start();
 	}
 

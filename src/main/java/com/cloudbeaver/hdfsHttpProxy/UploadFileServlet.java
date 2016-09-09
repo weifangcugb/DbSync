@@ -35,12 +35,12 @@ public class UploadFileServlet extends HttpServlet{
 
 	@Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
-    	String token = req.getParameter("token");
+    	String token = req.getParameter(HdfsProxyServer.TOKEN);
     	String tokenJson = new String(BeaverUtils.decryptAes(Base64.decodeBase64(token), HdfsProxyServer.SERVER_PASSWORD));
     	JSONObject jObject = JSONObject.fromObject(tokenJson);
     	BeaverUtils.ErrCode errCode = veryfiToken(jObject);
     	if(errCode == BeaverUtils.ErrCode.OK){
-        	String location = jObject.getString("location");
+        	String location = jObject.getString(HdfsProxyServer.LOCATION);
         	int readNumTillNow = 0, len = 0;
         	byte[] buffer = new byte[BUFFER_SIZE];
         	DataInputStream dataInputStream = new DataInputStream(req.getInputStream());
@@ -67,18 +67,18 @@ public class UploadFileServlet extends HttpServlet{
 	private BeaverUtils.ErrCode veryfiToken(JSONObject tokenOject){
 		DatabaseBean dbBean = HdfsProxyServer.getDataBaseBeanFromConf();
     	try (Connection conn = SqlHelper.getDBConnection(dbBean)) {
-    		String userName = tokenOject.getString("username");
-    		String password = tokenOject.getString("password");
-    		long requestTime = tokenOject.getLong("requestTime");
-    		String tableId = tokenOject.getString("tableId");
-    		String uploadKey = tokenOject.getString("uploadKey");
+    		String userName = tokenOject.getString(HdfsProxyServer.EMAIL);
+    		String password = tokenOject.getString(HdfsProxyServer.PASSWORD);
+    		long requestTime = tokenOject.getLong(HdfsProxyServer.REQUESTTIME);
+    		String tableId = tokenOject.getString(HdfsProxyServer.TABLEID);
+    		String uploadKey = tokenOject.getString(HdfsProxyServer.UPLOADKEY);
 
 			JSONArray resultArray = SqlHelper.execSimpleQuery(HdfsProxyServer.getSQLFromTableId(tableId), dbBean, conn);
 			if(resultArray.size() > 0){
 				for(int i = 0; i < resultArray.size(); i++){
 					JSONObject jObject = resultArray.getJSONObject(i);
-					if ( jObject.getString("email").equals(userName) && BCrypt.checkpw(password, jObject.getString("password"))
-						&& jObject.getString("uploadKey").equals(uploadKey) && System.currentTimeMillis() < (requestTime + HdfsProxyServer.TOKEN_EXPIRE_INTERVAL)) {
+					if ( jObject.getString(HdfsProxyServer.EMAIL).equals(userName) && BCrypt.checkpw(password, jObject.getString(HdfsProxyServer.PASSWORD))
+						&& jObject.getString(HdfsProxyServer.UPLOADKEY).equals(uploadKey) && System.currentTimeMillis() < (requestTime + HdfsProxyServer.TOKEN_EXPIRE_INTERVAL)) {
 						return BeaverUtils.ErrCode.OK;
 					}
 				}

@@ -37,9 +37,9 @@ public class GetFileInfoServlet extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
         JSONObject reqJson = JSONObject.fromObject(IOUtils.toString(req.getInputStream()));
-        String userName = reqJson.getString("userName");
-        String password = reqJson.getString("passWord");
-        String tableId = reqJson.getString("tableId");
+        String userName = reqJson.getString(HdfsProxyServer.EMAIL);
+        String password = reqJson.getString(HdfsProxyServer.PASSWORD);
+        String tableId = reqJson.getString(HdfsProxyServer.TABLEID);
 
         JSONObject respJson = new JSONObject();
         DatabaseBean dbBean = HdfsProxyServer.getDataBaseBeanFromConf();
@@ -48,37 +48,37 @@ public class GetFileInfoServlet extends HttpServlet{
 			if(resultArray.size() > 0){
 				for(int i = 0; i < resultArray.size(); i++){
 					JSONObject jObject = resultArray.getJSONObject(i);
-					if( jObject.getString("email").equals(userName) && BCrypt.checkpw(password, jObject.getString("password")) ){
+					if( jObject.getString(HdfsProxyServer.EMAIL).equals(userName) && BCrypt.checkpw(password, jObject.getString(HdfsProxyServer.PASSWORD)) ){
 			    		long length = HdfsHelper.getFileLength(hdfsPrefix + HdfsHelper.getRealPathWithTableId(tableId));
 			    		if (length == -1) {
 							length = 0;
 						}
 
 			    		JSONObject tokenJson = new JSONObject();
-			    		tokenJson.put("tableId", tableId);
-			    		tokenJson.put("uploadKey", jObject.getString("uploadKey"));
-			    		tokenJson.put("username", userName);
-			    		tokenJson.put("password", password);
-			    		tokenJson.put("location", hdfsPrefix + HdfsHelper.getRealPathWithTableId(tableId));
-			    		tokenJson.put("offset", length);
-			    		tokenJson.put("requestTime", System.currentTimeMillis());
+			    		tokenJson.put(HdfsProxyServer.TABLEID, tableId);
+			    		tokenJson.put(HdfsProxyServer.UPLOADKEY, jObject.getString(HdfsProxyServer.UPLOADKEY));
+			    		tokenJson.put(HdfsProxyServer.EMAIL, userName);
+			    		tokenJson.put(HdfsProxyServer.PASSWORD, password);
+			    		tokenJson.put(HdfsProxyServer.LOCATION, hdfsPrefix + HdfsHelper.getRealPathWithTableId(tableId));
+			    		tokenJson.put(HdfsProxyServer.OFFSET, length);
+			    		tokenJson.put(HdfsProxyServer.REQUESTTIME, System.currentTimeMillis());
 
 			    		byte[] token = BeaverUtils.encryptAes(tokenJson.toString().getBytes(), HdfsProxyServer.SERVER_PASSWORD );
-			    		respJson.put("token", URLEncoder.encode(Base64.encodeBase64String(token), BeaverUtils.DEFAULT_CHARSET));
-			    		respJson.put("errorCode", BeaverUtils.ErrCode.OK.ordinal());
-			    		respJson.put("offset", length);
+			    		respJson.put(HdfsProxyServer.TOKEN, URLEncoder.encode(Base64.encodeBase64String(token), BeaverUtils.DEFAULT_CHARSET));
+			    		respJson.put(HdfsProxyServer.ERRORCODE, BeaverUtils.ErrCode.OK.ordinal());
+			    		respJson.put(HdfsProxyServer.OFFSET, length);
 					} else {
-						respJson.put("errorCode", BeaverUtils.ErrCode.PASS_CHECK_ERROR.ordinal());
+						respJson.put(HdfsProxyServer.ERRORCODE, BeaverUtils.ErrCode.PASS_CHECK_ERROR.ordinal());
 					}
 				}
 			} else {
-				respJson.put("errorCode", BeaverUtils.ErrCode.USER_NOT_EXIST.ordinal());
+				respJson.put(HdfsProxyServer.ERRORCODE, BeaverUtils.ErrCode.USER_NOT_EXIST.ordinal());
 			}
 		} catch(SQLException  e) {
-			respJson.put("errorCode", BeaverUtils.ErrCode.SQL_ERROR.ordinal());
+			respJson.put(HdfsProxyServer.ERRORCODE, BeaverUtils.ErrCode.SQL_ERROR.ordinal());
 			BeaverUtils.printLogExceptionWithoutSleep(e, "connect to database failed");
 		} catch(ClassNotFoundException | SecurityException e) {
-			respJson.put("errorCode", BeaverUtils.ErrCode.OTHER_ERROR.ordinal());
+			respJson.put(HdfsProxyServer.ERRORCODE, BeaverUtils.ErrCode.OTHER_ERROR.ordinal());
 			BeaverUtils.printLogExceptionWithoutSleep(e, "class not fount, server fatal error");
 		}
 

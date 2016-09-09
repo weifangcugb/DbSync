@@ -12,6 +12,8 @@
     	<property name="userName" value="power@power.com" />
     	<property name="passWd" value="apple"/>
     	<property name="tableUrl" value="upload://table/db5a8742-6460-11e6-bba9-09259609bdc7/0f2vxj_HBA2xzBdu" />
+    	<property name="fileLocalPath" value="/home/beaver/Documents/test/hadoop/harry.txt" />
+    	<property name="uploadFileUrl" value="http://localhost/uploadData" />
     </bean>
 
 </beans>
