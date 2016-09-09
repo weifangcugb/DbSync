@@ -16,7 +16,7 @@ public class SqlHelper {
     private static Logger logger = Logger.getLogger(SqlHelper.class);
 
     /*
-     * one connection per db
+     * one connection per db, and cache these connection in map
      * so this class can't used in multi-thread env
      */
     private static Hashtable<String, Connection> conMap = new Hashtable<String, Connection>();
@@ -146,7 +146,19 @@ public class SqlHelper {
 		return execSqlQuery(sqlQuery, dbBean, null);
 	}
 
-	public static void removeConnection(DatabaseBean dbBean) {
-		conMap.remove(dbBean.getDb());
+	public static void removeConnection(DatabaseBean dBean) {
+		conMap.remove(dBean.getDb());
+	}
+
+	public static void closeConnection(Connection conn, DatabaseBean dBean) {
+		conMap.remove(dBean.getDb());
+
+		if (conn != null) {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				BeaverUtils.printLogExceptionWithoutSleep(e, "can't close connection");
+			}
+		}
 	}
 }

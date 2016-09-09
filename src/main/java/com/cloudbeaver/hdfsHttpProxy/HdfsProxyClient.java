@@ -52,7 +52,7 @@ public class HdfsProxyClient {
 						throw new IOException("missing argument filename or length or errorCode or token or server response error");
 					}
 				}
-			}catch(IOException | SQLException e){
+			} catch(IOException | SQLException e) {
 				logger.error("upload file failed");
 				BeaverUtils.printLogExceptionAndSleep(e, "upload file failed", 5000);
 			}
