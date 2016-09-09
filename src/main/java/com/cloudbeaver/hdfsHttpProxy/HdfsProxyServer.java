@@ -98,8 +98,7 @@ public class HdfsProxyServer{
 	}
 
     public static void stopHdfsProxyServer(){
-		HdfsProxyServer hServer = new HdfsProxyServer();
-		hServer = hdfsProxyServer;
+		HdfsProxyServer hServer = hdfsProxyServer;
 		hServer.stop();
 	}
 
@@ -107,9 +106,8 @@ public class HdfsProxyServer{
     	ApplicationContext appContext = new FileSystemXmlApplicationContext("conf/HdfsProxyServerConf.xml");
     	conf = appContext.getBean("HdfsProxyServerConf", HdfsProxyServerConf.class);
 
-		HdfsProxyServer hServer = new HdfsProxyServer();
-		hdfsProxyServer = hServer;
-		hServer.start();
+    	hdfsProxyServer = new HdfsProxyServer();
+		hdfsProxyServer.start();
 	}
 
 	public static void main(String[] args){
