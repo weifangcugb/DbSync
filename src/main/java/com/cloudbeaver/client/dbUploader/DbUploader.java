@@ -34,7 +34,7 @@ public class DbUploader extends CommonUploader{
 	private static final int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 
     private static Map<String, String> appKeySecret = new HashMap<String, String>();
-    {
+    static {
     	String appPreDefKey = "20150603";
     	String appPreDefSecret = "7454739E907F5595AE61D84B8547F574";
     	appKeySecret.put(appPreDefKey, appPreDefSecret);
@@ -311,7 +311,6 @@ public class DbUploader extends CommonUploader{
 			return jArray.toString();
 		} catch (SQLException e) {
 			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
-			SqlHelper.removeConnection(dbBean);
 			throw new BeaverTableNeedRetryException();
 		}
 	}
@@ -326,10 +325,13 @@ public class DbUploader extends CommonUploader{
 //				move to next table
 				throw new BeaverTableIsFullException();
 			}else {
-//				timestamp is like '0x111'
-		    	if (!maxXgsj.startsWith("0x")) {
-					maxXgsj = "0x" + maxXgsj;
+				if (dbBean.getRowversion().equals("xgsj")) {
+//					timestamp is like '0x111'
+			    	if (!maxXgsj.startsWith("0x")) {
+						maxXgsj = "0x" + maxXgsj;
+					}
 				}
+
 				tableBean.setXgsj(maxXgsj);
 			}
 
@@ -337,7 +339,6 @@ public class DbUploader extends CommonUploader{
 			return jArray.toString();
 		} catch (SQLException e) {
 			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + conf.get("db." + dbBean.getDb() + ".url") + " msg:", 1000);
-			SqlHelper.removeConnection(dbBean);
 			throw new BeaverTableNeedRetryException();
 		}
 	}

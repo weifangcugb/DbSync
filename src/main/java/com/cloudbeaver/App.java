@@ -8,10 +8,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
-
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.common.CommonUploader;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.fileUploader.FileUploader;
+import com.cloudbeaver.hdfsHttpProxy.HdfsProxyServer;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.cloudbeaver.server.brokermonitor.BrokerMonitorWebServer;
 import com.cloudbeaver.server.consumer.SyncConsumer;
@@ -38,8 +39,11 @@ public class App {
         option.setRequired(false);
         options.addOption(option);
 
-        option = new Option("l", "large file size", true, "set how large a file is large file,\n should be larger than 100K");
+        option = new Option("l", "larger-than", true, "set how large a file is large file,\n should be larger than 100K");
+        option.setRequired(false);
+        options.addOption(option);
 
+        option = new Option("c", "conf-dir", true, "set where the conf file is");
         option.setRequired(false);
         options.addOption(option);
 
@@ -50,6 +54,11 @@ public class App {
 	            new HelpFormatter().printHelp("java -jar dbsync ", options, true);
 	            return;
             }
+
+	        if (commandLine.hasOption('c')) {
+				String confDir = commandLine.getOptionValue('c');
+				CommonUploader.setConfDir(confDir);
+			}
 
             if (commandLine.hasOption('l')) {
             	String largeFileSize = commandLine.getOptionValue('l');
@@ -104,6 +113,9 @@ public class App {
                     	break;
                     case "mockWebServer":
                     	MockWebServer.startMockWebServer();
+                    	break;
+                    case "hdfsProxyServer":
+                    	HdfsProxyServer.startHdfsProxyServer();
                     	break;
                     default:
                     	throw new ParseException("module name is wrong");

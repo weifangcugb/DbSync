@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/context   
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd   
+          http://www.springframework.org/schema/beans   
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"> 
+ 
+	<bean id="HdfsProxyServerConf" class="com.cloudbeaver.hdfsHttpProxy.proxybean.HdfsProxyServerConf">
+    	<property name="httpPort" value="8833" />
+    	<property name="httpsPort" value="8811" />
+    	<property name="bufferSize" value="102400" />
+
+		<property name="dbName" value="beaver_web_development" />
+		<property name="dbUser" value="beaver" />
+		<property name="dbPass" value="123456" />
+		<property name="dbType" value="postgresDB" />
+		<property name="dbUrl" value="jdbc:postgresql://localhost/beaver_web_development" />
+
+		<property name="keyStorePath" value="src/resources/https/keystore" />
+		<property name="keyStorePass" value="OBF:19iy19j019j219j419j619j8" />
+    </bean>
+
+</beans>

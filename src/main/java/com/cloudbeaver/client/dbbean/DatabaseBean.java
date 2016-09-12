@@ -27,7 +27,7 @@ public class DatabaseBean implements Serializable{
     String appKey;
     String appSecret;
     
-//  there are two types now, 'sqlServerDB' and 'oracleDB' and 'urlDB'
+//  there are two types now, 'sqlServerDB' and 'oracleDB' and 'urlDB' and 'postgresDB'
     String type;
 
     public String getAppKey() {

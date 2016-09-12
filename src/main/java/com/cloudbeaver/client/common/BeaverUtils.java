@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,11 +13,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
+import java.security.Key;
+import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +35,15 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -37,14 +51,46 @@ import org.apache.log4j.Logger;
 //import com.sun.image.codec.jpeg.JPEGCodec;
 //import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
+class beaverTrustManager implements X509TrustManager{
+	@Override 
+	public X509Certificate[] getAcceptedIssuers() {
+		return null; 
+	}
+	@Override 
+	public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
+	}
+	@Override 
+	public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
+	}
+}
+
 public class BeaverUtils {
 	private static Logger logger = Logger.getLogger(BeaverUtils.class);
+
+	public enum ErrCode{
+		OK("all things ok"),
+		SQL_ERROR("can't execute sql query"),
+		USER_NOT_EXIST("user doesn't exist"),
+		PASS_CHECK_ERROR("password is wrong"),
+		OTHER_ERROR("other error");
+
+		private String errMsg;
+		ErrCode(String errMsg) {
+			this.errMsg = errMsg;
+		}
+		public String getErrMsg(){
+			return errMsg;
+		}
+	}
 
 	public static String DEFAULT_CHARSET = "utf-8";
 
 	public static boolean DEBUG_MODE = true;
 
 	private static SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+
+	private static final PostStringUploader postStringUploader = new PostStringUploader();
+	private static final PostFileUploader postFileUploader = new PostFileUploader();
 
 	public static void PrintStackTrace(Exception e) {
 		if (DEBUG_MODE) {
@@ -112,47 +158,87 @@ public class BeaverUtils {
 			first = false;
 			sb.append(key).append('=').append(paraMap.get(key));
 		}
-		return doPost(webUrl, sb.toString(), contentType);
+		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader, false);
 	}
 
 	public static String doPost(String urlString, String flumeJson) throws IOException {
-		return doPost(urlString, flumeJson, "application/json").toString();
+		return doPost(urlString, flumeJson, false).toString();
 	}
 
-	private static StringBuilder doPost(String urlString, String flumeJson, String contentType) throws IOException {
+	public static String doPost(String urlString, String flumeJson, boolean useHttps) throws IOException {
+		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader, useHttps).toString();
+	}
+
+	public static String doPostBigFile(String urlString, String fileName, long seekPos) throws IOException {
+		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader, false).toString();
+	}
+
+	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader, boolean useHttps) throws IOException {
 		BufferedReader br = null;
-		HttpURLConnection urlConnection = null;
+		StringBuilder sb = new StringBuilder();
 		try {
-			if (urlString.indexOf("http://") == -1) {
-				urlString = "http://" + urlString;
+			if (!(urlString.startsWith("https://") || urlString.startsWith("http://"))) {
+				if (useHttps) {
+					urlString = "https://" + urlString;
+				} else {
+					urlString = "http://" + urlString;
+				}
 			}
 
-	        URL url = new URL(urlString);
-	        urlConnection = (HttpURLConnection) url.openConnection();
-	        urlConnection.setRequestMethod("POST");
+			URL url = new URL(urlString);
+
+			URLConnection urlConnection = url.openConnection();
+			urlConnection.setDoInput(true);
+			urlConnection.setConnectTimeout(20000);
 	        urlConnection.setRequestProperty("Content-Type", contentType + ";charset=utf-8");//text/plain
-	        urlConnection.setRequestProperty("Content-Length", "" + flumeJson.length());
-	        urlConnection.setConnectTimeout(20000);
-	        urlConnection.setDoInput(true);
 	        logger.debug(urlConnection.getRequestProperty("Content-Type"));
 
-	        if (flumeJson != null) {
-		        urlConnection.setDoOutput(true);
-		        PrintWriter pWriter = new PrintWriter((urlConnection.getOutputStream()));
-		        pWriter.write(flumeJson);
-		        pWriter.flush();
-		        pWriter.close();				
+			if (useHttps) {
+				HttpsURLConnection httpsURLConnection = (HttpsURLConnection) urlConnection;
+
+				try{
+					SSLContext sslcontext = SSLContext.getInstance("TLS"); 
+					sslcontext.init(null, new TrustManager[]{new beaverTrustManager()}, null);
+					httpsURLConnection.setSSLSocketFactory(sslcontext.getSocketFactory());
+					httpsURLConnection.setHostnameVerifier(new HostnameVerifier() {
+			            public boolean verify(String hostname, SSLSession session) {
+			              return true;
+			            }
+			        });
+				} catch(NoSuchAlgorithmException | KeyManagementException e) {
+					PrintStackTrace(e);
+					throw new IOException(e.getMessage());
+				}
+
+		        httpsURLConnection.setRequestMethod("POST");
+		        postUploader.setUrlConnectionProperty(httpsURLConnection, content);
+			} else {
+				HttpURLConnection httpURLConnection = (HttpURLConnection) urlConnection;
+
+				httpURLConnection.setRequestMethod("POST");
+		        postUploader.setUrlConnectionProperty(httpURLConnection, content);
+			}
+
+	        if (content != null) {
+	        	urlConnection.setDoOutput(true);
+        		try( DataOutputStream out = new DataOutputStream(urlConnection.getOutputStream()) ){
+		        	postUploader.upload(out, content, startIdx);
+		        }
 			}
 
 	        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 	        String line = "";
-	        StringBuilder sb = new StringBuilder();
 	        while ((line = in.readLine()) != null) {
 	            sb.append(line);
 	        }
 
-	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + urlConnection.getResponseCode() + " reply:" + sb.toString());
-	        return sb;
+	        int responseCode = -1;
+	        if (useHttps) {
+				responseCode = ((HttpsURLConnection)urlConnection).getResponseCode();
+			} else {
+				responseCode = ((HttpURLConnection)urlConnection).getResponseCode();
+			}
+	        logger.debug("Got reply message from web, server:" + urlString + " responseCode:" + responseCode + " reply:" + sb.toString());
 		}finally {
 			if (br != null) {
 				try {
@@ -162,6 +248,7 @@ public class BeaverUtils {
 				}
 			}
 		}
+        return sb;
 	}
 
 	/*
@@ -271,9 +358,13 @@ public class BeaverUtils {
 	}
 
 	public static void printLogExceptionAndSleep(Exception e, String msgPrefix, int sleepTime) {
-		BeaverUtils.PrintStackTrace(e);
-		logger.error(msgPrefix + " msg:" + e.getMessage());
+		printLogExceptionWithoutSleep(e, msgPrefix);
 		BeaverUtils.sleep(sleepTime);
+	}
+
+	public static void printLogExceptionWithoutSleep(Exception e, String msgPrefix) {
+		BeaverUtils.PrintStackTrace(e);
+		logger.error(msgPrefix + ", msg:" + e.getMessage());
 	}
 
 	public static String getRequestSign(Map<String, String> paraMap, String appSecret) throws NoSuchAlgorithmException {
@@ -373,5 +464,48 @@ public class BeaverUtils {
 				}
 			}
 		}
+	}
+
+	public static byte[] encryptAes(byte[] bytes, String key) throws SecurityException{
+		Key keySpec;
+	    try {
+	    	keySpec = buildAesKey(key);
+	        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+	        cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+	        return cipher.doFinal(bytes);
+	    } catch (Exception e) {
+	        logger.error(e.getMessage(), e);
+	        throw new SecurityException(e.getMessage(), e);
+	    }
+	}
+
+	public static byte[] decryptAes(byte[] bytes, String key) throws SecurityException{
+	    Key keySpec;
+	    try {
+	        keySpec = buildAesKey(key);
+	        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+	        cipher.init(Cipher.DECRYPT_MODE, keySpec);
+	        return cipher.doFinal(bytes);
+	    } catch (Exception e) {
+	        logger.error(e.getMessage(), e);
+	        throw new SecurityException(e.getMessage(), e);
+	    }
+	}
+
+	public static Key buildAesKey(String keyStr) throws UnsupportedEncodingException {
+	    byte[] key = new byte[16];
+	    byte[] temp = keyStr.getBytes("UTF-8");
+	    if (key.length > temp.length) {
+	        System.arraycopy(temp, 0, key, 0, temp.length);
+	    } else {
+	        System.arraycopy(temp, 0, key, 0, key.length);
+	    }
+	    SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+	    return keySpec;
+	}
+
+	public static Object getTableIdFromUploadUrl(String tableUrl) {
+//		example: upload://table/db5a8742-6460-11e6-bba9-09259609bdc7/0f2vxj_HBA2xzBdu
+		return tableUrl.substring("upload://table/".length(), tableUrl.lastIndexOf('/'));
 	}
 }

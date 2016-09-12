@@ -1,11 +1,7 @@
 package com.cloudbeaver.mockServer;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -52,6 +48,8 @@ public class PostDataServlet extends HttpServlet{
 		DBName2DBType.put("JfkhDB", "oracle");
 		DBName2DBType.put("DocumentDBForSqlite", "sqlite");
 		DBName2DBType.put("DocumentFiles", "file");
+		DBName2DBType.put("VideoMeetingDB", "sqlserver");
+		DBName2DBType.put("HelpDB", "sqlserver");
 	}
 
     @Override
@@ -176,64 +174,54 @@ public class PostDataServlet extends HttpServlet{
     		return ;
     	}
     	MultiDatabaseBean databases = GetTaskServlet.getMultiDatabaseBean();
-    	String maxxgsj = null;
-    	Object table = null;
-    	Object database = null;
     	JSONArray newjArray = JSONArray.fromObject(content);
-		if(newjArray.size()>0){
-			for(int i=0;i<newjArray.size();i++){
-				JSONObject iob = newjArray.getJSONObject(i);
-				String tableName = iob.getString("hdfs_table");
-//				maxxgsj = Long.parseLong(iob.get("xgsj2").toString());
-				if(serverType.equals("sqlserver")){
-					maxxgsj = iob.get("xgsj").toString();
+		for(int i = 0; i < newjArray.size() ;i++){
+			String maxxgsj = "0";
+			JSONObject iob = newjArray.getJSONObject(i);
+			String database = iob.getString("hdfs_db");
+			String tableName = iob.getString("hdfs_table");
+
+			if(serverType.equals("sqlserver")){
+				if(database.equals("VideoMeetingDB") || database.equals("HelpDB")){
+					maxxgsj = iob.getString("id");
+				} else {
+					maxxgsj = iob.getString("xgsj");
 				}
-				else if(serverType.equals("webservice")){
-					String str = null;
-					if(tableName.equals("pias/getItlist")){
-						maxxgsj = iob.getString("starttime").toString();
-					}
-					else if(tableName.equals("qqdh/getTalkList")){
-						str = iob.getString("startdate").toString();
+			} else if(serverType.equals("webservice")){
+				String str = null;
+				if(tableName.equals("pias/getItlist")){
+					maxxgsj = iob.getString("starttime").toString();
+				} else if(tableName.equals("qqdh/getTalkList")){
+					str = iob.getString("startdate").toString();
+					maxxgsj = changeDateToLongFormat(str);
+				} else if(tableName.equals("qqdh/getQqdh")){
+					str = iob.getString("modifydate").toString();
+					if(str.contains("-")){
 						maxxgsj = changeDateToLongFormat(str);
 					}
-					else if(tableName.equals("qqdh/getQqdh")){
-						str = iob.getString("modifydate").toString();
-						if(str.contains("-")){
-							maxxgsj = changeDateToLongFormat(str);
-						}
-						else{
-							maxxgsj = str;
-						}
+					else{
+						maxxgsj = str;
 					}
-					else if(tableName.equals("pras/getResult")){
-						str = iob.getString("CHECKDAY").toString();
-						maxxgsj = changeDateToLongFormat(str);
-					}
-					else if(tableName.equals("pras/getTable")){
-						//do nothing now
-						return;
-					}
-					
+				} else if(tableName.equals("pras/getResult")){
+					str = iob.getString("CHECKDAY").toString();
+					maxxgsj = changeDateToLongFormat(str);
+				} else if(tableName.equals("pras/getTable")){
+					//do nothing now
+					return;
 				}
-				else if(serverType.equals("oracle")){
-					maxxgsj = iob.get("ID").toString();
-				}
-				else if(serverType.equals("sqlite")){
-					maxxgsj = iob.get("xgsj2").toString();
-				}
-				else if(serverType.equals("file")){
-					maxxgsj = iob.get("xgsj").toString();
-				}
-				table = iob.get("hdfs_table");
-				database = iob.get("hdfs_db");
-				
-				searchOriginTask(databases,database,table,maxxgsj,serverType);
-				
-				//GetTaskServlet.setDodumentDBInitJson(databases);
+			} else if(serverType.equals("oracle")){
+				maxxgsj = iob.get("ID").toString();
+			} else if(serverType.equals("sqlite")){
+				maxxgsj = iob.get("xgsj2").toString();
+			} else if(serverType.equals("file")){
+				maxxgsj = iob.get("xgsj").toString();
+			}
+
+			searchOriginTask(databases, database, tableName, maxxgsj, serverType);
+
+			//GetTaskServlet.setDodumentDBInitJson(databases);
 //				System.out.println(GetTaskServlet.getDodumentDBInitJson());
 //				logger.info("new task："+GetTaskServlet.getDodumentDBInitJson());
-			}
 		}
     }
 
