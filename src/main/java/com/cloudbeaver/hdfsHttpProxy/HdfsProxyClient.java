@@ -21,6 +21,7 @@ public class HdfsProxyClient {
 	public void doUploadFileData() {
 		ApplicationContext appContext = new FileSystemXmlApplicationContext(CONF_FILE);
 		HdfsProxyClientConf hdfsProxyInfoConf = appContext.getBean(CONF_BEAN, HdfsProxyClientConf.class);
+
 		String localFileName = hdfsProxyInfoConf.getFileLocalPath();
 		String uploadFileUrl = hdfsProxyInfoConf.getUploadFileUrl();
 
@@ -32,20 +33,17 @@ public class HdfsProxyClient {
 		    	jsonObject.put(HdfsProxyServer.PASSWORD, hdfsProxyInfoConf.getPassWd());
 		    	jsonObject.put(HdfsProxyServer.TABLEID, BeaverUtils.getTableIdFromUploadUrl(hdfsProxyInfoConf.getTableUrl()));
 				String json = BeaverUtils.doPost(hdfsProxyInfoConf.getFileInfoUrl(), jsonObject.toString(), true);
+				JSONObject responseObject = JSONObject.fromObject(json);
 
-				jsonObject = JSONObject.fromObject(json);
-				if(jsonObject.containsKey(HdfsProxyServer.ERRORCODE) && jsonObject.getInt(HdfsProxyServer.ERRORCODE) == 0 && jsonObject.containsKey(HdfsProxyServer.OFFSET) 
-						&& jsonObject.containsKey(HdfsProxyServer.TOKEN) && jsonObject.getLong(HdfsProxyServer.OFFSET) >= 0){	
-					BeaverUtils.doPostBigFile(uploadFileUrl + "?" +HdfsProxyServer.TOKEN + "=" + jsonObject.getString(HdfsProxyServer.TOKEN), localFileName, jsonObject.getLong(HdfsProxyServer.OFFSET));
+//				second, upload file
+				if(responseObject.containsKey(HdfsProxyServer.ERRORCODE) && responseObject.getInt(HdfsProxyServer.ERRORCODE) == 0 && responseObject.containsKey(HdfsProxyServer.OFFSET) 
+						&& responseObject.containsKey(HdfsProxyServer.TOKEN) && responseObject.getLong(HdfsProxyServer.OFFSET) >= 0){
+					BeaverUtils.doPostBigFile(uploadFileUrl + "?" +HdfsProxyServer.TOKEN + "=" + responseObject.getString(HdfsProxyServer.TOKEN), localFileName, responseObject.getLong(HdfsProxyServer.OFFSET));
 					break;
-				} else {
-					if(jsonObject.getInt(HdfsProxyServer.ERRORCODE) == ErrCode.SQL_ERROR.ordinal()) {
-						throw new SQLException("connect to database failed");
-					} else {
-						throw new IOException("missing argument filename or length or errorCode or token or server response error");
-					}
+				}else{
+					throw new IOException(BeaverUtils.ErrCode.getErrCode(responseObject.getInt(HdfsProxyServer.ERRORCODE)).getErrMsg());
 				}
-			} catch(IOException | SQLException e) {
+			} catch(IOException e) {
 				logger.error("upload file failed");
 				BeaverUtils.printLogExceptionAndSleep(e, "upload file failed", 5000);
 			}

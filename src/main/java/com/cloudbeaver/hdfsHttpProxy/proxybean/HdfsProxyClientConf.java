@@ -15,6 +15,7 @@ public class HdfsProxyClientConf {
 		this.uploadFileUrl = uploadFileUrl;
 	}
 	public String getFileLocalPath() {
+		assert(fileLocalPath != null);
 		return fileLocalPath;
 	}
 	public void setFileLocalPath(String fileLocalPath) {
