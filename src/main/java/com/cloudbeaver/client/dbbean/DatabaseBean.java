@@ -47,6 +47,7 @@ public class DatabaseBean implements Serializable{
 	}
 
 	public String getType() {
+		assert(type != null);
 		return type;
 	}
 
@@ -55,6 +56,7 @@ public class DatabaseBean implements Serializable{
 	}
 
 	public String getDbUrl() {
+		assert(dbUrl != null);
 		return dbUrl;
 	}
 

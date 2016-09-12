@@ -67,7 +67,7 @@ public class DbUploaderIntergrationTest extends DbUploader {
 		    				if (maxVersion != null) {
 		    					DbUploaderTest.updateRefTask(maxVersion,olddbs,index,tBean,DbUploaderTest.DB2TypeMap.get(dbName));
 		    					tBean.setXgsj("0x"+maxVersion);
-			    				BeaverUtils.doPost(getConf().get(CONF_FLUME_SERVER_URL), jArray.toString());
+			    				BeaverUtils.doPost(getConf().getFlumeServerUrl(), jArray.toString());
 			    				//test HeartBeat
 			    				doHeartBeat();
 			    				break;

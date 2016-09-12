@@ -135,7 +135,7 @@ public class DbUploaderTest extends DbUploader{
 		    				if (maxVersion != null) {
 		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj("0x"+maxVersion);
-			    				BeaverUtils.doPost(getConf().get(CONF_FLUME_SERVER_URL), flumeJson);
+			    				BeaverUtils.doPost(getConf().getFlumeServerUrl(), flumeJson);
 			    				//test HeartBeat
 			    				doHeartBeat();
 			    				break;
@@ -221,7 +221,7 @@ public class DbUploaderTest extends DbUploader{
 		    				if (maxVersion != null) {
 		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj(maxVersion);
-			    				BeaverUtils.doPost(getConf().get(CONF_FLUME_SERVER_URL), flumeJson);
+			    				BeaverUtils.doPost(getConf().getFlumeServerUrl(), flumeJson);
 			    				break;
 							}
 		    			} catch (IOException e) {
@@ -414,7 +414,7 @@ public class DbUploaderTest extends DbUploader{
 		    				if (maxVersion != null) {
 		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj(maxVersion);
-			    				BeaverUtils.doPost(getConf().get(CONF_FLUME_SERVER_URL), flumeJson);
+			    				BeaverUtils.doPost(getConf().getFlumeServerUrl(), flumeJson);
 			    				//test HeartBeat
 			    				doHeartBeat();
 			    				break;
@@ -468,7 +468,7 @@ public class DbUploaderTest extends DbUploader{
 
 	public static void main(String[] args) {
 		DbUploaderTest appTest = new DbUploaderTest();
-		appTest.setUpServers();
+//		appTest.setUpServers();
 
 		try {
 //			appTest.testGetMsgForSqlserverStep();
@@ -477,11 +477,11 @@ public class DbUploaderTest extends DbUploader{
 //			appTest.testGetMsgForWebSync();
 //			appTest.testGetMsgForOracle();
 //			appTest.testGetMsgForOraleStep();
-			appTest.testGetMsgForSqlite();
+//			appTest.testGetMsgForSqlite();
 			appTest.testGetMsgProduct();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		appTest.tearDownServers();
+//		appTest.tearDownServers();
 	}
 }
