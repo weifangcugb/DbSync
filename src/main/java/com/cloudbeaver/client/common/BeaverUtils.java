@@ -81,6 +81,10 @@ public class BeaverUtils {
 		public String getErrMsg(){
 			return errMsg;
 		}
+
+		public static ErrCode getErrCode(int ordinal) {
+			return ErrCode.values()[ordinal];
+		}
 	}
 
 	public static String DEFAULT_CHARSET = "utf-8";
