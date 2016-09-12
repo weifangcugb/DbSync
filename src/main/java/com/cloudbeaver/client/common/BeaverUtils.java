@@ -54,7 +54,7 @@ import org.apache.log4j.Logger;
 class beaverTrustManager implements X509TrustManager{
 	@Override 
 	public X509Certificate[] getAcceptedIssuers() {
-		return null; 
+		return null;
 	}
 	@Override 
 	public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException { 
@@ -88,9 +88,6 @@ public class BeaverUtils {
 	public static boolean DEBUG_MODE = true;
 
 	private static SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
-
-	private static final PostStringUploader postStringUploader = new PostStringUploader();
-	private static final PostFileUploader postFileUploader = new PostFileUploader();
 
 	public static void PrintStackTrace(Exception e) {
 		if (DEBUG_MODE) {
@@ -158,7 +155,7 @@ public class BeaverUtils {
 			first = false;
 			sb.append(key).append('=').append(paraMap.get(key));
 		}
-		return doPost(webUrl, sb.toString(), 0, contentType, postStringUploader, false);
+		return doPost(webUrl, sb.toString(), 0, contentType, AbstractPostUploader.getPostUploader(AbstractPostUploader.STRING_UPLOADER), false);
 	}
 
 	public static String doPost(String urlString, String flumeJson) throws IOException {
@@ -166,11 +163,11 @@ public class BeaverUtils {
 	}
 
 	public static String doPost(String urlString, String flumeJson, boolean useHttps) throws IOException {
-		return doPost(urlString, flumeJson, 0, "application/json", postStringUploader, useHttps).toString();
+		return doPost(urlString, flumeJson, 0, "application/json", AbstractPostUploader.getPostUploader(AbstractPostUploader.STRING_UPLOADER), useHttps).toString();
 	}
 
 	public static String doPostBigFile(String urlString, String fileName, long seekPos) throws IOException {
-		return doPost(urlString, fileName, seekPos, "application/octet-stream", postFileUploader, false).toString();
+		return doPost(urlString, fileName, seekPos, "application/octet-stream", AbstractPostUploader.getPostUploader(AbstractPostUploader.BIG_FILE_UPLOADER), false).toString();
 	}
 
 	private static StringBuilder doPost(String urlString, String content, long startIdx, String contentType, PostUploader postUploader, boolean useHttps) throws IOException {
