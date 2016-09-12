@@ -5,7 +5,21 @@ public class HdfsProxyClientConf {
 	private String userName;
 	private String passWd;
 	private String tableUrl;
+	private String fileLocalPath;
+	private String uploadFileUrl;
 
+	public String getUploadFileUrl() {
+		return uploadFileUrl;
+	}
+	public void setUploadFileUrl(String uploadFileUrl) {
+		this.uploadFileUrl = uploadFileUrl;
+	}
+	public String getFileLocalPath() {
+		return fileLocalPath;
+	}
+	public void setFileLocalPath(String fileLocalPath) {
+		this.fileLocalPath = fileLocalPath;
+	}
 	public String getTableUrl() {
 		assert(tableUrl != null && tableUrl.startsWith("upload://table/"));
 		return tableUrl;

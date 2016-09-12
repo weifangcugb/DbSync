@@ -134,7 +134,7 @@ public class HdfsHttpProxyClientTest extends HdfsProxyClient{
 		String fileName = fileFullName.substring(fileFullName.lastIndexOf("/")+1);
 		String url = urlPrefix + fileName;
 		try {
-			doUploadFileData(fileFullName, url);
+			doUploadFileData();
 			logger.info("upload data to HDFS succeed!");
 			String hdfsData = getMd5ByString(readFromHdfs(HdfsHelper.getRealPathWithTableId(tableId)));
 			String localData = getMd5ByString(readFromLocal(fileFullName));

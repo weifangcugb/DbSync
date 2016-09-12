@@ -18,26 +18,28 @@ public class HdfsProxyClient {
 	private static final String CONF_BEAN = "HdfsProxyClientConf";
 	private static final String CONF_FILE = CommonUploader.CONF_FILE_DIR + CONF_BEAN + ".xml";
 
-	public void doUploadFileData(String localFileName, String urlString) {
+	public void doUploadFileData() {
 		ApplicationContext appContext = new FileSystemXmlApplicationContext(CONF_FILE);
 		HdfsProxyClientConf hdfsProxyInfoConf = appContext.getBean(CONF_BEAN, HdfsProxyClientConf.class);
+		String localFileName = hdfsProxyInfoConf.getFileLocalPath();
+		String uploadFileUrl = hdfsProxyInfoConf.getUploadFileUrl();
 
 		while(true) {
 			try{
 //				first, sync position with web server
 				JSONObject jsonObject = new JSONObject();
-		    	jsonObject.put("userName", hdfsProxyInfoConf.getUserName());
-		    	jsonObject.put("passWord", hdfsProxyInfoConf.getPassWd());
-		    	jsonObject.put("tableId", BeaverUtils.getTableIdFromUploadUrl(hdfsProxyInfoConf.getTableUrl()));
+		    	jsonObject.put(HdfsProxyServer.EMAIL, hdfsProxyInfoConf.getUserName());
+		    	jsonObject.put(HdfsProxyServer.PASSWORD, hdfsProxyInfoConf.getPassWd());
+		    	jsonObject.put(HdfsProxyServer.TABLEID, BeaverUtils.getTableIdFromUploadUrl(hdfsProxyInfoConf.getTableUrl()));
 				String json = BeaverUtils.doPost(hdfsProxyInfoConf.getFileInfoUrl(), jsonObject.toString(), true);
 
 				jsonObject = JSONObject.fromObject(json);
-				if(jsonObject.containsKey("errorCode") && jsonObject.getInt("errorCode") == 0 && jsonObject.containsKey("offset") 
-						&& jsonObject.containsKey("token") && jsonObject.getLong("offset") >= 0){	
-					BeaverUtils.doPostBigFile(urlString + "&token=" + jsonObject.getString("token"), localFileName, jsonObject.getLong("offset"));
+				if(jsonObject.containsKey(HdfsProxyServer.ERRORCODE) && jsonObject.getInt(HdfsProxyServer.ERRORCODE) == 0 && jsonObject.containsKey(HdfsProxyServer.OFFSET) 
+						&& jsonObject.containsKey(HdfsProxyServer.TOKEN) && jsonObject.getLong(HdfsProxyServer.OFFSET) >= 0){	
+					BeaverUtils.doPostBigFile(uploadFileUrl + "?" +HdfsProxyServer.TOKEN + "=" + jsonObject.getString(HdfsProxyServer.TOKEN), localFileName, jsonObject.getLong(HdfsProxyServer.OFFSET));
 					break;
 				} else {
-					if(jsonObject.getInt("errorCode") == ErrCode.SQL_ERROR.ordinal()) {
+					if(jsonObject.getInt(HdfsProxyServer.ERRORCODE) == ErrCode.SQL_ERROR.ordinal()) {
 						throw new SQLException("connect to database failed");
 					} else {
 						throw new IOException("missing argument filename or length or errorCode or token or server response error");
@@ -51,9 +53,7 @@ public class HdfsProxyClient {
 	}
 
 	public static void main(String[] args) {
-		String filename = "/home/beaver/Documents/test/hadoop/harry.txt";
-		String url = "http://localhost:8833/uploaddata?fileName=" + filename.substring(filename.lastIndexOf("/") + 1);
 		HdfsProxyClient hdfsHttpClient = new HdfsProxyClient();
-		hdfsHttpClient.doUploadFileData(filename, url);		
+		hdfsHttpClient.doUploadFileData();		
 	}
 }
