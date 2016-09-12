@@ -4,6 +4,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
+import org.junit.Assert;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
@@ -17,6 +18,7 @@ import com.cloudbeaver.client.common.CommonUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -76,15 +78,15 @@ public class DbUploader extends CommonUploader{
 		setPrisonIdByClientId(conf.getClientId());
 
 //      get tasks from web server
-//        while (true) {
-////			for this version, only load tasks once
-//    		try {
-//				loadTasks();
-//				break;
-//			} catch (IOException e) {
-//				BeaverUtils.printLogExceptionAndSleep(e, "get tasks failed, url:" + conf.getTaskServerUrl() + " json:" + getTaskJson() + " msg:", 60 * 1000);
-//			}
-//        }
+        while (true) {
+//			for this version, only load tasks once
+    		try {
+				updateTasks();
+				break;
+			} catch (IOException e) {
+				BeaverUtils.printLogExceptionAndSleep(e, "get tasks failed, url:" + conf.getTaskServerUrl() + " json:" + getTaskJson() + " msg:", 60 * 1000);
+			}
+        }
 	}
 
 	@Override
@@ -405,47 +407,27 @@ public class DbUploader extends CommonUploader{
 		}
 	}
 
-//	private void loadTasks() throws IOException, BeaverFatalException {
-//		String json = BeaverUtils.doGet(conf.get(CONF_TASK_SERVER_URL) + clientId);
-//        logger.debug("fetch tasks, tasks:" + json);
-//
-//        setTaskJson(json);
-//
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        dbBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
-//
-//        ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
-//        for (DatabaseBean dbBean : dbBeans.getDatabases()) {
-//        	if (conf.get("db." + dbBean.getDb() + ".url") != null) {
-//            	dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
-//            	dbBean.setDbUserName(conf.get("db." + dbBean.getDb() + ".username"));
-//            	dbBean.setDbPassword(conf.get("db." + dbBean.getDb() + ".password"));
-//            	String dbType = conf.get("db." + dbBean.getDb() + ".type");
-//            	if (dbType.equals(DB_TYPE_SQL_ORACLE) || dbType.equals(DB_TYPE_SQL_SERVER) || dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
-//            		dbBean.setType(dbType);
-//
-//        			if (dbType.equals(DB_TYPE_SQL_SERVER)) {
-//        				for (TableBean tableBean : dbBean.getTables()) {
-//    						if (!tableBean.getXgsj().startsWith("0x")) {
-//    							tableBean.setXgsj("0x" + tableBean.getXgsj());
-//    						}
-//    					}
-//        			}
-//    			}else {
-//    				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
-//    			}
-//
-//    			String appKey = conf.get("db." + dbBean.getDb() + ".appKey");
-//    			if (appKey != null) {
-//    				dbBean.setAppKey(appKey);
-//    				dbBean.setAppSecret(appKeySecret.get(appKey));
-//    			}
-//    			newDatabaseBeans.add(dbBean);
-//        	}
-//        }
-//
-//        dbBeans.setDatabases(newDatabaseBeans);
-//    }
+	private void updateTasks() throws IOException, BeaverFatalException {
+		String json = BeaverUtils.doGet(conf.getTaskServerUrl() + clientId);
+        logger.debug("fetch tasks, tasks:" + json);
+
+        setTaskJson(json);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        MultiDatabaseBean newBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
+
+        for (int index = 0; index < newBeans.getDatabases().size(); index++) {
+			DatabaseBean db1 = dbBeans.getDatabases().get(index);
+			DatabaseBean db2 = newBeans.getDatabases().get(index);
+			for (int i = 0;i<db1.getTables().size();i++) {
+				TableBean t1 = db1.getTables().get(i);
+				TableBean t2 = db2.getTables().get(i);
+				if(!t1.getXgsj().equals(t2.getXgsj())){
+					t1.setXgsj(t2.getXgsj());
+				}
+			}
+		}
+    }
 
 	private void initMultiDatabase(MultiDatabaseBean databaseBeans) throws BeaverFatalException{
 		ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
