@@ -458,8 +458,7 @@ public class DbUploaderTest extends DbUploader{
             DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
             if (dbBean == null || dbBean.getType().equals(DbUploader.DB_TYPE_SQL_SQLITE)) {
                 continue;
-            }
-            else{
+            }else if(dbBean.getDb().equals("TalkDB")){
             	doTask(dbBean);
             }
             
@@ -475,7 +474,7 @@ public class DbUploaderTest extends DbUploader{
 //			appTest.testGetMsgForSqlserver();
 //			appTest.testGetMsgForWeb();
 //			appTest.testGetMsgForWebSync();
-//			appTest.testGetMsgForOracle();
+			appTest.testGetMsgForOracle();
 //			appTest.testGetMsgForOraleStep();
 //			appTest.testGetMsgForSqlite();
 			appTest.testGetMsgProduct();

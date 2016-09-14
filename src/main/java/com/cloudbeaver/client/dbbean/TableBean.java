@@ -206,7 +206,7 @@ public class TableBean implements Serializable{
     public String getSqlString(String rowVersionColumn, String dbType, int sqlLimitNum) throws BeaverFatalException {
     	switch (dbType) {
 			case CommonUploader.DB_TYPE_SQL_SERVER:
-				return "SELECT top " + sqlLimitNum  + " " + table + "." + rowVersionColumn + ", * " + fromClause() + whereClause(rowVersionColumn)
+				return "SELECT top " + sqlLimitNum  + " " + table + "." + rowVersionColumn + " as " + rowVersionColumn + ", * " + fromClause() + whereClause(rowVersionColumn)
                 		+ " order by " + table + "." + rowVersionColumn;
 
 			case CommonUploader.DB_TYPE_SQL_SQLITE:

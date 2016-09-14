@@ -137,7 +137,7 @@ public class GetWebServerDataServlet extends HttpServlet{
 //    				+ "\"qiq\":0,\"regtime\":1384738549083,\"reviewtime\":0,\"starttime\":1484739404733,\"syprisonfk\":\"615564\",\"thismonth\":0,\"thisyear\":0,\"ts\":0}],"
 //    				+ "\"total\":" + totalsize +",\"totalPages\":" + totalpages + "}";
     	}
-    	else if(tablename.equals("qqdh/getTalkList")){
+    	else if(tablename.equals("qqdh/getTalklist")){
 //    		json = "{\"pageNo\":" + pageno + ",\"pageSize\":" + pagesize + ",\"records\":[{\"caller\":\"张三\",\"enddate\":\"2015-04-15 11:11:45\",\"fee\":20.0000,\"id\":7,"
 //    				+ "\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\",\"startdate\":\"2015-04-15 11:11:40\",\"state\":1,\"type\":\"拨出\",\"userno\":\"9999999999\"},"
 //    				+ "{\"caller\":\"张三\",\"enddate\":\"2015-04-15 11:27:25\",\"fee\":0.0000,\"id\":8,\"module\":1,\"name\":\"张\",\"phone\":\"18912345678\","
