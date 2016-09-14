@@ -167,7 +167,7 @@ public class DbUploader extends CommonUploader{
     	        		dbData = getDataFromOracle(dbBean, tableBean);
     	        	} else if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE) && dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)) {
     	        		dbData = getDataFromWebService(dbBean, tableBean);
-    	        	}else {
+    	        	} else {
     					throw new BeaverFatalException("db type is wrong, type can only be 'sqlserver', 'oracle' or 'webservice'");
     				}
 				} catch (BeaverTableIsFullException e) {
@@ -325,7 +325,7 @@ public class DbUploader extends CommonUploader{
 //				move to next table
 				throw new BeaverTableIsFullException();
 			}else {
-				if (dbBean.getRowversion().equals("xgsj")) {
+				if (dbBean.getDb().equals("DocumentDB")) {
 //					timestamp is like '0x111'
 			    	if (!maxXgsj.startsWith("0x")) {
 						maxXgsj = "0x" + maxXgsj;
@@ -430,7 +430,7 @@ public class DbUploader extends CommonUploader{
             	if (dbType.equals(DB_TYPE_SQL_ORACLE) || dbType.equals(DB_TYPE_SQL_SERVER) || dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
             		dbBean.setType(dbType);
 
-        			if (dbType.equals(DB_TYPE_SQL_SERVER)) {
+        			if (dbBean.getDb().equals("DocumentDB")) {
         				for (TableBean tableBean : dbBean.getTables()) {
     						if (!tableBean.getXgsj().startsWith("0x")) {
     							tableBean.setXgsj("0x" + tableBean.getXgsj());

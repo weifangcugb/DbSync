@@ -458,8 +458,7 @@ public class DbUploaderTest extends DbUploader{
             DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
             if (dbBean == null || dbBean.getType().equals(DbUploader.DB_TYPE_SQL_SQLITE)) {
                 continue;
-            }
-            else{
+            }else if(dbBean.getDb().equals("TalkDB")){
             	doTask(dbBean);
             }
             
@@ -468,20 +467,20 @@ public class DbUploaderTest extends DbUploader{
 
 	public static void main(String[] args) {
 		DbUploaderTest appTest = new DbUploaderTest();
-		appTest.setUpServers();
+//		appTest.setUpServers();
 
 		try {
 //			appTest.testGetMsgForSqlserverStep();
 //			appTest.testGetMsgForSqlserver();
 //			appTest.testGetMsgForWeb();
 //			appTest.testGetMsgForWebSync();
-//			appTest.testGetMsgForOracle();
+			appTest.testGetMsgForOracle();
 //			appTest.testGetMsgForOraleStep();
-			appTest.testGetMsgForSqlite();
-			appTest.testGetMsgProduct();
+//			appTest.testGetMsgForSqlite();
+//			appTest.testGetMsgProduct();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		appTest.tearDownServers();
+//		appTest.tearDownServers();
 	}
 }
