@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/context
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd
+          http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<bean id="HelpDB" class="com.cloudbeaver.client.dbbean.DatabaseBean">
+		<property name="db" value="HelpDB" />
+        <property name="rowversion" value="id" />
+        <property name="dbUrl" value="jdbc:sqlserver://58.58.26.41:1444;databaseName=3.9" />
+        <property name="dbUserName" value="bdplat" />
+        <property name="dbPassword" value="bdplat@237" />
+        <property name="type" value="sqlserver" />
+        <property name="tables">
+        	<list>
+        		<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Fee_UserCharges" />
+					<property name="ID" value="0" />
+					<property name="key" value="Fee_UserCharges.UserFk = Users.Id and Fee_UserCharges.UserAccountFk = Fee_UserAccounts.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Fee_UserAccounts</value>
+							<value>Users</value>
+							<value>Departments</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Fee_UserDeductions" />
+					<property name="ID" value="0" />
+					<property name="key" value="Fee_UserDeductions.UserFk = Users.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Users</value>
+							<value>Departments</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Contacts" />
+					<property name="ID" value="0" />
+					<property name="key" value="Contacts.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id and Contacts.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Prisoner</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Sms_SmsSendBoxes" />
+					<property name="ID" value="0" />
+					<property name="key" value="Sms_SmsSendBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id and Sms_SmsSendBoxes.FailureReasonFk = CommonCodes.Id and Sms_SmsSendBoxes.FeelingFk = CommonCodes.Id and Sms_SmsSendBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Prisoner</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Sms_SmsReceiveBoxes" />
+					<property name="ID" value="0" />
+					<property name="key" value="Sms_SmsReceiveBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id and Sms_SmsReceiveBoxes.FailureReasonFk = CommonCodes.Id and Sms_SmsReceiveBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Prisoner</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="ClassRoom_Histories" />
+					<property name="ID" value="0" />
+					<property name="key" value="ClassRoom_Histories.UserFk = Users.Id and ClassRoom_Histories.VideoFk = ClassRoom_Videos.Id and ClassRoom_Videos.TypeFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>ClassRoom_Videos</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="ClassRoom_StudyNotes" />
+					<property name="ID" value="0" />
+					<property name="key" value="ClassRoom_StudyNotes.UserFk = Users.Id and ClassRoom_StudyNotes.VideoFk = ClassRoom_Videos.Id and ClassRoom_Videos.TypeFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>ClassRoom_Videos</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Library_BookHistories" />
+					<property name="ID" value="0" />
+					<property name="key" value="Library_BookHistories.UserFk = Users.Id and Library_BookHistories.BookFk = Library_Books.Id and Library_Books.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Library_Books</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Library_BookReviews" />
+					<property name="ID" value="0" />
+					<property name="key" value="Library_BookReviews.UserFk = Users.Id and Library_BookReviews.BookFk = Library_Books.Id and Library_Books.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Library_Books</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Vod_VideoHistories" />
+					<property name="ID" value="0" />
+					<property name="key" value="Vod_VideoHistories.UserFk = Users.Id and Vod_VideoHistories.VideoFk = Vod_Videos.Id and Vod_Videos.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Vod_Videos</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Vod_VideoReviews" />
+					<property name="ID" value="0" />
+					<property name="key" value="Vod_VideoReviews.UserFk = Users.Id and Vod_VideoReviews.VideoFk = Vod_Videos.Id and Vod_Videos.CatalogFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Vod_Videos</value>
+							<value>Users</value>
+							<value>Departments</value>
+							<value>CommonCodes</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Terminal_TerminalApplications" />
+					<property name="ID" value="0" />
+					<property name="key" value="Terminal_TerminalApplications.UserFk = Users.Id and Terminal_TerminalApplications.TerminalFk = Terminal_TerminalInfos.Id and Terminal_TerminalApplications.TerminalModelFk = Terminal_TerminalModels.Id and TerminalApplications_SubscribeInfos.SubscribeInfoFk = Terminal_SubscribeInfos.Id and TerminalApplications_SubscribeInfos.TerminalApplicationFk = Terminal_TerminalApplications.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Terminal_SubscribeInfos</value>
+							<value>TerminalApplications_SubscribeInfos</value>
+							<value>Terminal_TerminalInfos</value>
+							<value>Terminal_TerminalModels</value>
+							<value>Users</value>
+							<value>Departments</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="Messages" />
+					<property name="ID" value="0" />
+					<property name="key" value="Messages.UserFk = Users.Id and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>Users</value>
+							<value>Departments</value>
+						</list>
+					</property>
+				</bean>
+				<bean class="com.cloudbeaver.client.dbbean.TableBean">
+					<property name="table" value="RainGlass_UserEmotions" />
+					<property name="ID" value="0" />
+					<property name="key" value="RainGlass_UserEmotions.UserFk = Users.Id and RainGlass_UserEmotions.EmotionFk = RainGlass_Emotions.Id and RainGlass_Emotions.Id = RainGlass_EmotionPersuasions.EmotionFk and Users.DepartmentFk = Departments.Id" />
+					<property name="join">
+						<list>
+							<value>RainGlass_Emotions</value>
+							<value>RainGlass_EmotionPersuasions</value>
+							<value>Users</value>
+							<value>Departments</value>
+						</list>
+					</property>
+				</bean>
+        	</list>
+        </property>
+    </bean>
+</beans>
