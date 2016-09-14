@@ -75,6 +75,8 @@ public class SyncConsumer extends FixedNumThreadPool{
 		DBName2DBType.put("PrasDB", "webservice");
 		DBName2DBType.put("JfkhDB", "oracle");
 		DBName2DBType.put("DocumentFiles", "file");
+		DBName2DBType.put("VideoMeetingDB", "sqlserver");
+		DBName2DBType.put("HelpDB", "sqlserver");
 	}
 
 	@Override
