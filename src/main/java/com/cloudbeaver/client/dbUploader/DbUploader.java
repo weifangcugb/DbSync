@@ -406,7 +406,7 @@ public class DbUploader extends CommonUploader{
 		}
 	}
 
-	private void updateTasks() throws IOException, BeaverFatalException {
+	private void updateTasks() throws IOException{
 		String json = BeaverUtils.doGet(conf.getTaskServerUrl() + clientId);
         logger.debug("fetch tasks, tasks:" + json);
 
@@ -415,18 +415,50 @@ public class DbUploader extends CommonUploader{
         ObjectMapper objectMapper = new ObjectMapper();
         MultiDatabaseBean newBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
 
-        for (int index = 0; index < newBeans.getDatabases().size(); index++) {
+        for (int index = 0; index < dbBeans.getDatabases().size(); index++) {
 			DatabaseBean db1 = dbBeans.getDatabases().get(index);
-			DatabaseBean db2 = newBeans.getDatabases().get(index);
-			for (int i = 0;i<db1.getTables().size();i++) {
-				TableBean t1 = db1.getTables().get(i);
-				TableBean t2 = db2.getTables().get(i);
-				if(!t1.getXgsj().equals(t2.getXgsj())){
-					t1.setXgsj(t2.getXgsj());
+			DatabaseBean db2 = getDatabaseBean(db1, newBeans);
+			if(db2 != null){				
+				for (int j = 0; j < db1.getTables().size(); j++) {
+					TableBean t1 = db1.getTables().get(j);
+					TableBean t2 = getTableBean(t1, db2);
+					if(t2 != null){
+						if(!t1.getXgsj().equals(t2.getXgsj())){
+							t1.setXgsj(t2.getXgsj());
+						}
+					}
+					else{
+						throw new IOException("Not find table " + t1.getTable() + " from web server!");
+					}
 				}
+			}
+			else{
+				throw new IOException("Not find database " + db1.getDb() + " from web server!");
 			}
 		}
     }
+
+	public DatabaseBean getDatabaseBean(DatabaseBean dBean, MultiDatabaseBean mBean) {
+		DatabaseBean databaseBean = null;
+		for(int i = 0; i < mBean.getDatabases().size(); i++){
+			if(mBean.getDatabases().get(i).getDb().equals(dBean.getDb())){
+				databaseBean = mBean.getDatabases().get(i);
+				break;
+			}
+		}
+		return databaseBean;
+	}
+
+	public TableBean getTableBean(TableBean tBean, DatabaseBean dBean) {
+		TableBean tableBean = null;
+		for(int i = 0; i < dBean.getTables().size(); i++){
+			if(dBean.getTables().get(i).getTable().equals(tBean.getTable())){
+				tableBean = dBean.getTables().get(i);
+				break;
+			}
+		}
+		return tableBean;
+	}
 
 	private void initMultiDatabase(MultiDatabaseBean databaseBeans) throws BeaverFatalException{
 		ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
