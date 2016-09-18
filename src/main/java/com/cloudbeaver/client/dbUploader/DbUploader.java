@@ -406,7 +406,7 @@ public class DbUploader extends CommonUploader{
 		}
 	}
 
-	private void updateTasks() throws IOException{
+	private void updateTasks() throws IOException, BeaverFatalException{
 		String json = BeaverUtils.doGet(conf.getTaskServerUrl() + clientId);
         logger.debug("fetch tasks, tasks:" + json);
 
@@ -428,17 +428,17 @@ public class DbUploader extends CommonUploader{
 						}
 					}
 					else{
-						throw new IOException("Not find table " + t1.getTable() + " from web server!");
+						throw new BeaverFatalException("Not find table " + t1.getTable() + " from web server!");
 					}
 				}
 			}
 			else{
-				throw new IOException("Not find database " + db1.getDb() + " from web server!");
+				throw new BeaverFatalException("Not find database " + db1.getDb() + " from web server!");
 			}
 		}
     }
 
-	public DatabaseBean getDatabaseBean(DatabaseBean dBean, MultiDatabaseBean mBean) {
+	private DatabaseBean getDatabaseBean(DatabaseBean dBean, MultiDatabaseBean mBean) {
 		DatabaseBean databaseBean = null;
 		for(int i = 0; i < mBean.getDatabases().size(); i++){
 			if(mBean.getDatabases().get(i).getDb().equals(dBean.getDb())){
@@ -449,7 +449,7 @@ public class DbUploader extends CommonUploader{
 		return databaseBean;
 	}
 
-	public TableBean getTableBean(TableBean tBean, DatabaseBean dBean) {
+	private TableBean getTableBean(TableBean tBean, DatabaseBean dBean) {
 		TableBean tableBean = null;
 		for(int i = 0; i < dBean.getTables().size(); i++){
 			if(dBean.getTables().get(i).getTable().equals(tBean.getTable())){
