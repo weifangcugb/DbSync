@@ -135,7 +135,7 @@ public class DbUploaderTest extends DbUploader{
 		    				if (maxVersion != null) {
 		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj("0x"+maxVersion);
-			    				BeaverUtils.doPost(getConf().getFlumeServerUrl(), flumeJson);
+			    				BeaverUtils.doPost(getFLumeUrl(), flumeJson);
 			    				//test HeartBeat
 			    				doHeartBeat();
 			    				break;
@@ -221,7 +221,7 @@ public class DbUploaderTest extends DbUploader{
 		    				if (maxVersion != null) {
 		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj(maxVersion);
-			    				BeaverUtils.doPost(getConf().getFlumeServerUrl(), flumeJson);
+			    				BeaverUtils.doPost(getFLumeUrl(), flumeJson);
 			    				break;
 							}
 		    			} catch (IOException e) {
@@ -414,7 +414,7 @@ public class DbUploaderTest extends DbUploader{
 		    				if (maxVersion != null) {
 		    					updateRefTask(maxVersion,olddbs,index,tBean,DB2TypeMap.get(dbName));
 		    					tBean.setXgsj(maxVersion);
-			    				BeaverUtils.doPost(getConf().getFlumeServerUrl(), flumeJson);
+			    				BeaverUtils.doPost(getFLumeUrl(), flumeJson);
 			    				//test HeartBeat
 			    				doHeartBeat();
 			    				break;

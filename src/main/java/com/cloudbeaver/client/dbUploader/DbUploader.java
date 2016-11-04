@@ -4,15 +4,12 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverTableIsFullException;
 import com.cloudbeaver.client.common.BeaverTableNeedRetryException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.SqlHelper;
-import com.cloudbeaver.client.common.SyncClientConfBean;
 import com.cloudbeaver.client.common.CommonUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
@@ -30,10 +27,9 @@ import java.util.Map;
 public class DbUploader extends CommonUploader{
     private static Logger logger = Logger.getLogger(DbUploader.class);
 
-    private SyncClientConfBean conf;
+    private Map<String, String> conf;
     private String taskJson;
     private MultiDatabaseBean dbBeans;    
-	private ApplicationContext appContext = new FileSystemXmlApplicationContext(CONF_DBSYNC_DB_FILENAME);
 
 	private static final int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 	private static final String DB_ROW_VERSION_START_TIME = "starttime";
@@ -47,11 +43,6 @@ public class DbUploader extends CommonUploader{
 
 	public static Map<String, String> getAppKeySecret() {
 		return appKeySecret;
-	}
-
-    //for test
-    public SyncClientConfBean getConf() {
-		return conf;
 	}
 
     public String getTaskJson() {
@@ -69,23 +60,74 @@ public class DbUploader extends CommonUploader{
 
 	@Override
 	public void setup() throws BeaverFatalException {
-		conf = appContext.getBean("SyncClientConfBean", SyncClientConfBean.class);
-		dbBeans = appContext.getBean("MultiDatabaseBean", MultiDatabaseBean.class);
-		initMultiDatabase(dbBeans);
-
-		setClientId(conf.getClientId());
-		setPrisonIdByClientId(conf.getClientId());
+        try {
+			conf = BeaverUtils.loadConfig(CONF_DBSYNC_DB_FILENAME);
+	        if (conf.containsKey(CONF_CLIENT_ID) && conf.get(CONF_CLIENT_ID).contains("_")) {
+				setClientId(conf.get(CONF_CLIENT_ID));
+				setPrisonIdByClientId(conf.get(CONF_CLIENT_ID));
+			}else {
+				logger.fatal("no client.id or client.id has no '_', in config file");
+				throw new BeaverFatalException("no client.id or client.id has no '_' in config file");
+			}
+		} catch (IOException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.fatal("load config failed, please restart process. confName:" + CONF_DBSYNC_DB_FILENAME + " msg:" + e.getMessage());
+			throw new BeaverFatalException("load config failed, please restart process. confName:" + CONF_DBSYNC_DB_FILENAME + " msg:" + e.getMessage(), e);
+		}
 
 //      get tasks from web server
         while (true) {
 //			for this version, only load tasks once
     		try {
-				updateTasks();
+				loadTasks();
 				break;
 			} catch (IOException e) {
-				BeaverUtils.printLogExceptionAndSleep(e, "get tasks failed, url:" + conf.getTaskServerUrl() + " json:" + getTaskJson() + " msg:", 60 * 1000);
+				BeaverUtils.printLogExceptionAndSleep(e, "get tasks failed, url:" + conf.get(CONF_TASK_SERVER_URL) + " json:" + getTaskJson() + " msg:", 60 * 1000);
 			}
         }
+	}
+
+
+	private void loadTasks() throws IOException, BeaverFatalException {
+        String json = BeaverUtils.doGet(conf.get(CONF_TASK_SERVER_URL) + clientId);
+        logger.debug("fetch tasks, tasks:" + json);
+
+        setTaskJson(json);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        dbBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
+
+        ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
+        for (DatabaseBean dbBean : dbBeans.getDatabases()) {
+        	if (conf.get("db." + dbBean.getDb() + ".url") != null) {
+            	dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
+            	dbBean.setDbUserName(conf.get("db." + dbBean.getDb() + ".username"));
+            	dbBean.setDbPassword(conf.get("db." + dbBean.getDb() + ".password"));
+            	String dbType = conf.get("db." + dbBean.getDb() + ".type");
+            	if (dbType.equals(DB_TYPE_SQL_ORACLE) || dbType.equals(DB_TYPE_SQL_SERVER) || dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
+            		dbBean.setType(dbType);
+
+        			if (dbType.equals(DB_TYPE_SQL_SERVER)) {
+        				for (TableBean tableBean : dbBean.getTables()) {
+    						if (!tableBean.getXgsj().startsWith("0x")) {
+    							tableBean.setXgsj("0x" + tableBean.getXgsj());
+    						}
+    					}
+        			}
+    			}else {
+    				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
+    			}
+
+    			String appKey = conf.get("db." + dbBean.getDb() + ".appKey");
+    			if (appKey != null) {
+    				dbBean.setAppKey(appKey);
+    				dbBean.setAppSecret(appKeySecret.get(appKey));
+    			}
+    			newDatabaseBeans.add(dbBean);
+        	}
+        }
+
+        dbBeans.setDatabases(newDatabaseBeans);
 	}
 
 	@Override
@@ -175,12 +217,12 @@ public class DbUploader extends CommonUploader{
 
                 try {
                 	String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(dbData);
-    				BeaverUtils.doPost(conf.getFlumeServerUrl(), flumeJson);
+    				BeaverUtils.doPost(conf.get(CommonUploader.CONF_FLUME_SERVER_URL), flumeJson);
     				logger.debug("send db data to flume server, json:" + flumeJson);
     			} catch (IOException e) {
 //    				change back 'xgsj'
     				tableBean.rollBackXgsj();
-    				BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:" + conf.getFlumeServerUrl(), 1000);
+    				BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:" + conf.get(CommonUploader.CONF_FLUME_SERVER_URL), 1000);
     			}
 			}
         }
@@ -374,7 +416,7 @@ public class DbUploader extends CommonUploader{
 		}
 
 		try {
-			BeaverUtils.doPost(conf.getFlumeServerUrl(), BeaverUtils.compressAndFormatFlumeHttp(dbsReport.toString()));
+			BeaverUtils.doPost(conf.get(CommonUploader.CONF_FLUME_SERVER_URL), BeaverUtils.compressAndFormatFlumeHttp(dbsReport.toString()));
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("send heart beat error. msg:" + e.getMessage());
@@ -391,6 +433,10 @@ public class DbUploader extends CommonUploader{
 		return "upload_db_data";
 	}
 
+	protected String getFLumeUrl(){
+		return conf.get(CommonUploader.CONF_FLUME_SERVER_URL);
+	}
+
 	public static void startDbUploader(){
 		logger.info("starting dbUploader");
 
@@ -404,107 +450,6 @@ public class DbUploader extends CommonUploader{
 			BeaverUtils.PrintStackTrace(e);
 			logger.error("dbuploader join failed, msg:" + e.getMessage());
 		}
-	}
-
-	private void updateTasks() throws IOException, BeaverFatalException{
-		String json = BeaverUtils.doGet(conf.getTaskServerUrl() + clientId);
-        logger.debug("fetch tasks, tasks:" + json);
-
-        setTaskJson(json);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        MultiDatabaseBean newBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
-
-        for (int index = 0; index < dbBeans.getDatabases().size(); index++) {
-			DatabaseBean db1 = dbBeans.getDatabases().get(index);
-			DatabaseBean db2 = getDatabaseBean(db1, newBeans);
-			if(db2 != null){				
-				for (int j = 0; j < db1.getTables().size(); j++) {
-					TableBean t1 = db1.getTables().get(j);
-					TableBean t2 = getTableBean(t1, db2);
-					if(t2 != null){
-						if(!t1.getXgsj().equals(t2.getXgsj())){
-							t1.setXgsj(t2.getXgsj());
-						}
-					}
-					else{
-						throw new BeaverFatalException("Not find table " + t1.getTable() + " from web server!");
-					}
-				}
-			}
-			else{
-				throw new BeaverFatalException("Not find database " + db1.getDb() + " from web server!");
-			}
-		}
-    }
-
-	private DatabaseBean getDatabaseBean(DatabaseBean dBean, MultiDatabaseBean mBean) {
-		DatabaseBean databaseBean = null;
-		for(int i = 0; i < mBean.getDatabases().size(); i++){
-			if(mBean.getDatabases().get(i).getDb().equals(dBean.getDb())){
-				databaseBean = mBean.getDatabases().get(i);
-				break;
-			}
-		}
-		return databaseBean;
-	}
-
-	private TableBean getTableBean(TableBean tBean, DatabaseBean dBean) {
-		TableBean tableBean = null;
-		for(int i = 0; i < dBean.getTables().size(); i++){
-			if(dBean.getTables().get(i).getTable().equals(tBean.getTable())){
-				tableBean = dBean.getTables().get(i);
-				break;
-			}
-		}
-		return tableBean;
-	}
-
-	private void initMultiDatabase(MultiDatabaseBean databaseBeans) throws BeaverFatalException{
-		ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
-		for(int i = 0; i < databaseBeans.getDatabases().size(); i++){
-			DatabaseBean dBean = databaseBeans.getDatabases().get(i);
-        	String dbType = dBean.getType();
-			if(dbType.equals(DB_TYPE_WEB_SERVICE)){
-				for(int j = 0; j < dBean.getTables().size(); j++){
-    				TableBean tBean = dBean.getTables().get(j);
-    				tBean.setID(tBean.getStarttime());
-    			}
-			}
-			else if(dbType.equals(DB_TYPE_SQL_ORACLE)){
-				for(int j = 0; j < dBean.getTables().size(); j++){
-    				TableBean tBean = dBean.getTables().get(j);
-    				tBean.setStarttime(tBean.getID());
-    			}
-			}
-			else if(dbType.equals(DB_TYPE_SQL_SERVER)){
-				for(int j = 0; j < dBean.getTables().size(); j++){
-    				TableBean tBean = dBean.getTables().get(j);
-    				if (!tBean.getXgsj().startsWith("0x")) {
-						tBean.setXgsj("0x" + tBean.getXgsj());
-					}
-    				tBean.setStarttime(tBean.getXgsj());
-    				tBean.setID(tBean.getXgsj());
-    			}
-			}
-			else if(dbType.equals(DB_TYPE_SQL_SQLITE)){
-				for(int j = 0; j < dBean.getTables().size(); j++){
-    				TableBean tBean = dBean.getTables().get(j);
-    				tBean.setStarttime(tBean.getXgsj());
-    				tBean.setID(tBean.getXgsj());
-    			}
-			}
-			else {
-				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
-			}
-			String appKey = dBean.getAppKey();
-			if (appKey != null) {
-				dBean.setAppKey(appKey);
-				dBean.setAppSecret(appKeySecret.get(appKey));
-			}
-			newDatabaseBeans.add(dBean);
-		}
-		databaseBeans.setDatabases(newDatabaseBeans);
 	}
 
     public static void main(String[] args) {
