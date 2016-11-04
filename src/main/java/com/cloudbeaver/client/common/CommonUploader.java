@@ -23,7 +23,7 @@ public abstract class CommonUploader extends FixedNumThreadPool{
 	public static final String DB_EMPTY_ROW_VERSION = "0";
 
 	public static String CONF_FILE_DIR = "conf/";
-	public static String CONF_DBSYNC_DB_FILENAME = CONF_FILE_DIR + "SyncClient_DB.xml";
+	public static String CONF_DBSYNC_DB_FILENAME = CONF_FILE_DIR + "SyncClient_DB.properties";
 	public static String CONF_DBSYNC_FILE_FILENAME = CONF_FILE_DIR + "SyncClient_File.properties";
 	public static String CONF_KAFKA_CONSUMER_FILE_NAME = CONF_FILE_DIR + "SyncConsumer.properties";
 
