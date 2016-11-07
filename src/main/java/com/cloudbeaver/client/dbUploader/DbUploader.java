@@ -115,7 +115,7 @@ public class DbUploader extends CommonUploader{
     					}
         			}
     			}else {
-    				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb'");
+    				throw new BeaverFatalException("dbtype set error, only 'urldb' or 'sqldb' or 'webservice'");
     			}
 
     			String appKey = conf.get("db." + dbBean.getDb() + ".appKey");

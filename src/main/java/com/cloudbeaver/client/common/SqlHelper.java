@@ -37,7 +37,7 @@ public class SqlHelper {
             throw new BeaverFatalException("program get stop request from user, exit now");
     }
 
-    public static Connection getDBConnection(DatabaseBean dbBean) throws ClassNotFoundException, SQLException{
+    public static synchronized Connection getDBConnection(DatabaseBean dbBean) throws ClassNotFoundException, SQLException{
     	String driverClassName = null;
         if (dbBean.getDbUrl().startsWith("jdbc:sqlserver")) {
             driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
@@ -51,14 +51,13 @@ public class SqlHelper {
 
         logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
 
+        Connection conn = null;
 		Class.forName(driverClassName);
-		Connection conn = null;
 		if (dbBean.getDbUrl().startsWith("jdbc:sqlite")) {
 			conn = DriverManager.getConnection(dbBean.getDbUrl());
 		} else {
 			conn = DriverManager.getConnection(dbBean.getDbUrl(), dbBean.getDbUserName(), dbBean.getDbPassword());
 		}
-
 		return conn;
     }
 
