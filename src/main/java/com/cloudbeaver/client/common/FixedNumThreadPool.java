@@ -81,23 +81,17 @@ public abstract class FixedNumThreadPool implements Runnable{
 								BeaverUtils.printLogExceptionAndSleep(e1, "got Exception from children class, need exit.", 1000);
 								return;
 							}
+						} catch (Exception e){
+							BeaverUtils.printLogExceptionAndSleep(e, "got Exception from children class, need exit.", 1000);
+							return;
 						}
+
 						BeaverUtils.sleep(getSleepTimeBetweenTaskInnerLoop());
 					}
 					logger.info("exit thread to " + getTaskDescription() + ", threadId:" + thisThreadId);
 				}
 			});
 		}
-
-		executor.submit(new Runnable() {
-			@Override
-			public void run() {
-				while (isRunning()) {
-					doHeartBeat();
-					BeaverUtils.sleep(HEART_BEAT_INTERVAL);
-				}
-			}
-		});
 
 		executor.submit(new Runnable() {
 			@Override
