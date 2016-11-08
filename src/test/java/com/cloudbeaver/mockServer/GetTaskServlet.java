@@ -313,7 +313,7 @@ public class GetTaskServlet extends HttpServlet{
 			ObjectMapper oMapper = new ObjectMapper();
 			if (clientId.endsWith("db")) {
 				//test all
-				databaseBeans = oMapper.readValue(documentDBInitJson, MultiDatabaseBean.class);
+				databaseBeans = oMapper.readValue(documentDBInitJson2, MultiDatabaseBean.class);
 				//for web server test
 //				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
 				//for sqlite
@@ -370,9 +370,9 @@ public class GetTaskServlet extends HttpServlet{
     			else if(map.get(dBean.getDb()).equals("sqlserver")){
     				for(int j = 0; j < dBean.getTables().size(); j++){
         				TableBean tBean = dBean.getTables().get(j);
-        				if (!tBean.getXgsj().startsWith("0x")) {
-    						tBean.setXgsj("0x" + tBean.getXgsj());
-    					}
+//        				if (!tBean.getXgsj().startsWith("0x")) {
+//    						tBean.setXgsj("0x" + tBean.getXgsj());
+//    					}
         				tBean.setStarttime(tBean.getXgsj());
         				tBean.setID(tBean.getXgsj());
         			}

@@ -183,7 +183,7 @@ public class PostDataServlet extends HttpServlet{
 
 			if(serverType.equals("sqlserver")){
 				if(database.equals("VideoMeetingDB") || database.equals("HelpDB")){
-					maxxgsj = iob.getString("id");
+					maxxgsj = iob.getString("ID");
 				} else {
 					maxxgsj = iob.getString("xgsj");
 				}
