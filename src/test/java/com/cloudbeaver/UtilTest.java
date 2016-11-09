@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.cloudbeaver.client.common.BeaverUtils;
+import com.cloudbeaver.client.common.SqlHelper;
+import com.cloudbeaver.client.dbbean.DatabaseBean;
 
 public class UtilTest {
 	@Test
@@ -115,9 +117,49 @@ public class UtilTest {
 			System.out.println("It does not match");
 	}
 
+	private void testSync() {
+		Thread thread = new Thread(new Runnable() {
+			public void run() {
+//				sync.syncNow();
+				sync.sayHello();
+			}
+		});
+		thread.start();
+
+//		BeaverUtils.sleep(1000);
+//		sync.sayHello();
+		sync.sayHi();
+	}
+
 	public static void main(String[] args) throws NoSuchAlgorithmException {
 		UtilTest uTest = new UtilTest();
 //		uTest.testAppSign();
-		uTest.testBCrypt();
+//		uTest.testBCrypt();
+		uTest.testSync();
+	}
+}
+
+class sync{
+	public static synchronized void syncNow(){
+		while(true){
+			System.out.println("sleeping");
+			BeaverUtils.sleep(1000);
+		}
+	}
+
+	public static void sayHello(){
+		while(true){
+			System.out.println("hello");
+			BeaverUtils.sleep(1000);
+		}
+	}
+
+	public static void sayHi(){
+		synchronized(sync.class){
+			while(true){
+				System.out.println("hi");
+				BeaverUtils.sleep(1000);
+			}
+		}
 	}
 }
