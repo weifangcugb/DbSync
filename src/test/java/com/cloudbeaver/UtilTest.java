@@ -15,9 +15,11 @@ import org.junit.Test;
 //import org.mindrot.jbcrypt.BCrypt;
 import org.mindrot.jbcrypt.BCrypt;
 
+import com.auth0.jwt.Algorithm;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
+import com.cloudbeaver.jwt.JWTSigner;
 
 public class UtilTest {
 	@Test
@@ -135,7 +137,12 @@ public class UtilTest {
 		UtilTest uTest = new UtilTest();
 //		uTest.testAppSign();
 //		uTest.testBCrypt();
-		uTest.testSync();
+//		uTest.testSync();
+		uTest.testJwt();
+	}
+
+	private void testJwt() {
+
 	}
 }
 

@@ -33,7 +33,8 @@ import sun.misc.BASE64Decoder;
 
 public class JWTTokenTest {
 	private static Logger logger = Logger.getLogger(JWTTokenTest.class);
-	private static String secret = "x6I0%^sa2u3$";
+//	private static String secret = "x6I0%^sa2u3$";
+	private static String secret = "HRYSxbg";
     private static PrivateKey privateKey;
     private static PublicKey publicKey;
     private final static Base64 decoder = new Base64(true);
@@ -135,7 +136,7 @@ public class JWTTokenTest {
     }
 
     public final static void verifyToken(String token) throws IOException, JWTAlgorithmException, SignatureException, IllegalStateException{
-        boolean isBeaverWebToken = false;
+        boolean isBeaverWebToken = true;
 //        if (token.startsWith(BEAVER_WEB_TOKEN_PREFIX)) {
 //            token = token.substring(BEAVER_WEB_TOKEN_PREFIX.length() + 1);
 //            isBeaverWebToken = true;
@@ -300,6 +301,11 @@ public class JWTTokenTest {
     	JWTTokenTest jwtTokenTest = new JWTTokenTest();
     	jwtTokenTest.setPrivateKey();
     	jwtTokenTest.setPubKey();
-    	jwtTokenTest.testToken();
+    	jwtTokenTest.testToken1();
     }
+
+	private void testToken1() throws InvalidKeyException, NoSuchProviderException, SignatureException, JWTAlgorithmException, IOException {
+         String token2 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNDc5MjgwODc0LCJleHAiOjE0NzkzNjcyNzR9.0KJdo5BaUnzeCRqZWHEc9aHvq9BQhzxaIRqXNU0ytn0";
+    	verifyToken(token2);
+	}
 }
