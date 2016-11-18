@@ -348,7 +348,13 @@ public class BeaverUtils {
 		bImage.getGraphics().drawImage(img, 0, 0, width, height, null);
 
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		ImageIO.write(bImage, "jpeg", bout);
+		if(file.getName().toLowerCase().endsWith("png")){
+			ImageIO.write(bImage, "png", bout);
+		}else if(file.getName().toLowerCase().endsWith("bmp")){
+			ImageIO.write(bImage, "bmp", bout);
+		}else {
+			ImageIO.write(bImage, "jpeg", bout);
+		}
 //		JPEGImageEncoder jpegEncoder = JPEGCodec.createJPEGEncoder(bout);
 //		jpegEncoder.encode(bImage);
 		return bout.toByteArray();

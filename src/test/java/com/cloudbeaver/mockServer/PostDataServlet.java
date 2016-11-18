@@ -2,6 +2,9 @@ package com.cloudbeaver.mockServer;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 
+import com.auth0.jwt.internal.org.apache.commons.codec.binary.Base64;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
@@ -35,7 +39,7 @@ public class PostDataServlet extends HttpServlet{
 	private static final String FLUME_HTTP_REQ_PREFIX = "[{ \"headers\" : {}, \"body\" : \"";
 	public static final String DEFAULT_CHARSET = "utf-8";
 	public static final String FILE_SAVE_DIR = "/home/beaver/Documents/test/result/";
-	public static final boolean NEED_SAVE_FILE = false;
+	public static final boolean NEED_SAVE_FILE = true;
 	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
 	private static int picNum = 0;
 
@@ -118,55 +122,6 @@ public class PostDataServlet extends HttpServlet{
 	    Date date = sdf.parse(str);
 		long l = date.getTime();
 		return String.valueOf(l);
-    }
-
-    public final static String getIpAddress(HttpServletRequest request) throws IOException { 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (logger.isInfoEnabled()) {
-            logger.info("getIpAddress(HttpServletRequest) - X-Forwarded-For - String ip=" + ip);
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-                ip = request.getHeader("Proxy-Client-IP");
-                if (logger.isInfoEnabled()) {
-                    logger.info("getIpAddress(HttpServletRequest) - Proxy-Client-IP - String ip=" + ip);
-                }
-            }
-            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-                ip = request.getHeader("WL-Proxy-Client-IP");
-                if (logger.isInfoEnabled()) {
-                    logger.info("getIpAddress(HttpServletRequest) - WL-Proxy-Client-IP - String ip=" + ip);
-                }
-            }
-            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-                ip = request.getHeader("HTTP_CLIENT_IP");
-                if (logger.isInfoEnabled()) {
-                    logger.info("getIpAddress(HttpServletRequest) - HTTP_CLIENT_IP - String ip=" + ip);
-                }
-            }
-            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-                ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-                if (logger.isInfoEnabled()) {
-                    logger.info("getIpAddress(HttpServletRequest) - HTTP_X_FORWARDED_FOR - String ip=" + ip);
-                }
-            }
-            if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-                ip = request.getRemoteAddr();
-                if (logger.isInfoEnabled()) {
-                    logger.info("getIpAddress(HttpServletRequest) - getRemoteAddr - String ip=" + ip);
-                }
-            }
-        } else if (ip.length() > 15) {
-            String[] ips = ip.split(",");
-            for (int index = 0; index < ips.length; index++) {
-                String strIp = (String) ips[index];
-                if (!("unknown".equalsIgnoreCase(strIp))) {
-                    ip = strIp;
-                    break;
-                }
-            }
-        }
-        return ip;
     }
 
     public static void updateTask(String content, String serverType) throws IOException, ParseException{
@@ -291,8 +246,9 @@ public class PostDataServlet extends HttpServlet{
 				if(!DBName2DBType.get(database).equals("file")){
 					continue;
 				}
-				BufferedWriter out = new BufferedWriter(new FileWriter(FILE_SAVE_DIR+fileName));
-				out.write(fileData);
+				byte [] fdata = Base64.decodeBase64(fileData.getBytes());
+				FileOutputStream out = new FileOutputStream(new File(FILE_SAVE_DIR+fileName));
+				out.write(fdata);
 				out.flush();
 				out.close();
 			}

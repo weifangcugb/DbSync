@@ -80,7 +80,7 @@ public class FileUploaderTest extends FileUploader{
 //		appFileTest.setUpServers();
 		try {
 			appFileTest.testGetMsgForWebFile();
-			appFileTest.testGetMsgForLocalFile();
+//			appFileTest.testGetMsgForLocalFile();
 		} catch (BeaverFatalException e) {
 			e.printStackTrace();
 		}
