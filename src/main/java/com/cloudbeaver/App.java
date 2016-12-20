@@ -12,7 +12,6 @@ import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.CommonUploader;
 import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.fileUploader.FileUploader;
-import com.cloudbeaver.hdfsHttpProxy.HdfsProxyServer;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.cloudbeaver.server.brokermonitor.BrokerMonitorWebServer;
 import com.cloudbeaver.server.consumer.SyncConsumer;
@@ -113,9 +112,6 @@ public class App {
                     	break;
                     case "mockWebServer":
                     	MockWebServer.startMockWebServer();
-                    	break;
-                    case "hdfsProxyServer":
-                    	HdfsProxyServer.startHdfsProxyServer();
                     	break;
                     default:
                     	throw new ParseException("module name is wrong");
