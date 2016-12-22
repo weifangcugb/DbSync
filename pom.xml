@@ -235,7 +235,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Allows the example to be run via 'mvn compile exec:java' -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -259,6 +258,8 @@
 			</archive>
 		</configuration>
 	</plugin>
+
+
 	<plugin>
 		<groupId>org.apache.maven.plugins</groupId>
 		<artifactId>maven-dependency-plugin</artifactId>
@@ -277,7 +278,7 @@
 			</execution>
 		</executions>
 	</plugin>
-<!--
+
 	<plugin>
 		<artifactId>maven-source-plugin</artifactId>
 		<version>2.1</version>
@@ -294,9 +295,38 @@
 			</execution>
 		</executions>
 	</plugin>
--->
+
+	    <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.0.12</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <obfuscate>true</obfuscate>
+                    <proguardInclude>${basedir}/proguard.conf</proguardInclude>
+                    <libs>
+                    	<lib>${java.home}/lib/rt.jar</lib>
+                    	<lib>${java.home}/lib/jce.jar</lib>
+                    </libs>
+                    <addMavenDescriptor>false</addMavenDescriptor>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.proguard</groupId>
+                        <artifactId>proguard-base</artifactId>
+                        <version>5.2</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
         </plugins>
     </build>
-
-
 </project>
