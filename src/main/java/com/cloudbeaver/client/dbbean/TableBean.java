@@ -248,7 +248,6 @@ public class TableBean implements Serializable{
 			case CommonUploader.DB_TYPE_SQL_ORACLE:
 				return "SELECT " + selectColumnClause() + fromClause() + whereClause(rowVersionColumn, dbType, sqlLimitNum)
 		                + " order by " + table + "." + rowVersionColumn;
-
 			default:
 				throw new BeaverFatalException("unknow sql type, " + dbType);
 		}
@@ -257,13 +256,25 @@ public class TableBean implements Serializable{
 	public String getSubTableSqlString(DatabaseBean dbBean, TableBean tableBean, List<String> subtables, String versionOffset) throws BeaverFatalException {
 		String tables = subtables.stream().collect(Collectors.joining(".*,", "", ".*"));
 		String from = subtables.stream().collect(Collectors.joining(",", tableBean.getTable() + ',', " "));
-		return "select " + tables + " from " + from + " where " + tableBean.getKey() 
+		if (isXFZXDateSystem(dbBean.getType(), dbBean.getRowversion())) {
+			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
+			+ " and to_char(" + tableBean.getTable() + "." + dbBean.getRowversion() + ")=" + versionOffset;
+		}else{
+			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
 			+ " and " + tableBean.getTable() + "." + dbBean.getRowversion() + "=" + versionOffset;
+		}
 	}
 
     private String whereClause(String rowVersionColumn, String dbType, int sqlLimitNum) {
+//    	only used by oracle
 		if (dbType.equals(CommonUploader.DB_TYPE_SQL_ORACLE)) {
-			return whereClause(rowVersionColumn) + " and " + table + "." + rowVersionColumn + " <= (" + xgsj + " + " + sqlLimitNum + ")";
+			if (isXFZXDateSystem(dbType, rowVersionColumn)) {
+//				xfzx system
+				return String.format("WHERE %s to_number(to_char(%s.%s)) > %s AND to_number(to_char(%s.%s)) <= (%s + %d)", 
+						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, xgsj, sqlLimitNum);
+			}else{
+				return whereClause(rowVersionColumn) + " and " + table + "." + rowVersionColumn + " <= (" + xgsj + " + " + sqlLimitNum + ")";
+			}
 		}else {
 			return null;
 		}
@@ -300,6 +311,10 @@ public class TableBean implements Serializable{
         }
     }
 
+    private boolean isXFZXDateSystem(String type, String rowversionColumn){
+    	return (type.equals(CommonUploader.DB_TYPE_SQL_ORACLE) && (rowversionColumn.equals("OPTIME") || rowversionColumn.equals("MDATE")));
+    }
+
     public void setQueryTime(String touchTime){
     	this.queryTime = touchTime;
     }
@@ -309,7 +324,7 @@ public class TableBean implements Serializable{
 	}
 
 	public String getMaxRowVersionSqlString(String type, String rowversionColumn) {
-		if (type.equals(CommonUploader.DB_TYPE_SQL_ORACLE) && (rowversionColumn.equals("OPTIME") || rowversionColumn.equals("MDATE"))) {/*hack here*/
+		if (isXFZXDateSystem(type, rowversionColumn)) {/*hack here*/
 			return "select max(to_number(to_char(" + rowversionColumn +",'yyyymmddhhmmss'))) as " + rowversionColumn + " from " + table;
 		}else{
 			return "select max(" + rowversionColumn +") as " + rowversionColumn + " from " + table;
