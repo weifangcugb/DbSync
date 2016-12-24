@@ -3,6 +3,8 @@ package com.cloudbeaver.client.common;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -139,15 +141,13 @@ public class SqlHelper {
                 jsonObj.element("hdfs_table", tableBean.getTable());
 
                 if (tableBean.getJoin_subtable() != null) {
-    				ArrayList<String> subtables = tableBean.getJoin_subtable();
-    				for (String subtable : subtables) {
-    					String subtableSql = tableBean.getSubTableSqlString(dbBean.getType(), dbBean.getRowversion(), subtable, jsonObj.getString(dbBean.getRowversion()));
-    					JSONArray subArray = new JSONArray();
-    					execSqlQuery(subtableSql, dbBean, subArray);
-    					if (!subArray.isEmpty()) {
-    						jsonObj.put(subtable, subArray);
-    					}
-    				}
+    				List<String> subtables = tableBean.getJoin_subtable();
+					String subtableSql = tableBean.getSubTableSqlString(dbBean, tableBean, subtables, jsonObj.getString(dbBean.getRowversion()));
+					JSONArray subArray = new JSONArray();
+					execSqlQuery(subtableSql, dbBean, subArray);
+					if (!subArray.isEmpty()) {
+						jsonObj.put(subtables.stream().collect(Collectors.joining("_")), subArray);
+					}
 				}
 			}
 		}

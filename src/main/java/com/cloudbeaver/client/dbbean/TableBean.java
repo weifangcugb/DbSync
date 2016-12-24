@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * bean for one table
@@ -25,8 +27,11 @@ public class TableBean implements Serializable{
     private String starttime = "0";
     @JsonProperty("ID")
     private String id = "0";
+    private String opTime;/*xfzx*/
+    private String mDate;/*xfzx*/
+    private String flowSn;/*flowsn*/
 
-    @JsonIgnore
+	@JsonIgnore
     private String queryTime;
 
     @JsonIgnore
@@ -47,7 +52,7 @@ public class TableBean implements Serializable{
 
     @JsonIgnore
     private boolean syncTypeOnceADay = false;
-    
+
 	public String getStarttime() {
 		return starttime;
 	}
@@ -57,11 +62,38 @@ public class TableBean implements Serializable{
 		xgsj = starttime;
 	}
 
+    public String getOpTime() {
+		return opTime;
+	}
+
+	public void setOpTime(String opTime) {
+		this.starttime = opTime;
+		this.opTime = opTime;
+	}
+
+	public String getmDate() {
+		return mDate;
+	}
+
+	public void setmDate(String mDate) {
+		this.starttime = mDate;
+		this.mDate = mDate;
+	}
+
+	public String getFlowSn() {
+		return flowSn;
+	}
+
+	public void setFlowSn(String flowSn) {
+		this.starttime = flowSn;
+		this.flowSn = flowSn;
+	}
+
 	public void setID(String ID) {
 		this.id = ID;
 		xgsj = ID;
 	}
-	
+
 	//for test
 	public String getID() {
 		return id;
@@ -222,14 +254,11 @@ public class TableBean implements Serializable{
 		}
     }
 
-	public String getSubTableSqlString(String dbType, String dbRowVersion, String subtableName, String xgsj) throws BeaverFatalException {
-		switch (dbType) {
-			case CommonUploader.DB_TYPE_SQL_ORACLE:
-				return "select " + subtableName + ".* from " + subtableName + "," + table + " where " + key + " and " + table + "." + dbRowVersion + "=" + xgsj;
-//			TODO: add other types
-			default:
-				throw new BeaverFatalException("unknow sql type, " + dbType);
-		}
+	public String getSubTableSqlString(DatabaseBean dbBean, TableBean tableBean, List<String> subtables, String versionOffset) throws BeaverFatalException {
+		String tables = subtables.stream().collect(Collectors.joining(".*,", "", ".*"));
+		String from = subtables.stream().collect(Collectors.joining(",", tableBean.getTable() + ',', " "));
+		return "select " + tables + " from " + from + " where " + tableBean.getKey() 
+			+ " and " + tableBean.getTable() + "." + dbBean.getRowversion() + "=" + versionOffset;
 	}
 
     private String whereClause(String rowVersionColumn, String dbType, int sqlLimitNum) {
@@ -280,7 +309,11 @@ public class TableBean implements Serializable{
 	}
 
 	public String getMaxRowVersionSqlString(String type, String rowversionColumn) {
-		return "select max(" + rowversionColumn +") as " + rowversionColumn + " from " + table;
+		if (type.equals(CommonUploader.DB_TYPE_SQL_ORACLE) && (rowversionColumn.equals("OPTIME") || rowversionColumn.equals("MDATE"))) {/*hack here*/
+			return "select max(to_number(to_char(" + rowversionColumn +",'yyyymmddhhmmss'))) as " + rowversionColumn + " from " + table;
+		}else{
+			return "select max(" + rowversionColumn +") as " + rowversionColumn + " from " + table;
+		}
 	}
 
 	@JsonIgnore
