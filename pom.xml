@@ -310,7 +310,7 @@
                 </executions>
                 <configuration>
                     <obfuscate>true</obfuscate>
-                    <proguardInclude>${basedir}/proguard.conf</proguardInclude>
+		    <proguardInclude>${basedir}/src/resources/proguard.conf</proguardInclude>
                     <libs>
                     	<lib>${java.home}/lib/rt.jar</lib>
                     	<lib>${java.home}/lib/jce.jar</lib>
