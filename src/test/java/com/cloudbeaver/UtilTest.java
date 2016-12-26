@@ -28,11 +28,19 @@ public class UtilTest {
 
 	@Test
 	public void testDate() throws ParseException{
-		String dirConf = "/tmp/testpics?2016-06-22-12-00-00";
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
-		String time = dirConf.substring(dirConf.indexOf('?') + 1);
-		Date date = sdf.parse(time);
-		System.out.println(date);
+//		String dirConf = "/tmp/testpics?2016-06-22-12-00-00";
+//		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
+//		String time = dirConf.substring(dirConf.indexOf('?') + 1);
+
+//		2016-07-15 16:55:01.0
+//		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+//		Date date = sdf.parse("2016-07-15 16:55:01.0");
+//		System.out.println(date);
+//		System.out.println(date.getTime());
+
+		String time = "2016-07-15 16:55:01.0";
+		String result = time.substring(0, time.indexOf('.')).replaceAll("[-: ]", "");
+		System.out.println(result);
 	}
 
 	@Test
@@ -112,12 +120,13 @@ public class UtilTest {
 		sync.sayHi();
 	}
 
-	public static void main(String[] args) throws NoSuchAlgorithmException {
+	public static void main(String[] args) throws NoSuchAlgorithmException, ParseException {
 		UtilTest uTest = new UtilTest();
 //		uTest.testAppSign();
 //		uTest.testBCrypt();
 //		uTest.testSync();
-		uTest.testJwt();
+//		uTest.testJwt();
+		uTest.testDate();
 	}
 
 	private void testJwt() {

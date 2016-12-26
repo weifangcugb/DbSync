@@ -11,6 +11,7 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
 
+import com.auth0.jwt.internal.org.apache.commons.lang3.ObjectUtils.Null;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
 
@@ -86,6 +87,7 @@ public class SqlHelper {
     }
 
 	private static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
+		logger.info("sql:" + sqlQuery);
 		Connection con = getCachedConnKeepTrying(dbBean);
 		try {
 //			Statement statement = con.createStatement();
@@ -119,12 +121,19 @@ public class SqlHelper {
 	            	jArray.add(jsonObj);
 				}
 
-	            maxXgsjUtilNow = rs.getString(dbBean.getRowversion());
+	            String maxV = rs.getString(dbBean.getRowversion());
+	            if (maxV != null) {
+	            	maxXgsjUtilNow = maxV;
+				}
 	        }
+	        rs.close();
+	        pStatement.clearBatch();
+	        pStatement.close();
 
 	        return maxXgsjUtilNow;
-		} finally {
+		} catch(SQLException e) {
 			removeCachedConnection(dbBean);
+			throw e;
 		}
 	}
 

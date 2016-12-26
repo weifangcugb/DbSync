@@ -43,19 +43,6 @@ public class PostDataServlet extends HttpServlet{
 	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
 	private static int picNum = 0;
 
-	public static Map<String, String> DBName2DBType = new HashMap<String, String>();
-	{
-		DBName2DBType.put("DocumentDB", "sqlserver");
-		DBName2DBType.put("MeetingDB", "webservice");
-		DBName2DBType.put("TalkDB", "webservice");
-		DBName2DBType.put("PrasDB", "webservice");
-		DBName2DBType.put("JfkhDB", "oracle");
-		DBName2DBType.put("DocumentDBForSqlite", "sqlite");
-		DBName2DBType.put("DocumentFiles", "file");
-		DBName2DBType.put("VideoMeetingDB", "sqlserver");
-		DBName2DBType.put("HelpDB", "sqlserver");
-	}
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	doPost(req, resp);
@@ -90,6 +77,7 @@ public class PostDataServlet extends HttpServlet{
 		}
 		System.out.println("dbName = " + dbName);
 
+		Map<String, String> DBName2DBType = GetTaskServlet.map;
 		if(!content.contains("HeartBeat")){
 			Assert.assertTrue("this database or file doesn't exists", DBName2DBType.containsKey(dbName));
 		}
@@ -165,7 +153,15 @@ public class PostDataServlet extends HttpServlet{
 					return;
 				}
 			} else if(serverType.equals("oracle")){
-				maxxgsj = iob.get("ID").toString();
+				if (tableName.equals("TBXF_SCREENING") || tableName.equals("TBXF_PRISONERPERFORMANCE") || tableName.equals("TBXF_SENTENCEALTERATION")) {
+					maxxgsj = getOracleDateLong(iob.getString("OPTIME"));
+				}else if (tableName.equals("TBPRISONER_MEETING_SUMMARY")) {
+					maxxgsj = getOracleDateLong(iob.getString("MDATE"));
+				}else if (tableName.equals("TBFLOW")) {
+					maxxgsj = getOracleDateLong(iob.getString("FLOWSN"));
+				}else{
+					maxxgsj = iob.get("ID").toString();
+				}
 			} else if(serverType.equals("sqlite")){
 				maxxgsj = iob.get("xgsj2").toString();
 			} else if(serverType.equals("file")){
@@ -180,7 +176,15 @@ public class PostDataServlet extends HttpServlet{
 		}
     }
 
-    public static void searchOriginTask(MultiDatabaseBean databases,Object database,Object table,String maxxgsj,String serverType) throws IOException{
+    private static String getOracleDateLong(String datetime) throws ParseException {
+//		2016-07-15 16:55:01.0
+//		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+//    	Date date = sdf.parse(datetime);
+//    	return "" + date.getTime();
+    	return datetime.substring(0, datetime.indexOf('.')).replaceAll("[-: ]", "");
+	}
+
+	public static void searchOriginTask(MultiDatabaseBean databases,Object database,Object table,String maxxgsj,String serverType) throws IOException{
 		for(int i = 0; i < databases.getDatabases().size(); i++){
 			DatabaseBean dbBean = databases.getDatabases().get(i);
 			if(dbBean.getDb().equals(database)){
@@ -204,7 +208,7 @@ public class PostDataServlet extends HttpServlet{
 							}		
 						}
 						else if(serverType.equals("oracle")){
-							Assert.assertTrue("ID of a record is less than table's ID", Long.parseLong(maxxgsj) >= Long.parseLong(tBean.getID()));
+							Assert.assertTrue("ID of a record is less than table's ID, newId:" + maxxgsj + " oldId:" + tBean.getID(), Long.parseLong(maxxgsj) >= Long.parseLong(tBean.getID()));
 							if(Long.parseLong(maxxgsj) > Long.parseLong(tBean.getID())){
 								tBean.setID(maxxgsj);
 								Assert.assertEquals(tBean.getID(), maxxgsj);
@@ -243,6 +247,7 @@ public class PostDataServlet extends HttpServlet{
 //				String dirName = iob.getString("hdfs_table");
 				String fileData = iob.getString("file_data");
 				Object database = iob.get("hdfs_db");
+				Map<String, String> DBName2DBType = GetTaskServlet.map;
 				if(!DBName2DBType.get(database).equals("file")){
 					continue;
 				}

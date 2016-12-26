@@ -19,6 +19,7 @@ import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -45,6 +46,10 @@ public class GetTaskServlet extends HttpServlet{
 		map.put("DocumentFiles", "file");
 		map.put("VideoMeetingDB", "sqlserver");
 		map.put("HelpDB", "sqlserver");
+		map.put("XfzxDB", "oracle");
+		map.put("XfzxDB1", "oracle");
+		map.put("XfzxDB2", "oracle");
+		map.put("XfzxDB3", "oracle");
 	}
 
 //	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj2\",\"tables\":"
@@ -298,6 +303,43 @@ public class GetTaskServlet extends HttpServlet{
 				+ "]}"
 			+ "]}";
 
+	private static String xfzxInitJson1 = "{\"databases\":[{\"db\":\"XfzxDB\",\"rowversion\":\"OPTIME\",\"tables\":["
+			+ "{\"table\":\"TBXF_SCREENING\",\"OPTIME\":\"20160715040000\"},"
+			+ "{\"table\":\"TBXF_SENTENCEALTERATION\",\"OPTIME\":\"20160715000000\"},"
+			+ "{\"table\":\"TBXF_PRISONERPERFORMANCE\",\"OPTIME\":\"20160715000000\"}"
+			+ "]}"
+			+ "]}";
+
+	private static String xfzxInitJson2 = "{\"databases\":[{\"db\":\"XfzxDB\",\"rowversion\":\"MDATE\",\"tables\":["
+			+ "{\"table\":\"TBPRISONER_MEETING_SUMMARY\",\"MDATE\":\"20160715000000\", \"join\":[\"TBPRISONER_MEETING_CRIMINAL\"],"
+			+ "\"key\":\"TBPRISONER_MEETING_CRIMINAL.MKEY = TBPRISONER_MEETING_SUMMARY.MKEY\"}"
+			+ "]}"
+			+ "]}";
+
+	private static String xfzxInitJson3 = "{\"databases\":[{\"db\":\"XfzxDB\",\"rowversion\":\"FLOWSN\",\"tables\":["
+			+ "{\"table\":\"TBFLOW\",\"FLOWSN\":\"0\", \"join\":[\"TBFLOW_BASE\",\"TBFLOW_BASE_CRIMINAL\",\"TBFLOW_OTHER_FLOW\",\"TBFLOW_BASE_OTHER\"],"
+			+ "\"key\":\"TBFLOW.FLOWDRAFTID=TBFLOW_BASE.FLOWDRAFTID AND TBFLOW_BASE.FLOWDEFID=TBFLOW_CASE_CRIMINAL.FLOWDEFID "
+			+ "AND TBFLOW.FLOWDRAFTID=TBFLOW_OTHER_FLOW.FLOWDRAFTID AND TBFLOW_OTHER_FLOW.OTHERID=TBFLOW_BASE_OTHER.OTHERID\"}"
+			+ "]}"
+			+ "]}";
+
+	private static String xfzxInitJson = "{\"databases\":["
+			+ "{\"db\":\"XfzxDB1\",\"rowversion\":\"OPTIME\",\"tables\":["
+				+ "{\"table\":\"TBXF_SCREENING\",\"OPTIME\":\"20160715040000\"},"
+				+ "{\"table\":\"TBXF_SENTENCEALTERATION\",\"OPTIME\":\"20160715000000\"},"
+				+ "{\"table\":\"TBXF_PRISONERPERFORMANCE\",\"OPTIME\":\"20160715000000\"}"
+			+ "]},"
+			+ "{\"db\":\"XfzxDB2\",\"rowversion\":\"MDATE\",\"tables\":["
+					+ "{\"table\":\"TBPRISONER_MEETING_SUMMARY\",\"MDATE\":\"20160715000000\", \"join\":[\"TBPRISONER_MEETING_CRIMINAL\"],"
+					+ "\"key\":\"TBPRISONER_MEETING_CRIMINAL.MKEY = TBPRISONER_MEETING_SUMMARY.MKEY\"}"
+			+ "]},"
+			+ "{\"db\":\"XfzxDB3\",\"rowversion\":\"FLOWSN\",\"tables\":["
+					+ "{\"table\":\"TBFLOW\",\"FLOWSN\":\"0\", \"join\":[\"TBFLOW_BASE\",\"TBFLOW_BASE_CRIMINAL\",\"TBFLOW_OTHER_FLOW\",\"TBFLOW_BASE_OTHER\"],"
+					+ "\"key\":\"TBFLOW.FLOWDRAFTID=TBFLOW_BASE.FLOWDRAFTID AND TBFLOW_BASE.FLOWDEFID=TBFLOW_CASE_CRIMINAL.FLOWDEFID "
+					+ "AND TBFLOW.FLOWDRAFTID=TBFLOW_OTHER_FLOW.FLOWDRAFTID AND TBFLOW_OTHER_FLOW.OTHERID=TBFLOW_BASE_OTHER.OTHERID\"}"
+			+ "]}"
+			+ "]}";
+
 	/*
 	 * file db
 	 */
@@ -313,7 +355,7 @@ public class GetTaskServlet extends HttpServlet{
 			ObjectMapper oMapper = new ObjectMapper();
 			if (clientId.endsWith("db")) {
 				//test all
-				databaseBeans = oMapper.readValue(documentDBInitJson2, MultiDatabaseBean.class);
+//				databaseBeans = oMapper.readValue(documentDBInitJson2, MultiDatabaseBean.class);
 				//for web server test
 //				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
 				//for sqlite
@@ -322,6 +364,8 @@ public class GetTaskServlet extends HttpServlet{
 //				databaseBeans = oMapper.readValue(zhongCiInitJson, MultiDatabaseBean.class);
 				//for sql server2008
 //				databaseBeans = oMapper.readValue(bangjiaoInitJson, MultiDatabaseBean.class);
+//				for xfzx system
+				databaseBeans = oMapper.readValue(xfzxInitJson1 , MultiDatabaseBean.class);
 			}
 			else if(clientId.endsWith("documentfile")){
 				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);
@@ -341,6 +385,16 @@ public class GetTaskServlet extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
+    	String json = xfzxInitJson;
+    	resp.setCharacterEncoding("utf-8");
+    	PrintWriter pw = resp.getWriter();
+        pw.write(json);
+        pw.flush();
+        pw.close();
+        System.out.println("get task succeed!");
+    }
+
+    protected void doPost2(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
     	String url = req.getRequestURI();
     	int tableIdIndex = url.lastIndexOf('/');
     	if (url.length() <= getTaskApi.length() || tableIdIndex != (getTaskApi.length() - 1)) {

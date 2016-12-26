@@ -339,6 +339,10 @@ public class DbUploader extends CommonUploader{
 					}
 				}else {
 					logger.debug("get db data, json:" + jArray.toString());
+					/*hack here*/
+					if (dbBean.getDb().startsWith("XfzxDB")) {
+						nowMaxXgsj = nowMaxXgsj.substring(0, nowMaxXgsj.indexOf('.')).replaceAll("[-: ]", "");
+					}
 					tableBean.setXgsj(nowMaxXgsj);
 					break;
 				}

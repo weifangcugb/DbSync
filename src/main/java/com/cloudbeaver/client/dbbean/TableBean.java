@@ -27,8 +27,11 @@ public class TableBean implements Serializable{
     private String starttime = "0";
     @JsonProperty("ID")
     private String id = "0";
+    @JsonProperty("OPTIME")
     private String opTime;/*xfzx*/
+    @JsonProperty("MDATE")
     private String mDate;/*xfzx*/
+    @JsonProperty("FLOWSN")
     private String flowSn;/*flowsn*/
 
 	@JsonIgnore
@@ -67,8 +70,8 @@ public class TableBean implements Serializable{
 	}
 
 	public void setOpTime(String opTime) {
-		this.starttime = opTime;
 		this.opTime = opTime;
+		xgsj = opTime;
 	}
 
 	public String getmDate() {
@@ -76,8 +79,9 @@ public class TableBean implements Serializable{
 	}
 
 	public void setmDate(String mDate) {
-		this.starttime = mDate;
 		this.mDate = mDate;
+		logger.info("mdate:" + mDate + " xgsj:" + xgsj);
+		xgsj = mDate;
 	}
 
 	public String getFlowSn() {
@@ -85,7 +89,7 @@ public class TableBean implements Serializable{
 	}
 
 	public void setFlowSn(String flowSn) {
-		this.starttime = flowSn;
+		xgsj = flowSn;
 		this.flowSn = flowSn;
 	}
 
@@ -258,7 +262,7 @@ public class TableBean implements Serializable{
 		String from = subtables.stream().collect(Collectors.joining(",", tableBean.getTable() + ',', " "));
 		if (isXFZXDateSystem(dbBean.getType(), dbBean.getRowversion())) {
 			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
-			+ " and to_char(" + tableBean.getTable() + "." + dbBean.getRowversion() + ")=" + versionOffset;
+			+ " and to_char(" + tableBean.getTable() + "." + dbBean.getRowversion() + ") =" + versionOffset;
 		}else{
 			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
 			+ " and " + tableBean.getTable() + "." + dbBean.getRowversion() + "=" + versionOffset;
@@ -270,7 +274,7 @@ public class TableBean implements Serializable{
 		if (dbType.equals(CommonUploader.DB_TYPE_SQL_ORACLE)) {
 			if (isXFZXDateSystem(dbType, rowVersionColumn)) {
 //				xfzx system
-				return String.format("WHERE %s to_number(to_char(%s.%s)) > %s AND to_number(to_char(%s.%s)) <= (%s + %d)", 
+				return String.format("WHERE %s to_number(to_char(%s.%s, 'yyyymmddhhmmss')) > %s AND to_number(to_char(%s.%s, 'yyyymmddhhmmss')) <= (%s + %d)", 
 						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, xgsj, sqlLimitNum);
 			}else{
 				return whereClause(rowVersionColumn) + " and " + table + "." + rowVersionColumn + " <= (" + xgsj + " + " + sqlLimitNum + ")";
