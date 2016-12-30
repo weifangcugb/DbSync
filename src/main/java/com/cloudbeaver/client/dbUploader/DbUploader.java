@@ -231,8 +231,7 @@ public class DbUploader extends CommonUploader {
 						String jsonString = dbData.getJSONObject(i).toString();
 						if (sb.length() + jsonString.length() > MAX_MSG_SIZE) {
 							if (sb.length() > 0) {
-								sb.append(']');
-								sendMsgOut(sb);
+								sendMsgOut(sb.append(']'));
 							}
 
 							sb = new StringBuilder();
