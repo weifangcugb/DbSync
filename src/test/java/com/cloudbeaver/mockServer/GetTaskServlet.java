@@ -3,8 +3,11 @@ package com.cloudbeaver.mockServer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,12 +18,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
-import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 @WebServlet("/api/business/sync/*")
 public class GetTaskServlet extends HttpServlet{
@@ -384,16 +388,6 @@ public class GetTaskServlet extends HttpServlet{
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
-    	String json = xfzxInitJson;
-    	resp.setCharacterEncoding("utf-8");
-    	PrintWriter pw = resp.getWriter();
-        pw.write(json);
-        pw.flush();
-        pw.close();
-        System.out.println("get task succeed!");
-    }
-
-    protected void doPost2(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException{
     	String url = req.getRequestURI();
     	int tableIdIndex = url.lastIndexOf('/');
     	if (url.length() <= getTaskApi.length() || tableIdIndex != (getTaskApi.length() - 1)) {
@@ -404,77 +398,53 @@ public class GetTaskServlet extends HttpServlet{
     	
     	clientId = url.substring(tableIdIndex + 1);
     	String json;
-    	if (clientId.endsWith("db")) {
+    	if (clientId.endsWith("db") || clientId.endsWith("documentfile")) {
     		databaseBeans = getMultiDatabaseBean();
-    		for(int i = 0; i < databaseBeans.getDatabases().size(); i++){
-    			DatabaseBean dBean = databaseBeans.getDatabases().get(i);
-    			if(map.get(dBean.getDb()).equals("webservice")){
-    				for(int j = 0; j < dBean.getTables().size(); j++){
-        				TableBean tBean = dBean.getTables().get(j);
-        				tBean.setID(tBean.getStarttime());
-        			}
-    			}
-    			else if(map.get(dBean.getDb()).equals("oracle")){
-    				for(int j = 0; j < dBean.getTables().size(); j++){
-        				TableBean tBean = dBean.getTables().get(j);
-        				tBean.setStarttime(tBean.getID());
-        			}
-    			}
-    			else if(map.get(dBean.getDb()).equals("sqlserver")){
-    				for(int j = 0; j < dBean.getTables().size(); j++){
-        				TableBean tBean = dBean.getTables().get(j);
-//        				if (!tBean.getXgsj().startsWith("0x")) {
-//    						tBean.setXgsj("0x" + tBean.getXgsj());
-//    					}
-        				tBean.setStarttime(tBean.getXgsj());
-        				tBean.setID(tBean.getXgsj());
-        			}
-    			}
-    			else if(map.get(dBean.getDb()).equals("sqlite")){
-    				for(int j = 0; j < dBean.getTables().size(); j++){
-        				TableBean tBean = dBean.getTables().get(j);
-        				tBean.setStarttime(tBean.getXgsj());
-        				tBean.setID(tBean.getXgsj());
-        			}
-    			}
-    		}
-    		ObjectMapper oMapper = new ObjectMapper();
-    		StringWriter str=new StringWriter();
-    		oMapper.writeValue(str, databaseBeans);
-    		json = str.toString();
-    		logger.info("task from server："+json);
-//    		json = zhongCiInitJson;
-//    		System.out.println("task from server："+json);
-    	}else if (clientId.endsWith("documentfile")) {
-//    		json = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":[{\"table\":\"c://罪犯媒体/像片\",\"xgsj\":\"0000000000000000\"}]}]}";
-    		databaseBeans = getMultiDatabaseBean();
-    		for(int i = 0; i < databaseBeans.getDatabases().size(); i++){
-    			DatabaseBean dBean = databaseBeans.getDatabases().get(i);
-    			for(int j = 0; j < dBean.getTables().size(); j++){
-    				TableBean tBean = dBean.getTables().get(j);
-    				tBean.setStarttime(tBean.getXgsj());
-    				tBean.setID(tBean.getXgsj());
-    			}
-    		}
-    		ObjectMapper oMapper = new ObjectMapper();
-    		StringWriter str=new StringWriter();
-    		oMapper.writeValue(str, databaseBeans);
-    		json = str.toString();
-    		logger.info("task from server："+json);
     	}else {
     		json = "{\"databases\":[]}";
 		}
 
-    	//resp.setHeader(\"Content-type\", \"text/html;charset=UTF-8\");
+    	ObjectMapper oMapper = new ObjectMapper();
+		StringWriter str=new StringWriter();
+		oMapper.writeValue(str, databaseBeans);
+		json = deleteNUllValueInJson(str.toString());
+		logger.info("task from server："+json);
+
     	resp.setCharacterEncoding("utf-8");
     	PrintWriter pw = resp.getWriter();
-    	//pw.write(tableId);
         pw.write(json);
         pw.flush();
         pw.close();
         System.out.println("get task succeed!");
     }
 
+    public static String deleteNUllValueInJson(String json){
+    	JSONObject jObject =JSONObject.fromObject(json);
+    	JSONArray dbs = jObject.getJSONArray("databases");
+    	for(int i = 0; i < dbs.size(); i++){
+    		JSONObject db = dbs.getJSONObject(i);
+			JSONArray tables = db.getJSONArray("tables");
+			for(int j = 0; j < tables.size(); j++){
+				JSONObject table = tables.getJSONObject(j);
+				Set<String> keys = (Set<String>)table.keySet();
+				List<String> list = new ArrayList<String> ();
+				list.addAll(keys);
+				int size = list.size();
+				for(int k = 0; k < size; k++){
+					if(table.getString(list.get(k)).equals("null")){
+	                	table = table.discard(list.get(k));
+	                	keys = (Set<String>)table.keySet();
+	                	list.clear();
+	                	list.addAll(keys);
+	                	k--;
+	                	size = list.size();
+	                }
+				}
+			}
+    	}
+    	json = jObject.toString();
+    	return json;
+    }
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     	super.doDelete(req, resp);

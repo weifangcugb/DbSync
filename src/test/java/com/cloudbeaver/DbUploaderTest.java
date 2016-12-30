@@ -56,6 +56,10 @@ public class DbUploaderTest extends DbUploader{
 		DB2TypeMap.put("DocumentFiles", "file");
 		DB2TypeMap.put("VideoMeetingDB", "sqlserver");
 		DB2TypeMap.put("HelpDB", "sqlserver");
+		DB2TypeMap.put("XfzxDB", "oracle");
+		DB2TypeMap.put("XfzxDB1", "oracle");
+		DB2TypeMap.put("XfzxDB2", "oracle");
+		DB2TypeMap.put("XfzxDB3", "oracle");
 	}
 
 	private static MockWebServer mockServer = new MockWebServer();
@@ -467,7 +471,7 @@ public class DbUploaderTest extends DbUploader{
 
 	public static void main(String[] args) {
 		DbUploaderTest appTest = new DbUploaderTest();
-//		appTest.setUpServers();
+		appTest.setUpServers();
 
 		try {
 //			appTest.testGetMsgForSqlserverStep();
@@ -481,6 +485,6 @@ public class DbUploaderTest extends DbUploader{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-//		appTest.tearDownServers();
+		appTest.tearDownServers();
 	}
 }
