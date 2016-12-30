@@ -34,7 +34,7 @@ public class DbUploader extends CommonUploader {
 	private static final int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 	private static final String DB_ROW_VERSION_START_TIME = "starttime";
 
-	private static final int MAX_MSG_SIZE = 600 * 1024;
+	private static final int MAX_RETRY_SEND_TIMES = 5;
 
 	private static Map<String, String> appKeySecret = new HashMap<String, String>();
 	static {
@@ -225,45 +225,49 @@ public class DbUploader extends CommonUploader {
 					continue;
 				}
 
-				try {
-					StringBuilder sb = new StringBuilder();
-					for (int i = 0; i < dbData.size(); i++) {
-						String jsonString = dbData.getJSONObject(i).toString();
-						if (sb.length() + jsonString.length() > MAX_MSG_SIZE) {
-							if (sb.length() > 0) {
-								sendMsgOut(sb.append(']'));
-							}
 
-							sb = new StringBuilder();
-							sb.append('[').append(jsonString);
-						} else {
-							if (sb.length() > 0) {
-								sb.append(',');
-							} else {
-								sb.append('[');
-							}
-							sb.append(jsonString);
+				StringBuilder sb = new StringBuilder();
+				for (int i = 0; i < dbData.size(); i++) {
+					String jsonString = dbData.getJSONObject(i).toString();
+					if (sb.length() + jsonString.length() > MAX_RAW_MSG_SIZE) {
+						if (sb.length() > 0) {
+							sendMsgOut(sb.append(']'));
 						}
+
+						sb = new StringBuilder();
+						sb.append('[').append(jsonString);
+					} else {
+						if (sb.length() > 0) {
+							sb.append(',');
+						} else {
+							sb.append('[');
+						}
+						sb.append(jsonString);
 					}
-					sendMsgOut(sb.append(']'));
-				} catch (IOException e) {
-					// change back 'xgsj'
-					tableBean.rollBackXgsj();
-					BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:"
-							+ conf.get(CommonUploader.CONF_FLUME_SERVER_URL), 1000);
 				}
+				sendMsgOut(sb.append(']'));
 			}
 		}
 	}
 
-	private void sendMsgOut(StringBuilder sb) throws IOException {
-		String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(sb.toString());
-		if (flumeJson.length() < MAX_MSG_SIZE) {
-			BeaverUtils.doPost(conf.get(CommonUploader.CONF_FLUME_SERVER_URL), flumeJson);
-			logger.debug("send db data to flume server, json:" + flumeJson);
-		} else {
-			// msg is too long, we can't deliver it, leave it to log
-			logger.error("msg is too long, msg:" + flumeJson);
+	private void sendMsgOut(StringBuilder sb) {
+		for(int i = 0; i < MAX_RETRY_SEND_TIMES; i++){
+			try {
+				String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(sb.toString());
+				if (flumeJson.length() < MAX_PACKET_MSG_SIZE) {
+					BeaverUtils.doPost(conf.get(CommonUploader.CONF_FLUME_SERVER_URL), flumeJson);
+					logger.debug("send db data to flume server, json:" + flumeJson);
+				} else {
+					// msg is too long, we can't deliver it, leave it to log
+					logger.error("msg is too long, msg:" + flumeJson);
+				}
+				break;
+			} catch (IOException e) {
+//				change back 'xgsj'
+//				tableBean.rollBackXgsj();
+				BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:"
+						+ conf.get(CommonUploader.CONF_FLUME_SERVER_URL), 500);
+			}
 		}
 	}
 

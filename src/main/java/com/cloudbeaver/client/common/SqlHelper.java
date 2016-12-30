@@ -122,7 +122,7 @@ public class SqlHelper {
 				}
 
 	            String maxV = rs.getString(dbBean.getRowversion());
-	            if (maxV != null) {
+	            if (maxV != null && maxV.length() > 0) {
 	            	maxXgsjUtilNow = maxV;
 				}
 	        }

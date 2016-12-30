@@ -1,8 +1,8 @@
 package com.cloudbeaver.client.common;
 
 public abstract class CommonUploader extends FixedNumThreadPool{
-	public static final int DB_QEURY_LIMIT_DB = 50;
-	public static final int DB_QEURY_LIMIT_WEB_SERVICE = 50;
+	public static final int DB_QEURY_LIMIT_DB = 1000;
+	public static final int DB_QEURY_LIMIT_WEB_SERVICE = 500;
 
 	public static final String CONF_CLIENT_ID = "client.id";
 	public static final String CONF_FLUME_SERVER_URL = "flume-server.url";
@@ -21,6 +21,9 @@ public abstract class CommonUploader extends FixedNumThreadPool{
 	public static final String DB_TYPE_SQL_SQLITE = "sqlite";
 	public static final String DB_TYPE_WEB_SERVICE = "webservice";
 	public static final String DB_EMPTY_ROW_VERSION = "0";
+
+	public static int MAX_RAW_MSG_SIZE = 600 * 1024;
+	public static int MAX_PACKET_MSG_SIZE = 1000 * 1024;
 
 	public static String CONF_FILE_DIR = "conf/";
 	public static String CONF_DBSYNC_DB_FILENAME = CONF_FILE_DIR + "SyncClient_DB.properties";
