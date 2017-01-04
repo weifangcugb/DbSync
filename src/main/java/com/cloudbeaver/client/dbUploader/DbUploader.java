@@ -466,7 +466,7 @@ public class DbUploader extends CommonUploader {
 			db.put("hdfs_prison", prisonId);
 			db.put("hdfs_db", dbBean.getDb());
 			db.put(REPORT_TYPE, REPORT_TYPE_HEARTBEAT);
-			db.put("host_ip", BeaverUtils.getIPAddress());
+			db.put("client_ip", BeaverUtils.getIPAddress());
 			db.put("queryTime", dbBean.getQueryTime());
 			JSONArray tables = new JSONArray();
 			for (TableBean tBean : dbBean.getTables()) {

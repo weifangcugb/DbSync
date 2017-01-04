@@ -96,7 +96,7 @@ public class DbUploaderTest extends DbUploader{
 		int num = getDbBeans().getDatabases().size();
 		MultiDatabaseBean newdbs = olddbs;
 		for(int j = 0; j < MAX_LOOP_NUM; j++){
-			isEqulas(olddbs, newdbs);			
+			isEqulas(olddbs, newdbs);
 			for (int index = 0; index < num; index++) {
 				DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
 				if (dbBean == null) {

@@ -368,7 +368,7 @@ public class GetTaskServlet extends HttpServlet{
 				//for sql server2008
 //				databaseBeans = oMapper.readValue(bangjiaoInitJson, MultiDatabaseBean.class);
 //				for xfzx system
-				databaseBeans = oMapper.readValue(xfzxInitJson1 , MultiDatabaseBean.class);
+				databaseBeans = oMapper.readValue(xfzxInitJson , MultiDatabaseBean.class);
 			}
 			else if(clientId.endsWith("documentfile")){
 				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);
@@ -410,9 +410,10 @@ public class GetTaskServlet extends HttpServlet{
 		json = deleteNUllValueInJson(str.toString());
 		logger.info("task from server："+json);
 
+		logger.info("tasks:" + xfzxInitJson);
     	resp.setCharacterEncoding("utf-8");
     	PrintWriter pw = resp.getWriter();
-        pw.write(json);
+        pw.write(xfzxInitJson);
         pw.flush();
         pw.close();
         System.out.println("get task succeed!");
