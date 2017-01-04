@@ -1,7 +1,6 @@
 package com.cloudbeaver.client.common;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,7 +10,6 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
 
-import com.auth0.jwt.internal.org.apache.commons.lang3.ObjectUtils.Null;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
 
@@ -28,7 +26,7 @@ public class SqlHelper {
             while (FixedNumThreadPool.isRunning()) {
             	try{
                     if (!conMap.containsKey(dbBean.getDb())) {
-                    	conMap.put(dbBean.getDb(), getDBConnection(dbBean));                    	
+                    	conMap.put(dbBean.getDb(), getDBConnection(dbBean));
                     }
 
                     return (Connection) conMap.get(dbBean.getDb());

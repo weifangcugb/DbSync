@@ -15,8 +15,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.security.Key;
 import java.security.KeyManagementException;
 import java.security.MessageDigest;
@@ -514,5 +516,18 @@ public class BeaverUtils {
 	public static Object getTableIdFromUploadUrl(String tableUrl) {
 //		example: upload://table/db5a8742-6460-11e6-bba9-09259609bdc7/0f2vxj_HBA2xzBdu
 		return tableUrl.substring("upload://table/".length(), tableUrl.lastIndexOf('/'));
+	}
+
+	/* return ip: if an exception is thrown, ip is empty */
+	public static String getIPAddress() {
+		String ip = "";
+		try {
+			InetAddress addr = InetAddress.getLocalHost();
+			ip = addr.getHostAddress();
+		} catch (UnknownHostException e) {
+			BeaverUtils.PrintStackTrace(e);
+			logger.error("get ip address error. msg:" + e.getMessage());
+		}
+		return ip;
 	}
 }
