@@ -1,6 +1,10 @@
 package com.cloudbeaver.client.common;
 
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -177,6 +181,24 @@ public class SqlHelper {
 				conn.close();
 			} catch (SQLException e) {
 				BeaverUtils.printLogExceptionWithoutSleep(e, "can't close connection");
+			}
+		}
+	}
+
+	public static String nextOracleDateTime(String xgsj, int sqlLimitNum) {
+    	if (xgsj.equals("0") || xgsj.length() == 0) {
+			return "20100101000000";
+		}else{
+	    	try{
+	    		SimpleDateFormat ORACLE_DATE_FORMAT	= new SimpleDateFormat("yyyyMMddHHmmss");
+	    		Date date = ORACLE_DATE_FORMAT.parse(xgsj);
+	    		Calendar calendar = Calendar.getInstance();
+	    		calendar.setTime(date);
+	    		calendar.set(Calendar.SECOND, calendar.get(calendar.SECOND) + sqlLimitNum);
+	    		return ORACLE_DATE_FORMAT.format(calendar.getTime());
+	    	}catch (ParseException e) {
+	    		BeaverUtils.printLogExceptionWithoutSleep(e, "xgsj parse to date error");
+	    		return String.format("(%s + %d)", xgsj, sqlLimitNum);
 			}
 		}
 	}

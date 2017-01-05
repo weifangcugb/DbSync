@@ -4,12 +4,20 @@ import org.apache.log4j.*;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverTableIsFullException;
+import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.CommonUploader;
+import com.cloudbeaver.client.common.SqlHelper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import scala.runtime.StringFormat;
+
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -274,8 +282,8 @@ public class TableBean implements Serializable{
 		if (dbType.equals(CommonUploader.DB_TYPE_SQL_ORACLE)) {
 			if (isXFZXDateSystem(dbType, rowVersionColumn)) {
 //				xfzx system
-				return String.format("WHERE %s to_number(to_char(%s.%s, 'yyyymmddhhmmss')) > %s AND to_number(to_char(%s.%s, 'yyyymmddhhmmss')) <= (%s + %d)", 
-						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, xgsj, sqlLimitNum);
+				return String.format("WHERE %s to_number(to_char(%s.%s, 'yyyymmddhh24mmss')) > %s AND to_number(to_char(%s.%s, 'yyyymmddhh24mmss')) <= %s", 
+						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, SqlHelper.nextOracleDateTime(xgsj, sqlLimitNum));
 			}else{
 				return whereClause(rowVersionColumn) + " and " + table + "." + rowVersionColumn + " <= (" + xgsj + " + " + sqlLimitNum + ")";
 			}
@@ -284,7 +292,7 @@ public class TableBean implements Serializable{
 		}
 	}
 
-    private String selectColumnClause() {
+	private String selectColumnClause() {
     	StringBuilder sb = new StringBuilder();
     	sb.append(table + ".* ");
 		if (join != null) {

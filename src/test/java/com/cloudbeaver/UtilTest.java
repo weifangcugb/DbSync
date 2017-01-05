@@ -3,6 +3,7 @@ package com.cloudbeaver;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,9 +39,20 @@ public class UtilTest {
 //		System.out.println(date);
 //		System.out.println(date.getTime());
 
-		String time = "2016-07-15 16:55:01.0";
-		String result = time.substring(0, time.indexOf('.')).replaceAll("[-: ]", "");
-		System.out.println(result);
+//		String time = "2016-07-15 16:55:01.0";
+//		String result = time.substring(0, time.indexOf('.')).replaceAll("[-: ]", "");
+//		System.out.println(result);
+
+//		20160715165501
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+		Date date = sdf.parse("20000101000000");
+		System.out.println(date);
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.SECOND, calendar.get(calendar.SECOND) + 1000);
+		Date enDate = calendar.getTime();
+		System.out.println(enDate);
+		System.out.println(sdf.format(enDate));
 	}
 
 	@Test
