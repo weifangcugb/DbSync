@@ -413,11 +413,11 @@ public class GetTaskServlet extends HttpServlet{
 		logger.info("tasks:" + xfzxInitJson);
     	resp.setCharacterEncoding("utf-8");
     	PrintWriter pw = resp.getWriter();
-        pw.write(xfzxInitJson);
+        pw.write(json);
         pw.flush();
         pw.close();
         System.out.println("get task succeed!");
-    }
+    }	
 
     public static String deleteNUllValueInJson(String json){
     	JSONObject jObject =JSONObject.fromObject(json);

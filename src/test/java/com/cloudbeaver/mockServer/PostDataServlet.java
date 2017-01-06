@@ -208,11 +208,28 @@ public class PostDataServlet extends HttpServlet{
 							}		
 						}
 						else if(serverType.equals("oracle")){
-							Assert.assertTrue("ID of a record is less than table's ID, newId:" + maxxgsj + " oldId:" + tBean.getID(), Long.parseLong(maxxgsj) >= Long.parseLong(tBean.getID()));
-							if(Long.parseLong(maxxgsj) > Long.parseLong(tBean.getID())){
-								tBean.setID(maxxgsj);
-								Assert.assertEquals(tBean.getID(), maxxgsj);
-								System.out.println("update table："+tBean.getTable()+" "+tBean.getID());
+							String oldxgsj = "";
+							if (tBean.getTable().equals("TBXF_SCREENING") || tBean.getTable().equals("TBXF_PRISONERPERFORMANCE") || tBean.getTable().equals("TBXF_SENTENCEALTERATION")) {
+								oldxgsj = tBean.getOpTime();
+							}else if (tBean.getTable().equals("TBPRISONER_MEETING_SUMMARY")) {
+								oldxgsj = tBean.getmDate();
+							}else if (tBean.getTable().equals("TBFLOW")) {
+								oldxgsj = tBean.getFlowSn();
+							}else{
+								oldxgsj = tBean.getID();
+							}
+							Assert.assertTrue("ID of a record is less than table's ID, newId:" + maxxgsj + " oldId:" + oldxgsj, Long.parseLong(maxxgsj) >= Long.parseLong(oldxgsj));
+							if(Long.parseLong(maxxgsj) > Long.parseLong(oldxgsj)){
+								if (tBean.getTable().equals("TBXF_SCREENING") || tBean.getTable().equals("TBXF_PRISONERPERFORMANCE") || tBean.getTable().equals("TBXF_SENTENCEALTERATION")) {
+									tBean.setOpTime(maxxgsj);
+								}else if (tBean.getTable().equals("TBPRISONER_MEETING_SUMMARY")) {
+									tBean.setOpTime(maxxgsj);
+								}else if (tBean.getTable().equals("TBFLOW")) {
+									tBean.setFlowSn(maxxgsj);
+								}else{
+									tBean.setID(maxxgsj);
+								}
+								System.out.println("update table："+tBean.getTable()+" "+maxxgsj);
 							}		
 						}
 						else if(serverType.equals("sqlite")){
