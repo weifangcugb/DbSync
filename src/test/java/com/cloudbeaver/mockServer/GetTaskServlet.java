@@ -427,7 +427,7 @@ public class GetTaskServlet extends HttpServlet{
 			JSONArray tables = db.getJSONArray("tables");
 			for(int j = 0; j < tables.size(); j++){
 				JSONObject table = tables.getJSONObject(j);
-				Set<String> keys = (Set<String>)table.keySet();
+				Set keys = table.keySet();
 				List<String> list = new ArrayList<String> ();
 				list.addAll(keys);
 				int size = list.size();
