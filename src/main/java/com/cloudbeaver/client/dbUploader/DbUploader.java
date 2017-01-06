@@ -390,6 +390,10 @@ public class DbUploader extends CommonUploader {
 				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
 				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
 					long nextPoint = tableBean.getXgsjAsLong() + DB_QEURY_LIMIT_DB;
+					/* hack here */
+					if (isXFZXDateColumn(dbBean, tableBean)) {
+						nextPoint = Long.parseLong(SqlHelper.nextOracleDateTime(tableBean.getXgsj(), DB_QEURY_LIMIT_DB));
+					}
 					if (tableBean.getMaxXgsjAsLong() <= nextPoint) {
 						tableBean.setXgsj(tableBean.getMaxXgsjAsLong() + "");
 						throw new BeaverTableIsFullException();
@@ -399,7 +403,7 @@ public class DbUploader extends CommonUploader {
 				} else {
 					logger.debug("get db data, json:" + jArray.toString());
 					/* hack here */
-					if (dbBean.getDb().startsWith("XfzxDB")) {
+					if (isXFZXDateColumn(dbBean, tableBean)) {
 						nowMaxXgsj = nowMaxXgsj.substring(0, nowMaxXgsj.indexOf('.')).replaceAll("[-: ]", "");
 					}
 					tableBean.setXgsj(nowMaxXgsj);
@@ -413,6 +417,15 @@ public class DbUploader extends CommonUploader {
 			BeaverUtils.printLogExceptionAndSleep(e, "sql query faild, url:" + dbBean.getDbUrl() + " msg:", 1000);
 			throw new BeaverTableNeedRetryException();
 		}
+	}
+
+	
+	private boolean isXFZXDateColumn(DatabaseBean dbBean, TableBean tableBean) {
+		return dbBean.getDb().startsWith("XfzxDB") && 
+				(tableBean.getTable().equals("TBXF_SENTENCEALTERATION") || 
+				tableBean.getTable().equals("TBPRISONER_MEETING_SUMMARY") || 
+				tableBean.getTable().equals("TBXF_SCREENING") ||
+				tableBean.getTable().equals("TBXF_PRISONERPERFORMANCE"));
 	}
 
 	private JSONArray getDataFromSqlServer(DatabaseBean dbBean, TableBean tableBean)
