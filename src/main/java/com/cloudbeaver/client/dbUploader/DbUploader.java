@@ -113,10 +113,19 @@ public class DbUploader extends CommonUploader {
 						|| dbType.equals(DB_TYPE_SQL_SQLITE) || dbType.equals(DB_TYPE_WEB_SERVICE)) {
 					dbBean.setType(dbType);
 
-					if (dbType.equals(DB_TYPE_SQL_SERVER)) {
+					if (dbType.equals(DB_TYPE_SQL_SERVER) && dbBean.getDb().equals("DocumentDB")) {
 						for (TableBean tableBean : dbBean.getTables()) {
 							if (!tableBean.getXgsj().startsWith("0x")) {
 								tableBean.setXgsj("0x" + tableBean.getXgsj());
+							}
+						}
+					}
+					
+					if (dbType.equals(DB_TYPE_SQL_ORACLE) && dbBean.getDb().startsWith("XfzxDB")) {
+						for (TableBean tableBean : dbBean.getTables()) {
+							if (isXFZXDateColumn(dbBean, tableBean)) {
+								String xgsj = tableBean.getXgsj();
+								tableBean.setXgsj(xgsj.substring(0, xgsj.indexOf('.')).replaceAll("[-: ]", ""));
 							}
 						}
 					}
@@ -419,7 +428,6 @@ public class DbUploader extends CommonUploader {
 		}
 	}
 
-	
 	private boolean isXFZXDateColumn(DatabaseBean dbBean, TableBean tableBean) {
 		return dbBean.getDb().startsWith("XfzxDB") && 
 				(tableBean.getTable().equals("TBXF_SENTENCEALTERATION") || 
