@@ -17,6 +17,7 @@ import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.rmi.server.UnicastRemoteObject;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -103,6 +104,7 @@ public class DbUploader extends CommonUploader {
 		dbBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
 
 		ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
+		DatabaseBean uionWebServerBean = null;
 		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
 			if (conf.get("db." + dbBean.getDb() + ".url") != null) {
 				dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
@@ -138,8 +140,23 @@ public class DbUploader extends CommonUploader {
 					dbBean.setAppKey(appKey);
 					dbBean.setAppSecret(appKeySecret.get(appKey));
 				}
+
+				/*hack here
+				 * uion all Youdi webservice db-beans to one db-bean*/
+				if (dbType.equals(DB_TYPE_WEB_SERVICE)) {
+					if (uionWebServerBean == null) {
+						uionWebServerBean = dbBean;
+					}else{
+						uionWebServerBean.getTables().addAll(dbBean.getTables());
+					}
+					continue;
+				}
 				newDatabaseBeans.add(dbBean);
 			}
+		}
+
+		if (uionWebServerBean != null) {
+			newDatabaseBeans.add(uionWebServerBean);
 		}
 
 		dbBeans.setDatabases(newDatabaseBeans);
