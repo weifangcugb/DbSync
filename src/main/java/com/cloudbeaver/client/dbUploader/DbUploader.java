@@ -141,8 +141,9 @@ public class DbUploader extends CommonUploader {
 					dbBean.setAppSecret(appKeySecret.get(appKey));
 				}
 
-				/*hack here
-				 * uion all Youdi webservice db-beans to one db-bean*/
+				/* hack here
+				 * uion all Youdi webservice db-beans to one db-bean
+				 * */
 				if (dbType.equals(DB_TYPE_WEB_SERVICE)) {
 					if (uionWebServerBean == null) {
 						uionWebServerBean = dbBean;
