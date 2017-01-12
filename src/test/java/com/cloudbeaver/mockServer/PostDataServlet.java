@@ -150,13 +150,13 @@ public class PostDataServlet extends HttpServlet{
 				}
 			} else if(serverType.equals("oracle")){
 				if (tableName.equals("TBXF_SCREENING") || tableName.equals("TBXF_PRISONERPERFORMANCE") || tableName.equals("TBXF_SENTENCEALTERATION")) {
-					maxxgsj = getOracleDateLong(iob.getString("OPTIME"));
+					maxxgsj = iob.getString("OPTIME");
 				}else if (tableName.equals("TBPRISONER_MEETING_SUMMARY")) {
-					maxxgsj = getOracleDateLong(iob.getString("MDATE"));
+					maxxgsj = iob.getString("MDATE");
 				}else if (tableName.equals("TBFLOW")) {
-					maxxgsj = getOracleDateLong(iob.getString("FLOWSN"));
+					maxxgsj = iob.getString("FLOWSN");
 				}else{
-					maxxgsj = iob.get("ID").toString();
+					maxxgsj = iob.getString("ID");
 				}
 			} else if(serverType.equals("sqlite")){
 				maxxgsj = iob.get("xgsj2").toString();
@@ -214,19 +214,25 @@ public class PostDataServlet extends HttpServlet{
 							}else{
 								oldxgsj = tBean.getID();
 							}
-							Assert.assertTrue("ID of a record is less than table's ID, newId:" + maxxgsj + " oldId:" + oldxgsj, Long.parseLong(maxxgsj) >= Long.parseLong(oldxgsj));
-							if(Long.parseLong(maxxgsj) > Long.parseLong(oldxgsj)){
-								if (tBean.getTable().equals("TBXF_SCREENING") || tBean.getTable().equals("TBXF_PRISONERPERFORMANCE") || tBean.getTable().equals("TBXF_SENTENCEALTERATION")) {
-									tBean.setOpTime(maxxgsj);
-								}else if (tBean.getTable().equals("TBPRISONER_MEETING_SUMMARY")) {
-									tBean.setOpTime(maxxgsj);
-								}else if (tBean.getTable().equals("TBFLOW")) {
-									tBean.setFlowSn(maxxgsj);
-								}else{
+							if(dbBean.getDb().startsWith("XfzxDB")){
+								Assert.assertTrue("ID of a record is less than table's ID, newId:" + maxxgsj + " oldId:" + oldxgsj, maxxgsj.compareTo(oldxgsj) >= 0);
+								if(maxxgsj.compareTo(oldxgsj) > 0){
+									if (tBean.getTable().equals("TBXF_SCREENING") || tBean.getTable().equals("TBXF_PRISONERPERFORMANCE") || tBean.getTable().equals("TBXF_SENTENCEALTERATION")) {
+										tBean.setOpTime(maxxgsj);
+									}else if (tBean.getTable().equals("TBPRISONER_MEETING_SUMMARY")) {
+										tBean.setmDate(maxxgsj);
+									}else if (tBean.getTable().equals("TBFLOW")) {
+										tBean.setFlowSn(maxxgsj);
+									}
+									System.out.println("update table："+tBean.getTable()+" "+maxxgsj);
+								}
+							} else if(dbBean.getDb().equals("JfkhDB")){
+								Assert.assertTrue("ID of a record is less than table's ID, newId:" + maxxgsj + " oldId:" + oldxgsj, Long.parseLong(maxxgsj) >= Long.parseLong(oldxgsj));
+								if(Long.parseLong(maxxgsj) > Long.parseLong(oldxgsj)){
 									tBean.setID(maxxgsj);
 								}
 								System.out.println("update table："+tBean.getTable()+" "+maxxgsj);
-							}		
+							}
 						}
 						else if(serverType.equals("sqlite")){
 							Assert.assertTrue("xgsj of a record is less than table's xgsj", Long.parseLong(maxxgsj) >= Long.parseLong(tBean.getXgsj()));

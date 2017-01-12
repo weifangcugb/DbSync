@@ -330,7 +330,7 @@ public class TableBean implements Serializable{
 
 	public String getMaxRowVersionSqlString(String type, String rowversionColumn) {
 		if (isXFZXDateSystem(type, rowversionColumn)) {/*hack here*/
-			return "select max(to_number(to_char(" + rowversionColumn +",'yyyymmddhhmmss'))) as " + rowversionColumn + " from " + table;
+			return "select max(to_number(to_char(" + rowversionColumn +",'yyyymmddhh24mmss'))) as " + rowversionColumn + " from " + table;
 		}else{
 			return "select max(" + rowversionColumn +") as " + rowversionColumn + " from " + table;
 		}

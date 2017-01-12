@@ -174,8 +174,8 @@ public class DbUploaderTest extends DbUploader{
         }
 	}
 
-	@Test
-//	@Ignore
+//	@Test
+	@Ignore
 	public void testGetMsgForSqlite() throws Exception {
 		setup();
 		MultiDatabaseBean olddbs = getDbBeans();
