@@ -369,7 +369,7 @@ public class DbUploader extends CommonUploader {
 			paraMap.put("pageno", "" + (tableBean.getCurrentPageNum() + 1));
 		}
 
-		if (dbBean.getDb().equals("PrasDB") && tableBean.getTable().equals("pras/getTable")) {
+		if (tableBean.getTable().equals("pras/getTable")) {
 			paraMap.put("pagesize", "" + 1);
 		} else {
 			paraMap.put("pagesize", "" + DB_QEURY_LIMIT_WEB_SERVICE);

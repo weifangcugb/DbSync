@@ -2,6 +2,8 @@ package com.cloudbeaver.client.dbbean;
 
 import org.apache.log4j.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -14,20 +16,28 @@ public class DatabaseBean implements Serializable{
     ArrayList<TableBean> tables = new ArrayList<TableBean>();
 
     String rowversion;
+    @JsonIgnore
     String prison;
     String db;
 
+    @JsonIgnore
     String queryTime;
 
 //  db configs
+    @JsonIgnore
     String dbUrl;
+    @JsonIgnore
     String dbUserName;
+    @JsonIgnore
     String dbPassword;
 
+    @JsonIgnore
     String appKey;
+    @JsonIgnore
     String appSecret;
     
 //  there are two types now, 'sqlServerDB' and 'oracleDB' and 'urlDB' and 'postgresDB'
+    @JsonIgnore
     String type;
 
     public String getAppKey() {

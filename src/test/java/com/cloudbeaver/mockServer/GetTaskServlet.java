@@ -360,7 +360,7 @@ public class GetTaskServlet extends HttpServlet{
 				//test all
 //				databaseBeans = oMapper.readValue(documentDBInitJson2, MultiDatabaseBean.class);
 				//for web server test
-//				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
+				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
 				//for sqlite
 //				databaseBeans = oMapper.readValue(documentDBForSqliteInitJson, MultiDatabaseBean.class);
 				//for oracle
@@ -368,7 +368,7 @@ public class GetTaskServlet extends HttpServlet{
 				//for sql server2008
 //				databaseBeans = oMapper.readValue(bangjiaoInitJson, MultiDatabaseBean.class);
 //				for xfzx system
-				databaseBeans = oMapper.readValue(xfzxInitJson , MultiDatabaseBean.class);
+//				databaseBeans = oMapper.readValue(xfzxInitJson , MultiDatabaseBean.class);
 			}
 			else if(clientId.endsWith("documentfile")){
 				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);
@@ -410,7 +410,6 @@ public class GetTaskServlet extends HttpServlet{
 		json = deleteNUllValueInJson(str.toString());
 		logger.info("task from server："+json);
 
-		logger.info("tasks:" + xfzxInitJson);
     	resp.setCharacterEncoding("utf-8");
     	PrintWriter pw = resp.getWriter();
         pw.write(json);
@@ -424,15 +423,19 @@ public class GetTaskServlet extends HttpServlet{
     	JSONArray dbs = jObject.getJSONArray("databases");
     	for(int i = 0; i < dbs.size(); i++){
     		JSONObject db = dbs.getJSONObject(i);
+    		String rowVersion = db.getString("rowversion");
+    		ArrayList<String> columnName = new ArrayList<String>();
+        	columnName.add("table");
+        	columnName.add(rowVersion);
 			JSONArray tables = db.getJSONArray("tables");
 			for(int j = 0; j < tables.size(); j++){
 				JSONObject table = tables.getJSONObject(j);
 				Set keys = table.keySet();
-				List<String> list = new ArrayList<String> ();
+				List<String> list = new ArrayList<String>();
 				list.addAll(keys);
 				int size = list.size();
 				for(int k = 0; k < size; k++){
-					if(table.getString(list.get(k)).equals("null")){
+					if(!columnName.contains(list.get(k))){
 	                	table = table.discard(list.get(k));
 	                	keys = (Set<String>)table.keySet();
 	                	list.clear();
