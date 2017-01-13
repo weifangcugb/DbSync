@@ -126,7 +126,11 @@ public class DbUploader extends CommonUploader {
 						for (TableBean tableBean : dbBean.getTables()) {
 							if (isXFZXDateColumn(dbBean, tableBean)) {
 								String xgsj = tableBean.getXgsj();
-								tableBean.setXgsj(xgsj.substring(0, xgsj.indexOf('.')).replaceAll("[-: ]", ""));
+								int charAt = -1;
+								if ((charAt = xgsj.indexOf('.')) != -1) {
+									xgsj = xgsj.substring(0, charAt);
+								}
+								tableBean.setXgsj(xgsj.replaceAll("[-: ]", ""));
 							}
 						}
 					}
