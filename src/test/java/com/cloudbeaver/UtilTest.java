@@ -1,5 +1,6 @@
 package com.cloudbeaver;
 
+import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -138,11 +139,21 @@ public class UtilTest {
 //		uTest.testBCrypt();
 //		uTest.testSync();
 //		uTest.testJwt();
-		uTest.testDate();
+//		uTest.testDate();
+		uTest.testLong();
 	}
 
-	private void testJwt() {
+	private void testLong() {
+//		System.out.println(Long.MAX_VALUE);
+//		System.out.println(Double.MAX_VALUE);
+		double d = Double.parseDouble("9999914531867851516402");
+		if (d > 10000) {
+			System.out.println(d);
+		}
+		System.out.println(System.currentTimeMillis());
 
+		BigDecimal decimal = new BigDecimal(d);
+		System.out.println(decimal);
 	}
 }
 

@@ -17,6 +17,7 @@ import com.cloudbeaver.client.dbbean.TableBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -396,7 +397,7 @@ public class DbUploader extends CommonUploader {
 
 		try {
 			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION)
-					|| tableBean.getMaxXgsjAsLong() <= tableBean.getXgsjAsLong()) {
+					|| tableBean.getMaxXgsjAsDouble() <= tableBean.getXgsjAsDouble()) {
 				// table is empty, or table is full, or table has new data, or
 				// first time setup and client's xgsj is slower than
 				// web-server's
@@ -419,16 +420,17 @@ public class DbUploader extends CommonUploader {
 
 				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
 				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
-					long nextPoint = tableBean.getXgsjAsLong() + DB_QEURY_LIMIT_DB;
+					double nextPoint = tableBean.getXgsjAsDouble() + DB_QEURY_LIMIT_DB;
 					/* hack here */
 					if (isXFZXDateColumn(dbBean, tableBean)) {
 						nextPoint = Long.parseLong(SqlHelper.nextOracleDateTime(tableBean.getXgsj(), DB_QEURY_LIMIT_DB));
 					}
-					if (tableBean.getMaxXgsjAsLong() <= nextPoint) {
-						tableBean.setXgsj(tableBean.getMaxXgsjAsLong() + "");
+					if (tableBean.getMaxXgsjAsDouble() <= nextPoint) {
+						tableBean.setXgsj(tableBean.getMaxXgsj() + "");
 						throw new BeaverTableIsFullException();
 					} else {
-						tableBean.setXgsj(nextPoint + "");
+						BigDecimal decimal = new BigDecimal(nextPoint);
+						tableBean.setXgsj(decimal + "");
 					}
 				} else {
 					logger.debug("get db data, json:" + jArray.toString());

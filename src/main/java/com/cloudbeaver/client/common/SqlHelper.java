@@ -47,7 +47,8 @@ public class SqlHelper {
         if (dbBean.getDbUrl().startsWith("jdbc:sqlserver")) {
             driverClassName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
         } else if (dbBean.getDbUrl().startsWith("jdbc:oracle")) {
-            driverClassName = "oracle.jdbc.driver.OracleDriver";
+//            driverClassName = "oracle.jdbc.driver.OracleDriver";
+        	driverClassName = "oracle.jdbc.OracleDriver";
         } else if (dbBean.getDbUrl().startsWith("jdbc:sqlite")){
         	driverClassName = "org.sqlite.JDBC";
         } else if (dbBean.getDbUrl().startsWith("jdbc:postgresql")){

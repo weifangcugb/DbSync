@@ -360,7 +360,7 @@ public class GetTaskServlet extends HttpServlet{
 				//test all
 //				databaseBeans = oMapper.readValue(documentDBInitJson2, MultiDatabaseBean.class);
 				//for web server test
-				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
+//				databaseBeans = oMapper.readValue(youDiInitJson, MultiDatabaseBean.class);
 				//for sqlite
 //				databaseBeans = oMapper.readValue(documentDBForSqliteInitJson, MultiDatabaseBean.class);
 				//for oracle
@@ -368,7 +368,7 @@ public class GetTaskServlet extends HttpServlet{
 				//for sql server2008
 //				databaseBeans = oMapper.readValue(bangjiaoInitJson, MultiDatabaseBean.class);
 //				for xfzx system
-//				databaseBeans = oMapper.readValue(xfzxInitJson , MultiDatabaseBean.class);
+				databaseBeans = oMapper.readValue(xfzxInitJson , MultiDatabaseBean.class);
 			}
 			else if(clientId.endsWith("documentfile")){
 				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);

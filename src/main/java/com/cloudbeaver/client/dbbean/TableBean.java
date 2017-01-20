@@ -277,6 +277,10 @@ public class TableBean implements Serializable{
 //				xfzx system
 				return String.format("WHERE %s to_number(to_char(%s.%s, 'yyyymmddhh24mmss')) > %s AND to_number(to_char(%s.%s, 'yyyymmddhh24mmss')) <= %s", 
 						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, SqlHelper.nextOracleDateTime(xgsj, sqlLimitNum));
+			}else if (isXFZXFlowTable(dbType, rowVersionColumn)) {
+//				xfzx system flowsn
+				return String.format("WHERE %s to_number(%s.%s) > %s AND to_number(%s.%s) <= (%s + %s)", 
+						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, xgsj, sqlLimitNum);				
 			}else{
 				return whereClause(rowVersionColumn) + " and " + table + "." + rowVersionColumn + " <= (" + xgsj + " + " + sqlLimitNum + ")";
 			}
@@ -331,9 +335,15 @@ public class TableBean implements Serializable{
 	public String getMaxRowVersionSqlString(String type, String rowversionColumn) {
 		if (isXFZXDateSystem(type, rowversionColumn)) {/*hack here*/
 			return "select max(to_number(to_char(" + rowversionColumn +",'yyyymmddhh24mmss'))) as " + rowversionColumn + " from " + table;
+		}else if (isXFZXFlowTable(type, rowversionColumn)) {/*hack here*/
+			return "select max(to_number(" + rowversionColumn + ")) as " + rowversionColumn + " from " + table;
 		}else{
 			return "select max(" + rowversionColumn +") as " + rowversionColumn + " from " + table;
 		}
+	}
+
+	private boolean isXFZXFlowTable(String type, String rowversionColumn) {
+		return (type.equals(CommonUploader.DB_TYPE_SQL_ORACLE) && (rowversionColumn.equals("FLOWSN")));
 	}
 
 	@JsonIgnore
@@ -344,6 +354,16 @@ public class TableBean implements Serializable{
 	@JsonIgnore
 	public long getMaxXgsjAsLong() {
 		return Long.parseLong(maxXgsj);
+	}
+
+	@JsonIgnore
+	public double getMaxXgsjAsDouble() {
+		return Double.parseDouble(maxXgsj);
+	}
+	
+	@JsonIgnore
+	public double getXgsjAsDouble() {
+		return Double.parseDouble(xgsj);
 	}
 }
 
