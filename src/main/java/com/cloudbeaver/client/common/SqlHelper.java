@@ -125,7 +125,7 @@ public class SqlHelper {
 				}
 
 	            String maxV = rs.getString(dbBean.getRowversion());
-	            if (maxV != null && maxV.length() > 0) {
+	            if (maxV != null && maxV.length() > 0 && !maxV.toLowerCase().equals("null")) {
 	            	maxXgsjUtilNow = maxV;
 				}
 	        }
@@ -168,6 +168,11 @@ public class SqlHelper {
 
 	public static String getMaxRowVersion(DatabaseBean dbBean, TableBean tableBean) throws SQLException, BeaverFatalException{
 		String sqlQuery = tableBean.getMaxRowVersionSqlString(dbBean.getType(), dbBean.getRowversion());
+		return execSqlQuery(sqlQuery, dbBean, null);
+	}
+
+	public static String getMinRowVersion(DatabaseBean dbBean, TableBean tableBean) throws SQLException, BeaverFatalException {
+		String sqlQuery = tableBean.getMinRowVersionSqlString(dbBean.getType(), dbBean.getRowversion());
 		return execSqlQuery(sqlQuery, dbBean, null);
 	}
 

@@ -342,6 +342,17 @@ public class TableBean implements Serializable{
 		}
 	}
 
+	public String getMinRowVersionSqlString(String type, String rowversionColumn) {
+		String columnExp = rowversionColumn;
+		if (isXFZXDateSystem(type, rowversionColumn)) {/*hack here*/
+			columnExp = "to_number(to_char(" + rowversionColumn + "))";
+		}else if (isXFZXFlowTable(type, rowversionColumn)) {/*hack here*/
+			columnExp = "to_number(" + rowversionColumn + ")";
+		}
+
+		return String.format("select min(%s) as %s from %s where %s >= %s", columnExp, rowversionColumn, table, columnExp, xgsj);
+	}
+
 	private boolean isXFZXFlowTable(String type, String rowversionColumn) {
 		return (type.equals(CommonUploader.DB_TYPE_SQL_ORACLE) && (rowversionColumn.equals("FLOWSN")));
 	}

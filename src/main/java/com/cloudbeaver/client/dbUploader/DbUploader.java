@@ -396,6 +396,11 @@ public class DbUploader extends CommonUploader {
 				+ tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
 
 		try {
+			if (tableBean.getXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
+				String minRowVersion = SqlHelper.getMinRowVersion(dbBean, tableBean);
+				tableBean.setXgsj(minRowVersion);
+			}
+
 			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION)
 					|| tableBean.getMaxXgsjAsDouble() <= tableBean.getXgsjAsDouble()) {
 				// table is empty, or table is full, or table has new data, or
@@ -425,12 +430,20 @@ public class DbUploader extends CommonUploader {
 					if (isXFZXDateColumn(dbBean, tableBean)) {
 						nextPoint = Long.parseLong(SqlHelper.nextOracleDateTime(tableBean.getXgsj(), DB_QEURY_LIMIT_DB));
 					}
+
 					if (tableBean.getMaxXgsjAsDouble() <= nextPoint) {
 						tableBean.setXgsj(tableBean.getMaxXgsj() + "");
 						throw new BeaverTableIsFullException();
 					} else {
 						BigDecimal decimal = new BigDecimal(nextPoint);
 						tableBean.setXgsj(decimal + "");
+						
+						String minRowVersion = SqlHelper.getMinRowVersion(dbBean, tableBean);
+						if (!minRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
+							tableBean.setXgsj(minRowVersion);
+						}else{
+							throw new BeaverTableIsFullException();
+						}
 					}
 				} else {
 					logger.debug("get db data, json:" + jArray.toString());
