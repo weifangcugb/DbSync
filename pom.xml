@@ -26,7 +26,7 @@
    			<artifactId>jetty-all</artifactId>
     		<version>9.3.11.v20160721</version>
     		<type>pom</type>
-		</dependency>        
+		</dependency>
 <!--
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -112,10 +112,10 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>sqljdbc4</artifactId>
-	    <version>3.0</version>
+	    	<version>3.0</version>
 <!--
-	   <scope>system</scope>
-    	   <systemPath>${project.basedir}/src/resources/sqljdbc4-3.0.jar</systemPath>
+	   		<scope>system</scope>
+			<systemPath>${project.basedir}/src/resources/sqljdbc4-3.0.jar</systemPath>
 -->
     	</dependency>
     	<dependency>
