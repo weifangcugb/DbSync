@@ -107,7 +107,7 @@ public class SqlHelper {
 	                JSONObject jsonObj = new JSONObject();
 	                boolean firstRowVersionColumn = true;
 	                for (int i = 1; i <= columnCount; i++) {
-	                    String columnName =metaData.getColumnLabel(i);
+	                    String columnName = metaData.getColumnLabel(i);
 
 	                    if (firstRowVersionColumn && columnName.equals(dbBean.getRowversion())) {
 							maxXgsjUtilNow = rs.getString(columnName.trim());
@@ -117,7 +117,16 @@ public class SqlHelper {
 	                    String value = rs.getString(columnName.trim());
 	                    if (value == null) value = "";
 
-	                    jsonObj.put(columnName.trim(), value.trim());
+	                    if (jsonObj.containsKey(columnName.trim())) {
+	                    	for(int j = 1; ; j++){
+	                    		if (!jsonObj.containsKey(columnName.trim() + "_" + j)) {
+	                    			jsonObj.put(columnName.trim() + "_" + j, value.trim());
+	                    			break;
+								}
+	                    	}
+						}else{
+							jsonObj.put(columnName.trim(), value.trim());
+						}
 	                }
 
 	                jsonObj.put(dbBean.getRowversion(), maxXgsjUtilNow);
