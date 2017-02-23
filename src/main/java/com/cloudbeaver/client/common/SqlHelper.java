@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import net.sf.json.JSONArray;
@@ -16,6 +17,7 @@ import org.apache.log4j.*;
 
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
+import com.cloudbeaver.client.dbbean.TransformOp;
 
 public class SqlHelper {
     private static Logger logger = Logger.getLogger(SqlHelper.class);
@@ -160,6 +162,24 @@ public class SqlHelper {
                 jsonObj.put("hdfs_prison", prisonId);
                 jsonObj.put("hdfs_db", dbBean.getDb());
                 jsonObj.element("hdfs_table", tableBean.getTable());
+
+                if (tableBean.getReplaceOp() != null) {
+					for (TransformOp op : tableBean.getReplaceOp()) {
+						if (op.getToColumn() == null || !jsonObj.containsKey(op.getToColumn()) || jsonObj.getString(op.getToColumn()).equals("")) {
+							continue;
+						}
+
+						String opSql = op.getOpSql(jsonObj.getString(op.getToColumn()));
+						JSONArray opResult = new JSONArray();
+						execSqlQuery(opSql, dbBean, opResult);
+						if (!opResult.isEmpty()) {
+							JSONObject jObject = opResult.getJSONObject(0);
+							for (String key : (Set<String>)jObject.keySet()) {
+								jsonObj.put(op.getToColumn() + "_" +key, jObject.get(key));
+							}
+						}
+					}
+				}
 
                 if (tableBean.getJoin_subtable() != null) {
     				List<String> subtables = tableBean.getJoin_subtable();

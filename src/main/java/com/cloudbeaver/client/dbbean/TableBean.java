@@ -35,6 +35,8 @@ public class TableBean implements Serializable{
     @JsonProperty("FLOWSN")
     private String flowSn;/*flowsn*/
 
+    private List<TransformOp> replaceOp;
+
 	@JsonIgnore
     private String queryTime;
 
@@ -56,6 +58,14 @@ public class TableBean implements Serializable{
 
     @JsonIgnore
     private boolean syncTypeOnceADay = false;
+
+	public List<TransformOp> getReplaceOp() {
+		return replaceOp;
+	}
+
+	public void setReplaceOp(List<TransformOp> replaceOp) {
+		this.replaceOp = replaceOp;
+	}
 
 	public String getStarttime() {
 		return starttime;

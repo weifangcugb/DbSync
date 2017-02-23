@@ -306,6 +306,21 @@ public class GetTaskServlet extends HttpServlet{
 				+ "]}"
 			+ "]}";
 
+	private static String bangjiaoInitJson2 = "{\"databases\":["
+			+ "{\"db\":\"HelpDB\",\"rowversion\":\"ID\",\"tables\":["
+			+ "{\"table\":\"Sms_SmsSendBoxes\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
+				+ "\"key\":\"Sms_SmsSendBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id "
+					+ "and Sms_SmsSendBoxes.FailureReasonFk = CommonCodes.Id and Sms_SmsSendBoxes.FeelingFk = CommonCodes.Id "
+						+ "and Sms_SmsSendBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\","
+				+"\"replaceOp\":[{\"toColumn\":\"FailureReasonFk\",\"fromTable\":\"CommonCodes\",\"fromKey\":\"Id\",\"fromColumns\":\"Code Name\"},"
+					+ "{\"toColumn\":\"FeelingFk\",\"fromTable\":\"CommonCodes\",\"fromKey\":\"Id\",\"fromColumns\":\"Code Name\"}]},"
+			+ "{\"table\":\"Sms_SmsReceiveBoxes\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
+				+ "\"key\":\"Sms_SmsReceiveBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id "
+					+ "and Sms_SmsReceiveBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\","
+				+ "\"replaceOp\":[{\"toColumn\":\"FailureReasonFk\",\"fromTable\":\"CommonCodes\",\"fromKey\":\"Id\",\"fromColumns\":\"Code Name\"}]}"
+			+ "]}"
+			+ "]}";
+
 	private static String xfzxInitJson1 = "{\"databases\":[{\"db\":\"XfzxDB\",\"rowversion\":\"OPTIME\",\"tables\":["
 			+ "{\"table\":\"TBXF_SCREENING\",\"OPTIME\":\"20160715040000\"},"
 			+ "{\"table\":\"TBXF_SENTENCEALTERATION\",\"OPTIME\":\"20160715000000\"},"
@@ -368,7 +383,9 @@ public class GetTaskServlet extends HttpServlet{
 				//for sql server2008
 //				databaseBeans = oMapper.readValue(bangjiaoInitJson, MultiDatabaseBean.class);
 //				for xfzx system
-				databaseBeans = oMapper.readValue(xfzxInitJson , MultiDatabaseBean.class);
+//				databaseBeans = oMapper.readValue(xfzxInitJson , MultiDatabaseBean.class);
+//				for replaceOp
+				databaseBeans = oMapper.readValue(bangjiaoInitJson2, MultiDatabaseBean.class);
 			}
 			else if(clientId.endsWith("documentfile")){
 				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);
@@ -412,7 +429,7 @@ public class GetTaskServlet extends HttpServlet{
 
     	resp.setCharacterEncoding("utf-8");
     	PrintWriter pw = resp.getWriter();
-        pw.write(json);
+        pw.write(bangjiaoInitJson2);
         pw.flush();
         pw.close();
         System.out.println("get task succeed!");

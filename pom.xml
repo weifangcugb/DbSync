@@ -174,17 +174,7 @@
                 	<artifactId>jms</artifactId>
             	</exclusion>
         	</exclusions>
-    	</dependency>          
-        <dependency>  
-            <groupId>com.hadoop</groupId>  
-            <artifactId>hadoop-client</artifactId>  
-            <version>1.2.2-SNAPSHOT</version>  
-        </dependency>
-		<dependency>
-    		<groupId>com.hadoop</groupId>
-    		<artifactId>hadoop-core</artifactId>
-    		<version>1.2.2-SNAPSHOT</version>
-		</dependency>
+    	</dependency>
 		<dependency>
     		<groupId>commons-configuration</groupId>
     		<artifactId>commons-configuration</artifactId>
