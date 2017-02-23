@@ -310,14 +310,14 @@ public class GetTaskServlet extends HttpServlet{
 			+ "{\"db\":\"HelpDB\",\"rowversion\":\"ID\",\"tables\":["
 			+ "{\"table\":\"Sms_SmsSendBoxes\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
 				+ "\"key\":\"Sms_SmsSendBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id "
-					+ "and Sms_SmsSendBoxes.FailureReasonFk = CommonCodes.Id and Sms_SmsSendBoxes.FeelingFk = CommonCodes.Id "
 						+ "and Sms_SmsSendBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\","
 				+"\"replaceOp\":[{\"toColumn\":\"FailureReasonFk\",\"fromTable\":\"CommonCodes\",\"fromKey\":\"Id\",\"fromColumns\":\"Code Name\"},"
-					+ "{\"toColumn\":\"FeelingFk\",\"fromTable\":\"CommonCodes\",\"fromKey\":\"Id\",\"fromColumns\":\"Code Name\"}]},"
+					+ "{\"toColumn\":\"FeelingFk\",\"fromTable\":\"CommonCodes\",\"fromKey\":\"Id\",\"fromColumns\":\"Code, Name\"}]}"
+			+ ","
 			+ "{\"table\":\"Sms_SmsReceiveBoxes\",\"ID\":\"" + 0 + "\", \"join\":[\"Prisoner\", \"Users\", \"Departments\", \"CommonCodes\"],"
 				+ "\"key\":\"Sms_SmsReceiveBoxes.PrisonerFk = Prisoner.UserFk and Prisoner.UserFk = Users.Id "
 					+ "and Sms_SmsReceiveBoxes.RelationFk = CommonCodes.Id and Users.DepartmentFk = Departments.Id\","
-				+ "\"replaceOp\":[{\"toColumn\":\"FailureReasonFk\",\"fromTable\":\"CommonCodes\",\"fromKey\":\"Id\",\"fromColumns\":\"Code Name\"}]}"
+				+ "\"replaceOp\":[{\"toColumn\":\"FailureReasonFk\",\"fromTable\":\"CommonCodes\",\"fromKey\":\"Id\",\"fromColumns\":\"Code, Name\"}]}"
 			+ "]}"
 			+ "]}";
 
@@ -441,9 +441,6 @@ public class GetTaskServlet extends HttpServlet{
     	for(int i = 0; i < dbs.size(); i++){
     		JSONObject db = dbs.getJSONObject(i);
     		String rowVersion = db.getString("rowversion");
-    		ArrayList<String> columnName = new ArrayList<String>();
-        	columnName.add("table");
-        	columnName.add(rowVersion);
 			JSONArray tables = db.getJSONArray("tables");
 			for(int j = 0; j < tables.size(); j++){
 				JSONObject table = tables.getJSONObject(j);
@@ -452,7 +449,7 @@ public class GetTaskServlet extends HttpServlet{
 				list.addAll(keys);
 				int size = list.size();
 				for(int k = 0; k < size; k++){
-					if(!columnName.contains(list.get(k))){
+					if(table.get(list.get(k)).equals("null")){
 	                	table = table.discard(list.get(k));
 	                	keys = (Set<String>)table.keySet();
 	                	list.clear();

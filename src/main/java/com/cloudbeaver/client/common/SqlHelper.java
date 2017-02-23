@@ -169,7 +169,8 @@ public class SqlHelper {
 							continue;
 						}
 
-						String opSql = op.getOpSql(jsonObj.getString(op.getToColumn()));
+						String opSql = op.getOpSql(dbBean ,tableBean, jsonObj.getString(op.getToColumn()));
+						System.out.println(opSql);
 						JSONArray opResult = new JSONArray();
 						execSqlQuery(opSql, dbBean, opResult);
 						if (!opResult.isEmpty()) {

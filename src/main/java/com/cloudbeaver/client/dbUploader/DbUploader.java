@@ -284,10 +284,10 @@ public class DbUploader extends CommonUploader {
 	private void sendMsgOut(StringBuilder sb) {
 		for(int i = 0; i < MAX_RETRY_SEND_TIMES; i++){
 			try {
+				logger.debug("send db data to flume server, json:" + sb.toString());
 				String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(sb.toString());
 				if (flumeJson.length() < MAX_PACKET_MSG_SIZE) {
 					BeaverUtils.doPost(conf.get(CommonUploader.CONF_FLUME_SERVER_URL), flumeJson);
-					logger.debug("send db data to flume server, json:" + flumeJson);
 				} else {
 					// msg is too long, we can't deliver it, leave it to log
 					logger.error("msg is too long, msg:" + flumeJson);

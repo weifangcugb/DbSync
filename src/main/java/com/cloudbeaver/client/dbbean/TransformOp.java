@@ -9,8 +9,8 @@ public class TransformOp {
 	private String fromColumns;
 
 	@JsonIgnore
-	public String getOpSql(String columnValue){
-		return String.format("select %s from %s where %s = %s and %s = %s", fromColumns, fromTable, fromKey, toColumn, toColumn, columnValue);
+	public String getOpSql(DatabaseBean dbBean, TableBean tableBean, String columnValue){
+		return String.format("select %s, %s = 1 from %s, %s where %s.%s = %s.%s and %s.%s = %s", fromColumns, dbBean.getRowversion(), fromTable, tableBean.getTable(), fromTable, fromKey, tableBean.getTable(), toColumn, tableBean.getTable(), toColumn, columnValue);
 	}
 
 	public String getToColumn() {
