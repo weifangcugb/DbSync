@@ -4,9 +4,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
-import org.javatuples.Triplet;
 
-import com.auth0.jwt.internal.org.bouncycastle.jcajce.provider.asymmetric.RSA;
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverTableIsFullException;
 import com.cloudbeaver.client.common.BeaverTableNeedRetryException;
