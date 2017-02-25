@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import net.sf.json.JSONArray;
@@ -147,6 +148,24 @@ public class SqlHelper {
 	        return maxXgsjUtilNow;
 		} catch(SQLException e) {
 			removeCachedConnection(dbBean);
+			throw e;
+		}
+	}
+
+	public static void execSqlQueryWithConsumer(String sqlQuery, DatabaseBean dbBean, MySqlConsumer<ResultSet> consumer) throws SQLException, BeaverFatalException, ClassNotFoundException {
+		logger.debug("sql:" + sqlQuery);
+		try (Connection con = getDBConnection(dbBean)) {
+			PreparedStatement pStatement = con.prepareStatement(sqlQuery);
+	        //s.setQueryTimeout(10);
+	        ResultSet rs = pStatement.executeQuery();
+	        while(rs.next()){
+	        	consumer.accept(rs);
+	        }
+
+	        rs.close();
+	        pStatement.clearBatch();
+	        pStatement.close();
+		} catch(SQLException e) {
 			throw e;
 		}
 	}

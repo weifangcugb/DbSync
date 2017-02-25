@@ -4,7 +4,9 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
+import org.javatuples.Triplet;
 
+import com.auth0.jwt.internal.org.bouncycastle.jcajce.provider.asymmetric.RSA;
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverTableIsFullException;
 import com.cloudbeaver.client.common.BeaverTableNeedRetryException;
@@ -21,9 +23,12 @@ import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DbUploader extends CommonUploader {
 	private static Logger logger = Logger.getLogger(DbUploader.class);
@@ -92,6 +97,9 @@ public class DbUploader extends CommonUploader {
 						60 * 1000);
 			}
 		}
+
+		// load operation tables
+		loadOpTables();
 	}
 
 	private void loadTasks() throws IOException, BeaverFatalException {
@@ -122,7 +130,7 @@ public class DbUploader extends CommonUploader {
 							}
 						}
 					}
-					
+
 					if (dbType.equals(DB_TYPE_SQL_ORACLE) && dbBean.getDb().startsWith("XfzxDB")) {
 						for (TableBean tableBean : dbBean.getTables()) {
 							if (isXFZXDateColumn(dbBean, tableBean)) {
@@ -145,13 +153,13 @@ public class DbUploader extends CommonUploader {
 					dbBean.setAppSecret(appKeySecret.get(appKey));
 				}
 
-				/* hack here
-				 * uion all Youdi webservice db-beans to one db-bean
-				 * */
+				/*
+				 * hack here uion all Youdi webservice db-beans to one db-bean
+				 */
 				if (dbType.equals(DB_TYPE_WEB_SERVICE)) {
 					if (uionWebServerBean == null) {
 						uionWebServerBean = dbBean;
-					}else{
+					} else {
 						uionWebServerBean.getTables().addAll(dbBean.getTables());
 					}
 					continue;
@@ -165,6 +173,37 @@ public class DbUploader extends CommonUploader {
 		}
 
 		dbBeans.setDatabases(newDatabaseBeans);
+	}
+
+	private void loadOpTables() {
+		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
+			dbBean.getTables().stream().flatMap(t -> t.getReplaceOp().stream())
+			.collect(Collectors.groupingBy(op -> op.getFromTable(), Collectors.toList())).forEach((table, ops) -> {
+				String keyColumn = ops.get(0).getFromKey();
+				List<String> columns = ops.stream().flatMap(op -> Arrays.asList(op.getFromColumsArry()).stream())
+						.distinct().collect(Collectors.toList());
+				String loadingSql = ops.get(0).getOpSqlForLoading(columns);
+
+				while (true) {
+					try {
+						SqlHelper.execSqlQueryWithConsumer(loadingSql, dbBean, rs -> {
+							for (String columnName : columns) {
+								dbBean.putOpTableValue(table, rs.getString(keyColumn), columnName, rs.getString(columnName));
+							}
+						});
+						break;
+					} catch (SQLException | BeaverFatalException | ClassNotFoundException e) {
+						BeaverUtils.printLogExceptionAndSleep(e, "loading op table error", 2000);
+					}
+				}
+			});
+		}
+	}
+
+	@Override
+	protected void doOtherThings() {
+//		keep loading opTables
+		loadOpTables();
 	}
 
 	@Override
@@ -256,7 +295,6 @@ public class DbUploader extends CommonUploader {
 					continue;
 				}
 
-
 				StringBuilder sb = new StringBuilder();
 				for (int i = 0; i < dbData.size(); i++) {
 					String jsonString = dbData.getJSONObject(i).toString();
@@ -282,7 +320,7 @@ public class DbUploader extends CommonUploader {
 	}
 
 	private void sendMsgOut(StringBuilder sb) {
-		for(int i = 0; i < MAX_RETRY_SEND_TIMES; i++){
+		for (int i = 0; i < MAX_RETRY_SEND_TIMES; i++) {
 			try {
 				logger.debug("send db data to flume server, json:" + sb.toString());
 				String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(sb.toString());
@@ -294,10 +332,11 @@ public class DbUploader extends CommonUploader {
 				}
 				break;
 			} catch (IOException e) {
-//				change back 'xgsj'
-//				tableBean.rollBackXgsj();
-				BeaverUtils.printLogExceptionAndSleep(e, "post json to flume server failed, server:"
-						+ conf.get(CommonUploader.CONF_FLUME_SERVER_URL), 500);
+				// change back 'xgsj'
+				// tableBean.rollBackXgsj();
+				BeaverUtils.printLogExceptionAndSleep(e,
+						"post json to flume server failed, server:" + conf.get(CommonUploader.CONF_FLUME_SERVER_URL),
+						500);
 			}
 		}
 	}
@@ -428,7 +467,8 @@ public class DbUploader extends CommonUploader {
 					double nextPoint = tableBean.getXgsjAsDouble() + DB_QEURY_LIMIT_DB;
 					/* hack here */
 					if (isXFZXDateColumn(dbBean, tableBean)) {
-						nextPoint = Long.parseLong(SqlHelper.nextOracleDateTime(tableBean.getXgsj(), DB_QEURY_LIMIT_DB));
+						nextPoint = Long
+								.parseLong(SqlHelper.nextOracleDateTime(tableBean.getXgsj(), DB_QEURY_LIMIT_DB));
 					}
 
 					if (tableBean.getMaxXgsjAsDouble() <= nextPoint) {
@@ -437,11 +477,11 @@ public class DbUploader extends CommonUploader {
 					} else {
 						BigDecimal decimal = new BigDecimal(nextPoint);
 						tableBean.setXgsj(decimal + "");
-						
+
 						String minRowVersion = SqlHelper.getMinRowVersion(dbBean, tableBean);
 						if (!minRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
 							tableBean.setXgsj(minRowVersion);
-						}else{
+						} else {
 							throw new BeaverTableIsFullException();
 						}
 					}
@@ -465,11 +505,10 @@ public class DbUploader extends CommonUploader {
 	}
 
 	private boolean isXFZXDateColumn(DatabaseBean dbBean, TableBean tableBean) {
-		return dbBean.getDb().startsWith("XfzxDB") && 
-				(tableBean.getTable().equals("TBXF_SENTENCEALTERATION") || 
-				tableBean.getTable().equals("TBPRISONER_MEETING_SUMMARY") || 
-				tableBean.getTable().equals("TBXF_SCREENING") ||
-				tableBean.getTable().equals("TBXF_PRISONERPERFORMANCE"));
+		return dbBean.getDb().startsWith("XfzxDB") && (tableBean.getTable().equals("TBXF_SENTENCEALTERATION")
+				|| tableBean.getTable().equals("TBPRISONER_MEETING_SUMMARY")
+				|| tableBean.getTable().equals("TBXF_SCREENING")
+				|| tableBean.getTable().equals("TBXF_PRISONERPERFORMANCE"));
 	}
 
 	private JSONArray getDataFromSqlServer(DatabaseBean dbBean, TableBean tableBean)

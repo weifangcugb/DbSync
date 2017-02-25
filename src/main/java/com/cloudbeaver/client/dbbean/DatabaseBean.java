@@ -1,11 +1,14 @@
 package com.cloudbeaver.client.dbbean;
 
 import org.apache.log4j.*;
+import org.javatuples.Triplet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * bean for one database
@@ -13,7 +16,7 @@ import java.util.ArrayList;
 public class DatabaseBean implements Serializable{
     private static Logger logger = Logger.getLogger(DatabaseBean.class);
 
-    ArrayList<TableBean> tables = new ArrayList<TableBean>();
+    List<TableBean> tables = new ArrayList<TableBean>();
 
     String rowversion;
     @JsonIgnore
@@ -39,6 +42,22 @@ public class DatabaseBean implements Serializable{
 //  there are two types now, 'sqlServerDB' and 'oracleDB' and 'urlDB' and 'postgresDB'
     @JsonIgnore
     String type;
+
+	//triplet<tableName, id, columnNmae> => value
+    @JsonIgnore
+	private ConcurrentHashMap<Triplet<String, String, String>, String> opTableCopy = new ConcurrentHashMap<>();
+
+    @JsonIgnore
+	public String getOpTableValue(String tableName, String rowKey, String columnName) {
+		return opTableCopy.get(new Triplet<String, String, String>(tableName, rowKey, columnName));
+	}
+
+	public void putOpTableValue(String tableName, String rowKey, String columnName, String value) {
+		Triplet<String, String, String> key = new Triplet<String, String, String>(tableName, rowKey, columnName);
+		if (!opTableCopy.contains(key) || !opTableCopy.get(key).equals(value)) {
+			opTableCopy.put(key, value);
+		}
+	}
 
     public String getAppKey() {
 		return appKey;
@@ -94,7 +113,7 @@ public class DatabaseBean implements Serializable{
     	return db + "," + prison + "," + rowversion;
     }
 
-    public ArrayList<TableBean> getTables() {
+    public List<TableBean> getTables() {
         return tables;
     }
 

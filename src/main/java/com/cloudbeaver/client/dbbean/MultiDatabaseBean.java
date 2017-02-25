@@ -3,6 +3,7 @@ package com.cloudbeaver.client.dbbean;
 import org.apache.log4j.*;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -11,9 +12,9 @@ import java.util.Map;
 public class MultiDatabaseBean {
     private Logger logger = Logger.getLogger(MultiDatabaseBean.class);
 
-    private ArrayList<DatabaseBean> databases;
+    private List<DatabaseBean> databases;
 
-    public ArrayList<DatabaseBean> getDatabases() {
+    public List<DatabaseBean> getDatabases() {
         return databases;
     }
 
