@@ -1,6 +1,14 @@
 package com.cloudbeaver.client.dbbean;
 
+import java.sql.SQLException;
+import java.util.Set;
+
 import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
+import com.cloudbeaver.client.common.BeaverFatalException;
+import com.cloudbeaver.client.common.SqlHelper;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 public class TransformOp {
 	private String toColumn;
@@ -36,5 +44,17 @@ public class TransformOp {
 	}
 	public void setFromColumns(String fromColumns) {
 		this.fromColumns = fromColumns;
+	}
+
+	public void doOp(DatabaseBean dbBean, TableBean tableBean, JSONObject result) throws SQLException, BeaverFatalException {
+		String opSql = getOpSql(dbBean ,tableBean, result.getString(toColumn));
+		JSONArray opResult = new JSONArray();
+		SqlHelper.execSqlQuery(opSql, dbBean, opResult);
+		if (!opResult.isEmpty()) {
+			JSONObject jObject = opResult.getJSONObject(0);
+			for (String key : (Set<String>)jObject.keySet()) {
+				result.put(toColumn + "_" +key, jObject.get(key));
+			}
+		}
 	}
 }

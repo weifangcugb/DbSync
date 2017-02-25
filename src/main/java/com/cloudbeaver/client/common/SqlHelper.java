@@ -91,7 +91,7 @@ public class SqlHelper {
     	return resultArray;
     }
 
-	private static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
+	public static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
 		logger.debug("sql:" + sqlQuery);
 		Connection con = getCachedConnKeepTrying(dbBean);
 		try {
@@ -169,16 +169,7 @@ public class SqlHelper {
 							continue;
 						}
 
-						String opSql = op.getOpSql(dbBean ,tableBean, jsonObj.getString(op.getToColumn()));
-						System.out.println(opSql);
-						JSONArray opResult = new JSONArray();
-						execSqlQuery(opSql, dbBean, opResult);
-						if (!opResult.isEmpty()) {
-							JSONObject jObject = opResult.getJSONObject(0);
-							for (String key : (Set<String>)jObject.keySet()) {
-								jsonObj.put(op.getToColumn() + "_" +key, jObject.get(key));
-							}
-						}
+						op.doOp(dbBean ,tableBean, jsonObj);
 					}
 				}
 
