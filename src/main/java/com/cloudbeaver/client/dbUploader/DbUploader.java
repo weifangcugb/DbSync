@@ -107,11 +107,11 @@ public class DbUploader extends CommonUploader {
 		setTaskJson(json);
 
 		ObjectMapper objectMapper = new ObjectMapper();
-		dbBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
+		MultiDatabaseBean tmpDbBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
 
 		ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
 		DatabaseBean uionWebServerBean = null;
-		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
+		for (DatabaseBean dbBean : tmpDbBeans.getDatabases()) {
 			if (conf.get("db." + dbBean.getDb() + ".url") != null) {
 				dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
 				dbBean.setDbUserName(conf.get("db." + dbBean.getDb() + ".username"));
@@ -170,10 +170,15 @@ public class DbUploader extends CommonUploader {
 			newDatabaseBeans.add(uionWebServerBean);
 		}
 
-		dbBeans.setDatabases(newDatabaseBeans);
+		tmpDbBeans.setDatabases(newDatabaseBeans);
+		dbBeans = tmpDbBeans;
 	}
 
-	private void loadOpTables() {
+	private synchronized void loadOpTables() {
+		if (dbBeans == null) {
+			return;
+		}
+
 		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
 			dbBean.getTables().stream().flatMap(t -> t.getReplaceOp().stream())
 			.collect(Collectors.groupingBy(op -> op.getFromTable(), Collectors.toList())).forEach((table, ops) -> {
