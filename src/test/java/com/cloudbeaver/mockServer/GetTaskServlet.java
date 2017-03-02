@@ -53,6 +53,7 @@ public class GetTaskServlet extends HttpServlet{
 		map.put("XfzxDB1", "oracle");
 		map.put("XfzxDB2", "oracle");
 		map.put("XfzxDB3", "oracle");
+		map.put("SqlServerTest", "sqlserver");
 	}
 
 //	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj2\",\"tables\":"
@@ -364,6 +365,18 @@ public class GetTaskServlet extends HttpServlet{
 			+ "]}"
 			+ "]}";
 
+	public static String AllDBInitJsonForMockTest = "{\"databases\":["
+//			+ "{\"db\":\"MysqlTest\",\"rowversion\":\"ID\",\"tables\":["
+//			+ "{\"table\":\"users\",\"ID\":\"0\"},"
+//			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]},"
+			+ "{\"db\":\"SqlServerTest\",\"rowversion\":\"ID\",\"tables\":["
+			+ "{\"table\":\"users\",\"ID\":\"0\"},"
+			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]}"
+//			+ "{\"db\":\"OracleTest\",\"rowversion\":\"ID\",\"tables\":["
+//			+ "{\"table\":\"users\",\"ID\":\"0\"},"
+//			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]}"
+			+ "]}";
+
 	/*
 	 * file db
 	 */
@@ -391,7 +404,9 @@ public class GetTaskServlet extends HttpServlet{
 //				for xfzx system
 //				databaseBeans = oMapper.readValue(xfzxInitJson , MultiDatabaseBean.class);
 //				for replaceOp
-				databaseBeans = oMapper.readValue(bangjiaoInitJson2, MultiDatabaseBean.class);
+//				databaseBeans = oMapper.readValue(bangjiaoInitJson2, MultiDatabaseBean.class);
+				//for test db
+				databaseBeans = oMapper.readValue(AllDBInitJsonForMockTest, MultiDatabaseBean.class);
 			}
 			else if(clientId.endsWith("documentfile")){
 				databaseBeans = oMapper.readValue(documentFilesInitJson, MultiDatabaseBean.class);
@@ -435,7 +450,7 @@ public class GetTaskServlet extends HttpServlet{
 
     	resp.setCharacterEncoding("utf-8");
     	PrintWriter pw = resp.getWriter();
-        pw.write(bangjiaoInitJson2);
+        pw.write(json);
         pw.flush();
         pw.close();
         System.out.println("get task succeed!");

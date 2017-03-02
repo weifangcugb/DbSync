@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.text.ParseException;
 import java.util.Date;
 import java.text.SimpleDateFormat;
@@ -36,7 +37,9 @@ public class PostDataServlet extends HttpServlet{
 	public static final String DEFAULT_CHARSET = "utf-8";
 	public static final String FILE_SAVE_DIR = "/home/beaver/Documents/test/result/";
 	public static final boolean NEED_SAVE_FILE = true;
-	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
+	public static final String DATABASE_FILE_PREFIX = "/tmp/db/";
+	public static final String DATABASE_NAME = "hdfs_db";
+	public static final String TABLE_NAME = "hdfs_table";
 	private static int picNum = 0;
 
     @Override
@@ -64,14 +67,23 @@ public class PostDataServlet extends HttpServlet{
     		content = sb.toString();
     	}
 		System.out.println("content = " + content);
-
+		
 		String dbName = null;
+		String tName = null;
 		JSONArray newjArray = JSONArray.fromObject(content);
 		if(newjArray.size()>0){
 			JSONObject record = newjArray.getJSONObject(0);
-			dbName = record.getString(JSON_FILED_HDFS_DB);
+			dbName = record.getString(DATABASE_NAME);
+			tName = record.getString(TABLE_NAME);
 		}
 		System.out.println("dbName = " + dbName);
+
+		//write data to local
+    	String fileName = DATABASE_FILE_PREFIX + dbName + "_" + tName;
+    	RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+		file.seek(file.length());
+		file.write((content.substring(1, content.length()-1) + ",").getBytes());
+		file.close();
 
 		Map<String, String> DBName2DBType = GetTaskServlet.map;
 		if(!content.contains("HeartBeat")){
@@ -121,7 +133,7 @@ public class PostDataServlet extends HttpServlet{
 			String tableName = iob.getString("hdfs_table");
 
 			if(serverType.equals("sqlserver")){
-				if(database.equals("VideoMeetingDB") || database.equals("HelpDB")){
+				if(database.equals("VideoMeetingDB") || database.equals("HelpDB") || database.equals("SqlServerTest")){
 					maxxgsj = iob.getString("ID");
 				} else {
 					maxxgsj = iob.getString("xgsj");
@@ -180,7 +192,7 @@ public class PostDataServlet extends HttpServlet{
     	return datetime.substring(0, datetime.indexOf('.')).replaceAll("[-: ]", "");
 	}
 
-	public static void searchOriginTask(MultiDatabaseBean databases,Object database,Object table,String maxxgsj,String serverType) throws IOException{
+	public static void searchOriginTask(MultiDatabaseBean databases,Object database,Object table,String maxxgsj,String serverType) throws IOException, NumberFormatException, ParseException{
 		for(int i = 0; i < databases.getDatabases().size(); i++){
 			DatabaseBean dbBean = databases.getDatabases().get(i);
 			if(dbBean.getDb().equals(database)){
@@ -211,7 +223,7 @@ public class PostDataServlet extends HttpServlet{
 								oldxgsj = tBean.getmDate();
 							}else if (tBean.getTable().equals("TBFLOW")) {
 								oldxgsj = tBean.getFlowSn();
-							}else{
+							}else {
 								oldxgsj = tBean.getID();
 							}
 							if(dbBean.getDb().startsWith("XfzxDB")){
