@@ -60,6 +60,7 @@ public class DbUploaderTest extends DbUploader{
 		DB2TypeMap.put("XfzxDB1", "oracle");
 		DB2TypeMap.put("XfzxDB2", "oracle");
 		DB2TypeMap.put("XfzxDB3", "oracle");
+		DB2TypeMap.put("SqlServerTest", "sqlserver");
 	}
 
 	private static MockWebServer mockServer = new MockWebServer();

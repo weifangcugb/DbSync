@@ -35,7 +35,7 @@ public class TableBean implements Serializable{
     @JsonProperty("FLOWSN")
     private String flowSn;/*flowsn*/
 
-    private List<TransformOp> replaceOp;
+    private List<TransformOp> replaceOp = new ArrayList();
 
 	@JsonIgnore
     private String queryTime;
