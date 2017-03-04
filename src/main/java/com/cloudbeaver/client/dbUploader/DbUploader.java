@@ -440,7 +440,9 @@ public class DbUploader extends CommonUploader {
 		try {
 			if (tableBean.getXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
 				String minRowVersion = SqlHelper.getMinRowVersion(dbBean, tableBean);
-				tableBean.setXgsj(minRowVersion);
+				BigDecimal decimal2 = new BigDecimal(minRowVersion);
+				decimal2 = decimal2.subtract(new BigDecimal(1));
+				tableBean.setXgsj(decimal2.toString());
 			}
 
 			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION)
@@ -483,7 +485,9 @@ public class DbUploader extends CommonUploader {
 
 						String minRowVersion = SqlHelper.getMinRowVersion(dbBean, tableBean);
 						if (!minRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
-							tableBean.setXgsj(minRowVersion);
+							BigDecimal decimal2 = new BigDecimal(minRowVersion);
+							decimal2 = decimal2.subtract(new BigDecimal(1));
+							tableBean.setXgsj(decimal2.toString());
 						} else {
 							throw new BeaverTableIsFullException();
 						}

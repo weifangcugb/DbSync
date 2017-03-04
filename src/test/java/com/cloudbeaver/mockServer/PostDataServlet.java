@@ -71,23 +71,22 @@ public class PostDataServlet extends HttpServlet{
 		String dbName = null;
 		String tName = null;
 		JSONArray newjArray = JSONArray.fromObject(content);
-		if(newjArray.size()>0){
-			JSONObject record = newjArray.getJSONObject(0);
-			dbName = record.getString(DATABASE_NAME);
-			tName = record.getString(TABLE_NAME);
-		}
-		System.out.println("dbName = " + dbName);
-
-		//write data to local
-    	String fileName = DATABASE_FILE_PREFIX + dbName + "_" + tName;
-    	RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-		file.seek(file.length());
-		file.write((content.substring(1, content.length()-1) + ",").getBytes());
-		file.close();
 
 		Map<String, String> DBName2DBType = GetTaskServlet.map;
 		if(!content.contains("HeartBeat")){
+			if(newjArray.size()>0){
+				JSONObject record = newjArray.getJSONObject(0);
+				dbName = record.getString(DATABASE_NAME);
+				tName = record.getString(TABLE_NAME);
+			}
+			System.out.println("dbName = " + dbName);
 			Assert.assertTrue("this database or file doesn't exists", DBName2DBType.containsKey(dbName));
+			//write data to local
+	    	String fileName = DATABASE_FILE_PREFIX + dbName + "_" + tName;
+	    	RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+			file.seek(file.length());
+			file.write((content.substring(1, content.length()-1) + ",").getBytes());
+			file.close();
 		}
 
 		if(!content.contains("HeartBeat") && DBName2DBType.containsKey(dbName)){

@@ -54,6 +54,7 @@ public class GetTaskServlet extends HttpServlet{
 		map.put("XfzxDB2", "oracle");
 		map.put("XfzxDB3", "oracle");
 		map.put("SqlServerTest", "sqlserver");
+		map.put("OracleTest", "oracle");
 	}
 
 //	public static String documentDBInitJson = "{\"databases\":[{\"db\":\"DocumentDB\",\"rowversion\":\"xgsj2\",\"tables\":"
@@ -366,15 +367,12 @@ public class GetTaskServlet extends HttpServlet{
 			+ "]}";
 
 	public static String AllDBInitJsonForMockTest = "{\"databases\":["
-//			+ "{\"db\":\"MysqlTest\",\"rowversion\":\"ID\",\"tables\":["
-//			+ "{\"table\":\"users\",\"ID\":\"0\"},"
-//			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]},"
 			+ "{\"db\":\"SqlServerTest\",\"rowversion\":\"ID\",\"tables\":["
 			+ "{\"table\":\"users\",\"ID\":\"0\"},"
+			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]},"
+			+ "{\"db\":\"OracleTest\",\"rowversion\":\"ID\",\"tables\":["
+			+ "{\"table\":\"users\",\"ID\":\"0\"},"
 			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]}"
-//			+ "{\"db\":\"OracleTest\",\"rowversion\":\"ID\",\"tables\":["
-//			+ "{\"table\":\"users\",\"ID\":\"0\"},"
-//			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]}"
 			+ "]}";
 
 	/*
