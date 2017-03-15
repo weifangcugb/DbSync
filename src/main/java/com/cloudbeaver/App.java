@@ -46,6 +46,10 @@ public class App {
         option.setRequired(false);
         options.addOption(option);
 
+        option = new Option("s", "step limit num per query", true, "set query step");
+        option.setRequired(false);
+        options.addOption(option);
+
         CommandLineParser parser = new GnuParser();
 		try {
 			CommandLine commandLine = parser.parse(options, args);
@@ -57,6 +61,11 @@ public class App {
 	        if (commandLine.hasOption('c')) {
 				String confDir = commandLine.getOptionValue('c');
 				CommonUploader.setConfDir(confDir);
+			}
+
+	        if (commandLine.hasOption('s')) {
+				String step = commandLine.getOptionValue('s');
+				CommonUploader.DB_QEURY_LIMIT_DB = Integer.parseInt(step);
 			}
 
             if (commandLine.hasOption('l')) {
