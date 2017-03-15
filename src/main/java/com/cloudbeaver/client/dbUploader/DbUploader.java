@@ -35,6 +35,10 @@ public class DbUploader extends CommonUploader {
 	private String taskJson;
 	private MultiDatabaseBean dbBeans;
 
+	private BigDecimal one = new BigDecimal(1);
+
+	private BigDecimal DB_QUERY_LIMIT_DB_AS_DECIMAL = new BigDecimal(DB_QEURY_LIMIT_DB);
+
 	private static final int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 	private static final String DB_ROW_VERSION_START_TIME = "starttime";
 
@@ -469,27 +473,27 @@ public class DbUploader extends CommonUploader {
 
 				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
 				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
-					double nextPoint = tableBean.getXgsjAsDouble() + DB_QEURY_LIMIT_DB;
+					BigDecimal nowPoint = new BigDecimal(tableBean.getXgsj());
+					BigDecimal nextPoint = nowPoint.add(DB_QUERY_LIMIT_DB_AS_DECIMAL );
 					/* hack here */
 					if (isXFZXDateColumn(dbBean, tableBean)) {
-						nextPoint = Long
-								.parseLong(SqlHelper.nextOracleDateTime(tableBean.getXgsj(), DB_QEURY_LIMIT_DB));
+						nextPoint = new BigDecimal(SqlHelper.nextOracleDateTime(tableBean.getXgsj(), DB_QEURY_LIMIT_DB));
 					}
 
-					if (tableBean.getMaxXgsjAsDouble() <= nextPoint) {
-						tableBean.setXgsj(tableBean.getMaxXgsj() + "");
+					BigDecimal maxPoint = new BigDecimal(tableBean.getMaxXgsj());
+					if (maxPoint.compareTo(nextPoint) <= 0) {
+						tableBean.setXgsj(tableBean.getMaxXgsj());
 						throw new BeaverTableIsFullException();
 					} else {
-						BigDecimal decimal = new BigDecimal(nextPoint);
-						tableBean.setXgsj(decimal + "");
+						tableBean.setXgsj(nextPoint.toString());
 
 						String minRowVersion = SqlHelper.getMinRowVersion(dbBean, tableBean);
-						if (!minRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
-							BigDecimal decimal2 = new BigDecimal(minRowVersion);
-							decimal2 = decimal2.subtract(new BigDecimal(1));
-							tableBean.setXgsj(decimal2.toString());
-						} else {
+						if (minRowVersion.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
 							throw new BeaverTableIsFullException();
+						} else {
+							BigDecimal decimal2 = new BigDecimal(minRowVersion);
+							decimal2 = decimal2.subtract(one);
+							tableBean.setXgsj(decimal2.toString());
 						}
 					}
 				} else {

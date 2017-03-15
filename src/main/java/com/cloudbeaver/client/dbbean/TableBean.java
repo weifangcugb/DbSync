@@ -360,7 +360,7 @@ public class TableBean implements Serializable{
 			columnExp = "to_number(" + rowversionColumn + ")";
 		}
 
-		return String.format("select min(%s) as %s from %s where %s >= %s", columnExp, rowversionColumn, table, columnExp, xgsj);
+		return String.format("select min(%s) as %s from %s where %s > %s", columnExp, rowversionColumn, table, columnExp, xgsj);
 	}
 
 	private boolean isXFZXFlowTable(String type, String rowversionColumn) {
