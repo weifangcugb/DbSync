@@ -57,7 +57,7 @@ public class TransformOp {
 	}
 	public void setFromColumns(String fromColumns) {
 		this.fromColumns = fromColumns;
-		this.fromColumsArry = fromColumns.trim().split("\\s");
+		this.fromColumsArry = fromColumns.trim().split("\\s+");
 	}
 
 	public String[] getFromColumsArry() {

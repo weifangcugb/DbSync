@@ -59,6 +59,8 @@ public class TableBean implements Serializable{
     @JsonIgnore
     private boolean syncTypeOnceADay = false;
 
+	private String ORACLE_DATA_FORMAT = "yyyymmddhh24miss";
+
 	public List<TransformOp> getReplaceOp() {
 		return replaceOp;
 	}
@@ -229,9 +231,10 @@ public class TableBean implements Serializable{
         return xgsj;
     }
 
-    public void setXgsj(String maxXgsj) {
+    public void setXgsj(String nowXgsj) {
+    	logger.debug("set xgsj, before:" + xgsj + " after:" + nowXgsj);
 		prevxgsj = xgsj;
-        this.xgsj = maxXgsj;
+        this.xgsj = nowXgsj;
     }
 
     public ArrayList<String> getJoin() {
@@ -271,26 +274,31 @@ public class TableBean implements Serializable{
 	public String getSubTableSqlString(DatabaseBean dbBean, TableBean tableBean, List<String> subtables, String versionOffset) throws BeaverFatalException {
 		String tables = subtables.stream().collect(Collectors.joining(".*,", "", ".*"));
 		String from = subtables.stream().collect(Collectors.joining(",", tableBean.getTable() + ',', " "));
-		if (isXFZXDateSystem(dbBean.getType(), dbBean.getRowversion())) {
+		if (isXFZXFlowTable(dbBean.getType())) {
+//			hack here
 			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
-			+ " and to_char(" + tableBean.getTable() + "." + dbBean.getRowversion() + ") =" + versionOffset;
+				+ " and " + tableBean.getTable() + "." + "flowdraftid = '" + versionOffset + "'";
+		}else if (isXFZXDateSystem(dbBean.getType(), dbBean.getRowversion())) {
+			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
+				+ " and to_char(" + tableBean.getTable() + "." + dbBean.getRowversion() + ", '" + ORACLE_DATA_FORMAT + "') ='" + versionOffset+"'";
 		}else{
 			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
-			+ " and " + tableBean.getTable() + "." + dbBean.getRowversion() + "=" + versionOffset;
+				+ " and " + tableBean.getTable() + "." + dbBean.getRowversion() + "=" + versionOffset;
 		}
 	}
 
     private String whereClause(String rowVersionColumn, String dbType, int sqlLimitNum) {
 //    	only used by oracle
 		if (dbType.equals(CommonUploader.DB_TYPE_SQL_ORACLE)) {
-			if (isXFZXDateSystem(dbType, rowVersionColumn)) {
-//				xfzx system
-				return String.format("WHERE %s to_number(to_char(%s.%s, 'yyyymmddhh24mmss')) > %s AND to_number(to_char(%s.%s, 'yyyymmddhh24mmss')) <= %s", 
+			if (isXFZXFlowTable(dbType)) {
+				return String.format(" WHERE %s to_number(to_char(%s.%s, '" + ORACLE_DATA_FORMAT + "')) > %s AND to_number(to_char(%s.%s, '" + ORACLE_DATA_FORMAT + "')) <= %s", 
 						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, SqlHelper.nextOracleDateTime(xgsj, sqlLimitNum));
-			}else if (isXFZXFlowTable(dbType, rowVersionColumn)) {
-//				xfzx system flowsn
-				return String.format("WHERE %s to_number(%s.%s) > %s AND to_number(%s.%s) <= (%s + %s)", 
-						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, xgsj, sqlLimitNum);				
+			}else if (isXFZXDateSystem(dbType, rowVersionColumn)) {
+//				xfzx system
+//				return String.format("WHERE %s %s.%s > '%s' AND %s.%s <= '%s'", 
+//						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, SqlHelper.nextOracleDateTime(xgsj, sqlLimitNum));
+				return String.format(" WHERE %s to_number(to_char(%s.%s, '" + ORACLE_DATA_FORMAT + "')) > %s AND to_number(to_char(%s.%s, '" + ORACLE_DATA_FORMAT + "')) <= %s", 
+						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, SqlHelper.nextOracleDateTime(xgsj, sqlLimitNum));
 			}else{
 				return whereClause(rowVersionColumn) + " and " + table + "." + rowVersionColumn + " <= (" + xgsj + " + " + sqlLimitNum + ")";
 			}
@@ -344,10 +352,12 @@ public class TableBean implements Serializable{
 
 	public String getMaxRowVersionSqlString(String type, String rowversionColumn) {
 		if (isXFZXDateSystem(type, rowversionColumn)) {/*hack here*/
-			return "select max(to_number(to_char(" + rowversionColumn +",'yyyymmddhh24mmss'))) as " + rowversionColumn + " from " + table;
-		}else if (isXFZXFlowTable(type, rowversionColumn)) {/*hack here*/
-			return "select max(to_number(" + rowversionColumn + ")) as " + rowversionColumn + " from " + table;
-		}else{
+			return "select max(to_number(to_char(" + rowversionColumn +",'" + ORACLE_DATA_FORMAT + "'))) as " + rowversionColumn + " from " + table;
+		}
+//		else if (isXFZXFlowTable(type, rowversionColumn)) {/*hack here*/
+//			return "select max(to_number(" + rowversionColumn + ")) as " + rowversionColumn + " from " + table;
+//		}
+		else{
 			return "select max(" + rowversionColumn +") as " + rowversionColumn + " from " + table;
 		}
 	}
@@ -355,16 +365,17 @@ public class TableBean implements Serializable{
 	public String getMinRowVersionSqlString(String type, String rowversionColumn) {
 		String columnExp = rowversionColumn;
 		if (isXFZXDateSystem(type, rowversionColumn)) {/*hack here*/
-			columnExp = "to_number(to_char(" + rowversionColumn + "))";
-		}else if (isXFZXFlowTable(type, rowversionColumn)) {/*hack here*/
-			columnExp = "to_number(" + rowversionColumn + ")";
+			columnExp = "to_number(to_char(" + rowversionColumn + ", '" + ORACLE_DATA_FORMAT  + "'))";
 		}
+//		else if (isXFZXFlowTable(type, rowversionColumn)) {/*hack here*/
+//			columnExp = "to_number(" + rowversionColumn + ")";
+//		}
 
 		return String.format("select min(%s) as %s from %s where %s > %s", columnExp, rowversionColumn, table, columnExp, xgsj);
 	}
 
-	private boolean isXFZXFlowTable(String type, String rowversionColumn) {
-		return (type.equals(CommonUploader.DB_TYPE_SQL_ORACLE) && (rowversionColumn.equals("FLOWSN")));
+	public boolean isXFZXFlowTable(String type) {
+		return (type.equals(CommonUploader.DB_TYPE_SQL_ORACLE) && (table.equals("TBFLOW_BASE")));
 	}
 
 	@JsonIgnore

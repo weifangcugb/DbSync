@@ -54,7 +54,7 @@ public class DatabaseBean implements Serializable{
 
 	public void putOpTableValue(String tableName, String rowKey, String columnName, String value) {
 		Triplet<String, String, String> key = new Triplet<String, String, String>(tableName, rowKey, columnName);
-		if (value != null && (!opTableCopy.contains(key) || !opTableCopy.get(key).equals(value))) {
+		if (value != null && (!opTableCopy.containsKey(key) || !opTableCopy.get(key).equals(value))) {
 			opTableCopy.put(key, value);
 		}
 	}

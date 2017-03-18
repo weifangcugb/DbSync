@@ -178,7 +178,7 @@ public class DbUploader extends CommonUploader {
 		dbBeans = tmpDbBeans;
 	}
 
-	private synchronized void loadOpTables() {
+	private void loadOpTables() {
 		if (dbBeans == null) {
 			return;
 		}
@@ -203,8 +203,11 @@ public class DbUploader extends CommonUploader {
 						BeaverUtils.printLogExceptionAndSleep(e, "loading op table error", 2000);
 					}
 				}
+				logger.info("load op table down, tableName:" + table);
 			});
 		}
+
+		logger.info("load all op-tables down");
 	}
 
 	@Override
@@ -296,9 +299,11 @@ public class DbUploader extends CommonUploader {
 					}
 				} catch (BeaverTableIsFullException e) {
 					// move to next table
+					logger.info("table is full, dbName:" + dbBean.getDb() + " tableName:" + tableBean.getTable());
 					break;
 				} catch (BeaverTableNeedRetryException e) {
 					// retry this table
+					logger.info("got error, should retry, dbName:" + dbBean.getDb() + " tableName:" + tableBean.getTable());
 					continue;
 				}
 
@@ -329,7 +334,7 @@ public class DbUploader extends CommonUploader {
 	private void sendMsgOut(StringBuilder sb) {
 		for (int i = 0; i < MAX_RETRY_SEND_TIMES; i++) {
 			try {
-				logger.debug("send db data to flume server, json:" + sb.toString());
+//				logger.debug("send db data to flume server, json:" + sb.toString());
 				String flumeJson = BeaverUtils.compressAndFormatFlumeHttp(sb.toString());
 				if (flumeJson.length() < MAX_PACKET_MSG_SIZE) {
 					BeaverUtils.doPost(conf.get(CommonUploader.CONF_FLUME_SERVER_URL), flumeJson);
@@ -442,12 +447,12 @@ public class DbUploader extends CommonUploader {
 				+ tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
 
 		try {
-			if (tableBean.getXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
-				String minRowVersion = SqlHelper.getMinRowVersion(dbBean, tableBean);
-				BigDecimal decimal2 = new BigDecimal(minRowVersion);
-				decimal2 = decimal2.subtract(new BigDecimal(1));
-				tableBean.setXgsj(decimal2.toString());
-			}
+//			if (tableBean.getXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
+//				String minRowVersion = SqlHelper.getMinRowVersion(dbBean, tableBean);
+//				BigDecimal decimal2 = new BigDecimal(minRowVersion);
+//				decimal2 = decimal2.subtract(new BigDecimal(1));
+//				tableBean.setXgsj(decimal2.toString());
+//			}
 
 			if (tableBean.getMaxXgsj().equals(CommonUploader.DB_EMPTY_ROW_VERSION)
 					|| tableBean.getMaxXgsjAsDouble() <= tableBean.getXgsjAsDouble()) {
@@ -466,7 +471,7 @@ public class DbUploader extends CommonUploader {
 			JSONArray jArray = new JSONArray();
 			int i = 0;
 			while (jArray.isEmpty()) {
-				if (i++ % 200 == 0) {
+				if (i++ % 100 == 0) {
 					logger.info("Executing query: "
 							+ tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), DB_QEURY_LIMIT_DB));
 				}
@@ -474,7 +479,7 @@ public class DbUploader extends CommonUploader {
 				String nowMaxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
 				if (nowMaxXgsj.equals(CommonUploader.DB_EMPTY_ROW_VERSION)) {
 					BigDecimal nowPoint = new BigDecimal(tableBean.getXgsj());
-					BigDecimal nextPoint = nowPoint.add(DB_QUERY_LIMIT_DB_AS_DECIMAL );
+					BigDecimal nextPoint = nowPoint.add(DB_QUERY_LIMIT_DB_AS_DECIMAL);
 					/* hack here */
 					if (isXFZXDateColumn(dbBean, tableBean)) {
 						nextPoint = new BigDecimal(SqlHelper.nextOracleDateTime(tableBean.getXgsj(), DB_QEURY_LIMIT_DB));
@@ -493,11 +498,12 @@ public class DbUploader extends CommonUploader {
 						} else {
 							BigDecimal decimal2 = new BigDecimal(minRowVersion);
 							decimal2 = decimal2.subtract(one);
+							logger.debug("minVersion:" + minRowVersion + ", xgsj:" + decimal2.toString());
 							tableBean.setXgsj(decimal2.toString());
 						}
 					}
 				} else {
-					logger.debug("get db data, json:" + jArray.toString());
+					logger.debug("get db data, nowMaxXgsj:" + nowMaxXgsj + "json:" + jArray.toString());
 					/* hack here */
 					if (isXFZXDateColumn(dbBean, tableBean)) {
 						nowMaxXgsj = nowMaxXgsj.substring(0, nowMaxXgsj.indexOf('.')).replaceAll("[-: ]", "");
@@ -519,7 +525,8 @@ public class DbUploader extends CommonUploader {
 		return dbBean.getDb().startsWith("XfzxDB") && (tableBean.getTable().equals("TBXF_SENTENCEALTERATION")
 				|| tableBean.getTable().equals("TBPRISONER_MEETING_SUMMARY")
 				|| tableBean.getTable().equals("TBXF_SCREENING")
-				|| tableBean.getTable().equals("TBXF_PRISONERPERFORMANCE"));
+				|| tableBean.getTable().equals("TBXF_PRISONERPERFORMANCE"))
+				|| tableBean.getTable().equals("TBFLOW_BASE");
 	}
 
 	private JSONArray getDataFromSqlServer(DatabaseBean dbBean, TableBean tableBean)

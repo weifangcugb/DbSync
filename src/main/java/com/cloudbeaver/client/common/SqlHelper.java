@@ -91,7 +91,6 @@ public class SqlHelper {
     }
 
 	public static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
-		logger.debug("sql:" + sqlQuery);
 		Connection con = getCachedConnKeepTrying(dbBean);
 		try {
 //			Statement statement = con.createStatement();
@@ -191,8 +190,13 @@ public class SqlHelper {
 				}
 
                 if (tableBean.getJoin_subtable() != null) {
+                	String versionColumn = dbBean.getRowversion();
+                	if (tableBean.isXFZXFlowTable(dbBean.getType())) {
+//                		hack here
+						versionColumn = "FLOWDRAFTID";
+					}
     				List<String> subtables = tableBean.getJoin_subtable();
-					String subtableSql = tableBean.getSubTableSqlString(dbBean, tableBean, subtables, jsonObj.getString(dbBean.getRowversion()));
+					String subtableSql = tableBean.getSubTableSqlString(dbBean, tableBean, subtables, jsonObj.getString(versionColumn));
 					JSONArray subArray = new JSONArray();
 					execSqlQuery(subtableSql, dbBean, subArray);
 					if (!subArray.isEmpty()) {
@@ -231,10 +235,10 @@ public class SqlHelper {
 
 	public static String nextOracleDateTime(String xgsj, int sqlLimitNum) {
     	if (xgsj.equals("0") || xgsj.length() == 0) {
-			return "20100101000000";
+			return "20100101000000";//20100101000000 //2010-01-01 00:00:00.0
 		}else{
 	    	try{
-	    		SimpleDateFormat ORACLE_DATE_FORMAT	= new SimpleDateFormat("yyyyMMddHHmmss");
+	    		SimpleDateFormat ORACLE_DATE_FORMAT	= new SimpleDateFormat("yyyyMMddHHmmss");//yyyyMMddHHmmss //yyyy-MM-dd HH:mm:ss.s
 	    		Date date = ORACLE_DATE_FORMAT.parse(xgsj);
 	    		Calendar calendar = Calendar.getInstance();
 	    		calendar.setTime(date);
