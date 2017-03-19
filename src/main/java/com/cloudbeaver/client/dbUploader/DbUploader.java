@@ -200,7 +200,7 @@ public class DbUploader extends CommonUploader {
 						});
 						break;
 					} catch (SQLException | BeaverFatalException | ClassNotFoundException e) {
-						BeaverUtils.printLogExceptionAndSleep(e, "loading op table error", 2000);
+						BeaverUtils.printLogExceptionAndSleep(e, "loading op table error", 60*1000);
 					}
 				}
 				logger.info("load op table down, tableName:" + table);
@@ -503,7 +503,7 @@ public class DbUploader extends CommonUploader {
 						}
 					}
 				} else {
-					logger.debug("get db data, nowMaxXgsj:" + nowMaxXgsj + "json:" + jArray.toString());
+					logger.debug("get db data, nowMaxXgsj:" + nowMaxXgsj + " json:" + jArray.toString());
 					/* hack here */
 					if (isXFZXDateColumn(dbBean, tableBean)) {
 						nowMaxXgsj = nowMaxXgsj.substring(0, nowMaxXgsj.indexOf('.')).replaceAll("[-: ]", "");

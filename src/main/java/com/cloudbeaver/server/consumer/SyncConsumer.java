@@ -33,14 +33,14 @@ import kafka.message.MessageAndMetadata;
 public class SyncConsumer extends FixedNumThreadPool{
 	public static boolean USE_BEAVER_KAFKA = true;
 
-	private static Logger logger = Logger.getLogger(SyncConsumer.class);
+	protected static Logger logger = Logger.getLogger(SyncConsumer.class);
 
-	private static final String CONF_UPLOAD_FILE_URL = "upload.file.url";
-	private static final String CONF_UPLOAD_DB_URL = "upload.db.url";
-	private static final String CONF_HEARTBEAT_URL = "upload.heartbeat.url";
-	private static final String LOCAL_FILE_STORED_PATH = "/tmp/";
-	private static final String JSON_FILED_HDFS_DB = "hdfs_db";
-	private static final String JSON_FILED_HDFS_CLIENT = "hdfs_client";
+	protected static final String CONF_UPLOAD_FILE_URL = "upload.file.url";
+	protected static final String CONF_UPLOAD_DB_URL = "upload.db.url";
+	protected static final String CONF_HEARTBEAT_URL = "upload.heartbeat.url";
+	protected static final String LOCAL_FILE_STORED_PATH = "/tmp/";
+	protected static final String JSON_FILED_HDFS_DB = "hdfs_db";
+	protected static final String JSON_FILED_HDFS_CLIENT = "hdfs_client";
 
 //	kafka configs
 	private static final String ZOOKEEPER_CONNECT = "zookeeper.connect";
@@ -53,19 +53,19 @@ public class SyncConsumer extends FixedNumThreadPool{
 	private static int TOPIC_PARTITION_NUM = 10;
 	private static String TOPIC_NAME = "hdfs_upload";
 
-	private static final boolean STOR_IN_LOCAL = false;
-	private static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
+	protected static final boolean STOR_IN_LOCAL = false;
+	protected static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
 
-	private static final int MAX_POST_RETRY_TIME = 20;
+	protected static final int MAX_POST_RETRY_TIME = 20;
 
 	List<KafkaStream<byte[], byte[]>> streams = null;
 	ConsumerConnector consumer = null;
 
-	private Map<String, String> conf = null;
+	protected Map<String, String> conf = null;
 
-	private String fileUploadUrl= null;
-	private String dbUploadUrl = null;
-	private String heartBeatUrl = null;
+	protected String fileUploadUrl= null;
+	protected String dbUploadUrl = null;
+	protected String heartBeatUrl = null;
 
 	public static Map<String, String> DBName2DBType = new HashMap<String, String>();
 	{
@@ -231,7 +231,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 		}
 	}
 
-	private void writeToFile(byte[] msgBody) {
+	public static void writeToFile(byte[] msgBody) {
 		try {
 			String fileName = LOCAL_FILE_STORED_PATH + System.currentTimeMillis() + "_" + Thread.currentThread().getId() +".jpg";
 			FileOutputStream fout = new FileOutputStream(fileName);

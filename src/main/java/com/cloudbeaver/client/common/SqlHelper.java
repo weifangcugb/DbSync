@@ -91,6 +91,7 @@ public class SqlHelper {
     }
 
 	public static String execSqlQuery(String sqlQuery, DatabaseBean dbBean, JSONArray jArray) throws SQLException, BeaverFatalException {
+		logger.debug("execSqlQuery, sql:" + sqlQuery);
 		Connection con = getCachedConnKeepTrying(dbBean);
 		try {
 //			Statement statement = con.createStatement();
