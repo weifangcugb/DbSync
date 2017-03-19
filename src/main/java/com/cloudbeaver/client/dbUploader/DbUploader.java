@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -537,6 +538,7 @@ public class DbUploader extends CommonUploader {
 		try {
 			JSONArray jArray = new JSONArray();
 			String maxXgsj = SqlHelper.getDBData(prisonId, dbBean, tableBean, DB_QEURY_LIMIT_DB, jArray);
+			System.out.println(tableBean.getTable() + " : " + jArray.size());
 			if (jArray.isEmpty()) {
 				// move to next table
 				throw new BeaverTableIsFullException();

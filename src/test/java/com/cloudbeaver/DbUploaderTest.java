@@ -464,10 +464,9 @@ public class DbUploaderTest extends DbUploader{
             DatabaseBean dbBean = (DatabaseBean) getTaskObject(index);
             if (dbBean == null || dbBean.getType().equals(DbUploader.DB_TYPE_SQL_SQLITE)) {
                 continue;
-            }else {
+            }else{
             	doTask(dbBean);
-            }
-            
+            }            
         }
     }
 
@@ -484,6 +483,7 @@ public class DbUploaderTest extends DbUploader{
 //			appTest.testGetMsgForOraleStep();
 //			appTest.testGetMsgForSqlite();
 			appTest.testGetMsgProduct();
+//			BeaverUtils.sleep(300 * 1000);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

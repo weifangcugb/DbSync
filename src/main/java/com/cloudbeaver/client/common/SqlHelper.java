@@ -216,6 +216,7 @@ public class SqlHelper {
 
 	public static String getMinRowVersion(DatabaseBean dbBean, TableBean tableBean) throws SQLException, BeaverFatalException {
 		String sqlQuery = tableBean.getMinRowVersionSqlString(dbBean.getType(), dbBean.getRowversion());
+		logger.info(sqlQuery);
 		return execSqlQuery(sqlQuery, dbBean, null);
 	}
 

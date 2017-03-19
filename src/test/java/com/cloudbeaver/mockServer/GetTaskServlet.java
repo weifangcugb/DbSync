@@ -367,12 +367,16 @@ public class GetTaskServlet extends HttpServlet{
 			+ "]}";
 
 	public static String AllDBInitJsonForMockTest = "{\"databases\":["
-			+ "{\"db\":\"SqlServerTest\",\"rowversion\":\"ID\",\"tables\":["
-			+ "{\"table\":\"users\",\"ID\":\"0\"},"
-			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]},"
+//			+ "{\"db\":\"SqlServerTest\",\"rowversion\":\"ID\",\"tables\":["
+//			+ "{\"table\":\"users\",\"ID\":\"0\"},"
+//			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"},"
+//			+ "{\"table\":\"consumer\",\"join\":[\"department\"],\"key\":\"consumer.depId=department.ID\",\"ID\":\"0\"}"
+//			+ "]},"
 			+ "{\"db\":\"OracleTest\",\"rowversion\":\"ID\",\"tables\":["
 			+ "{\"table\":\"users\",\"ID\":\"0\"},"
-			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}]}"
+			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"},"
+			+ "{\"table\":\"consumer\",\"join\":[\"department\"],\"key\":\"consumer.depId=department.ID\",\"ID\":\"0\"}"
+			+ "]}"
 			+ "]}";
 
 	/*
