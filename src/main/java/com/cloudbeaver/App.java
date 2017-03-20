@@ -36,7 +36,7 @@ public class App {
         options.addOption(option);
 
         option = new Option("n", "module-name", true, "the name of this dbsync, for monitor automaticly");
-        option.setRequired(false);
+        option.setRequired(true);
         options.addOption(option);
 
         option = new Option("d", "dir-conf", true, "which dir will be used in FileUploader,\n'remote': use dir set by web sync api,\n'local': use dir set by conf/SyncClient_File.properties");

@@ -3,10 +3,13 @@ package com.cloudbeaver.client.common;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import net.sf.json.JSONArray;
@@ -173,7 +176,14 @@ public class SqlHelper {
 		String sqlQuery = tableBean.getSqlString(dbBean.getRowversion(), dbBean.getType(), sqlLimitNum);
 		String maxRowVersion = execSqlQuery(sqlQuery, dbBean, jArray);
 		if (!jArray.isEmpty()) {
+        	String versionColumn = dbBean.getRowversion();
+        	if (tableBean.isXFZXFlowTable(dbBean.getType())) {
+//        		hack here
+				versionColumn = "FLOWDRAFTID";
+			}
+
 //			handle join_subtable
+			List<String> subKeys = new ArrayList<>();
 			for (int i = 0; i < jArray.size(); i++) {
 				JSONObject jsonObj = jArray.getJSONObject(i);
 
@@ -196,21 +206,37 @@ public class SqlHelper {
 				}
 
                 if (tableBean.getJoin_subtable() != null) {
-                	String versionColumn = dbBean.getRowversion();
-                	if (tableBean.isXFZXFlowTable(dbBean.getType())) {
-//                		hack here
-						versionColumn = "FLOWDRAFTID";
+                	subKeys.add(jsonObj.getString(versionColumn));
+                }
+			}
+
+            if (subKeys.size() > 0) {
+				List<String> subtables = tableBean.getJoin_subtable();
+				String subtableSql = tableBean.getSubTableSqlString(dbBean, tableBean, subtables, subKeys);
+				JSONArray subArray = new JSONArray();
+				execSqlQuery(subtableSql, dbBean, subArray);
+
+				Map<String, JSONArray> subTableMap = new HashMap<>();
+				for (int i = 0; i < subArray.size(); i++) {
+					JSONObject jsonObj = subArray.getJSONObject(i);
+					if (subTableMap.containsKey(jsonObj.getString(versionColumn))) {
+						subTableMap.get(jsonObj.getString(versionColumn)).add(jsonObj);
+					}else{
+						JSONArray jArray2 = new JSONArray();
+						jArray2.add(jsonObj);
+						subTableMap.put(jsonObj.getString(versionColumn), jArray2);
 					}
-    				List<String> subtables = tableBean.getJoin_subtable();
-					String subtableSql = tableBean.getSubTableSqlString(dbBean, tableBean, subtables, jsonObj.getString(versionColumn));
-					JSONArray subArray = new JSONArray();
-					execSqlQuery(subtableSql, dbBean, subArray);
-					if (!subArray.isEmpty()) {
-						jsonObj.put(subtables.stream().collect(Collectors.joining("_")), subArray);
+				}
+
+				for (int i = 0; i < jArray.size(); i++) {
+					JSONObject jsonObj = subArray.getJSONObject(i);
+					if (subTableMap.containsKey(jsonObj.getString(versionColumn))) {
+						jsonObj.put(subtables.stream().collect(Collectors.joining("_")), subTableMap.get(jsonObj.getString(versionColumn)));
 					}
 				}
 			}
 		}
+
 		return maxRowVersion;
 	}
 

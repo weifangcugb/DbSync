@@ -271,19 +271,20 @@ public class TableBean implements Serializable{
 		}
     }
 
-	public String getSubTableSqlString(DatabaseBean dbBean, TableBean tableBean, List<String> subtables, String versionOffset) throws BeaverFatalException {
+	public String getSubTableSqlString(DatabaseBean dbBean, TableBean tableBean, List<String> subtables, List<String> subKeys) throws BeaverFatalException {
 		String tables = subtables.stream().collect(Collectors.joining(".*,", "", ".*"));
 		String from = subtables.stream().collect(Collectors.joining(",", tableBean.getTable() + ',', " "));
 		if (isXFZXFlowTable(dbBean.getType())) {
 //			hack here
 			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
-				+ " and " + tableBean.getTable() + "." + "flowdraftid = '" + versionOffset + "'";
+				+ " and " + tableBean.getTable() + ".flowdraftid in " + subKeys.stream().map(key -> "'"+key+"'").collect(Collectors.joining(",","(",")"));
 		}else if (isXFZXDateSystem(dbBean.getType(), dbBean.getRowversion())) {
 			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
-				+ " and to_char(" + tableBean.getTable() + "." + dbBean.getRowversion() + ", '" + ORACLE_DATA_FORMAT + "') ='" + versionOffset+"'";
+				+ " and to_char(" + tableBean.getTable() + "." + dbBean.getRowversion() + ", '" + ORACLE_DATA_FORMAT + "') in " 
+				+ subKeys.stream().map(key -> "'"+key+"'").collect(Collectors.joining(",","(",")"));
 		}else{
 			return "select " + tables + " from " + from + " where " + tableBean.getKey() 
-				+ " and " + tableBean.getTable() + "." + dbBean.getRowversion() + "=" + versionOffset;
+				+ " and " + tableBean.getTable() + "." + dbBean.getRowversion() + " in " + subKeys.stream().collect(Collectors.joining(",", "(", ")"));
 		}
 	}
 
