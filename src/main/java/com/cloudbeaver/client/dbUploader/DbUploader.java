@@ -45,6 +45,9 @@ public class DbUploader extends CommonUploader {
 	private static final int MAX_RETRY_SEND_TIMES = 5;
 
 	private static Map<String, String> appKeySecret = new HashMap<String, String>();
+
+	public static boolean PRE_LOAD_OP_TALBE = false;
+
 	static {
 		String appPreDefKey = "20150603";
 		String appPreDefSecret = "7454739E907F5595AE61D84B8547F574";
@@ -179,7 +182,7 @@ public class DbUploader extends CommonUploader {
 	}
 
 	private void loadOpTables() {
-		if (dbBeans == null) {
+		if (dbBeans == null || !PRE_LOAD_OP_TALBE) {
 			return;
 		}
 

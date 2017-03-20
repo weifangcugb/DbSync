@@ -5,9 +5,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
+
 import com.auth0.jwt.internal.com.fasterxml.jackson.annotation.JsonIgnore;
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.SqlHelper;
+import com.cloudbeaver.client.dbUploader.DbUploader;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -16,6 +19,8 @@ import net.sf.json.JSONObject;
  * for now, only replace operator
  */
 public class TransformOp {
+	private static Logger logger = Logger.getLogger(DbUploader.class);
+
 	private String toColumn;
 	private String fromTable;
 	private String fromKey;
@@ -75,6 +80,7 @@ public class TransformOp {
 
 	public void doOp2(DatabaseBean dbBean, TableBean tableBean, JSONObject result) throws SQLException, BeaverFatalException {
 		String opSql = getOpSql(dbBean ,tableBean, result.getString(toColumn));
+		logger.debug("query op table, sql:" + opSql);
 		JSONArray opResult = new JSONArray();
 		SqlHelper.execSqlQuery(opSql, dbBean, opResult);
 		if (!opResult.isEmpty()) {

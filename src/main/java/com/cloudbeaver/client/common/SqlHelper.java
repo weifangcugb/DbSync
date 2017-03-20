@@ -14,6 +14,7 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
 
+import com.cloudbeaver.client.dbUploader.DbUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
 import com.cloudbeaver.client.dbbean.TransformOp;
@@ -186,7 +187,11 @@ public class SqlHelper {
 							continue;
 						}
 
-						op.doOp(dbBean ,tableBean, jsonObj);
+						if (DbUploader.PRE_LOAD_OP_TALBE) {
+							op.doOp(dbBean ,tableBean, jsonObj);
+						}else{
+							op.doOp2(dbBean, tableBean, jsonObj);
+						}
 					}
 				}
 

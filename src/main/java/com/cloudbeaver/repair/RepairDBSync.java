@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.auth0.jwt.internal.com.fasterxml.jackson.core.JsonParseException;
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.CommonUploader;
@@ -86,7 +85,7 @@ public class RepairDBSync extends SyncConsumer{
 					if (!repaired) {
 						logger.error("can't recognize msg, msg:" + msg);
 					}
-				}catch(JsonParseException e){
+				}catch(JsonProcessingException e){
 					logger.error("parse json exception, msg:" + e.getMessage());
 				}
 			}

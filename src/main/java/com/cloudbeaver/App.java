@@ -35,6 +35,10 @@ public class App {
         option.setRequired(false);
         options.addOption(option);
 
+        option = new Option("n", "module-name", true, "the name of this dbsync, for monitor automaticly");
+        option.setRequired(false);
+        options.addOption(option);
+
         option = new Option("d", "dir-conf", true, "which dir will be used in FileUploader,\n'remote': use dir set by web sync api,\n'local': use dir set by conf/SyncClient_File.properties");
         option.setRequired(false);
         options.addOption(option);
@@ -47,7 +51,11 @@ public class App {
         option.setRequired(false);
         options.addOption(option);
 
-        option = new Option("s", "step limit num per query", true, "set query step");
+        option = new Option("p", "pre-load-op", false, "set wether pre load op talbes, default is false");
+        option.setRequired(false);
+        options.addOption(option);
+
+        option = new Option("s", "step-limit", true, "set version step each query, default is 3600");
         option.setRequired(false);
         options.addOption(option);
 
@@ -57,6 +65,10 @@ public class App {
 	        if (commandLine.hasOption('h')) {
 	            new HelpFormatter().printHelp("java -jar dbsync ", options, true);
 	            return;
+            }
+
+	        if (commandLine.hasOption('p')) {
+	            DbUploader.PRE_LOAD_OP_TALBE = true;
             }
 
 	        if (commandLine.hasOption('c')) {
