@@ -46,6 +46,8 @@ class ErrorMsgMatcher{
 }
 
 public class RepairDBSync extends SyncConsumer{
+	private int repairNum = 0;
+
 	public static void main(String[] args) {
 		startRepair();
 	}
@@ -89,6 +91,8 @@ public class RepairDBSync extends SyncConsumer{
 					logger.error("parse json exception, msg:" + e.getMessage());
 				}
 			}
+
+			logger.info("repair down, repairNum:" + repairNum);
 		} catch (IOException | BeaverFatalException e) {
 			BeaverUtils.printLogExceptionWithoutSleep(e, "repair failed");
 		}
@@ -162,7 +166,7 @@ public class RepairDBSync extends SyncConsumer{
 								}
 							}
 						}
-						logger.info("repair one msg");
+						logger.info("repair one msg, Num:" + ++repairNum);
 //						logger.debug("repair one msg, msgBody:" + msgBody);
 					}else {
 						logger.error("unknow db type," + " dbName:" + dbName + " msg:" + msgBody);
