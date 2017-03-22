@@ -1,6 +1,7 @@
 package com.cloudbeaver.client.dbbean;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,7 +37,12 @@ public class TransformOp {
 
 	@JsonIgnore
 	public String getOpSql(DatabaseBean dbBean, TableBean tableBean, String columnValue){
-		return String.format("select %s, %s = 1 from %s, %s where %s.%s = %s.%s and %s.%s = %s", fromColumns, dbBean.getRowversion(), fromTable, tableBean.getTable(), fromTable, fromKey, tableBean.getTable(), toColumn, tableBean.getTable(), toColumn, columnValue);
+		String selectColums = Arrays.asList(fromColumsArry).stream().collect(Collectors.joining("," + fromTable + '.', fromTable + '.', " "));
+		if (tableBean.getTable().equals("TBFLOW_BASE")) {
+			return String.format("select %s, %s.%s from %s, %s where %s.%s = %s.%s and %s.%s = '%s'", selectColums, tableBean.getTable(), dbBean.getRowversion(), fromTable, tableBean.getTable(), fromTable, fromKey, tableBean.getTable(), toColumn, tableBean.getTable(), toColumn, columnValue);
+		}else{
+			return String.format("select %s, %s.%s from %s, %s where %s.%s = %s.%s and %s.%s = %s", selectColums, tableBean.getTable(), dbBean.getRowversion(), fromTable, tableBean.getTable(), fromTable, fromKey, tableBean.getTable(), toColumn, tableBean.getTable(), toColumn, columnValue);
+		}
 	}
 
 	public String getToColumn() {
