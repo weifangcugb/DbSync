@@ -187,7 +187,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 										logger.debug("posturl:" + fileUploadUrl);
 										BeaverUtils.doPost(fileUploadUrl, msgBody);
 									}
-	
+
 									if (STOR_IN_LOCAL) {
 										for (int i = 0; i < root.size(); i++) {
 											JsonNode item = root.get(i);
