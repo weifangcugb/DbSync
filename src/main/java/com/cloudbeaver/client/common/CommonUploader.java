@@ -19,6 +19,8 @@ public abstract class CommonUploader extends FixedNumThreadPool{
 	public static final String DB_TYPE_SQL_ORACLE = "oracle";
 	public static final String DB_TYPE_SQL_SQLITE = "sqlite";
 	public static final String DB_TYPE_WEB_SERVICE = "webservice";
+	public static final String DB_TYPE_MYSQL = "mysql";
+
 	public static final String DB_EMPTY_ROW_VERSION = "0";
 
 	public static int DB_QEURY_LIMIT_DB = 1800;

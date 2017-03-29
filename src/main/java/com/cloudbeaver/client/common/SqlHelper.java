@@ -58,7 +58,11 @@ public class SqlHelper {
         	driverClassName = "org.sqlite.JDBC";
         } else if (dbBean.getDbUrl().startsWith("jdbc:postgresql")){
         	driverClassName = "org.postgresql.Driver";
-        }
+        } else if (dbBean.getDbUrl().startsWith("jdbc:mysql")){
+        	driverClassName = "com.mysql.cj.jdbc.Driver";
+        } else {
+			throw new ClassNotFoundException("no driver class for DBType, DBUrl:" + dbBean.getDbUrl());
+		}
 
         logger.debug(dbBean.getDb() + "," + driverClassName + "," + dbBean.getDbUrl());
 

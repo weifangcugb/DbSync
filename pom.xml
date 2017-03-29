@@ -119,6 +119,11 @@
 -->
     	</dependency>
     	<dependency>
+		    <groupId>mysql</groupId>
+		    <artifactId>mysql-connector-java</artifactId>
+		    <version>6.0.5</version>
+		</dependency>
+    	<dependency>
    			<groupId>org.xerial</groupId>
         	<artifactId>sqlite-jdbc</artifactId>
 <!-- version can't be 3.8.7, wrong order for 'order by da_jbxx.xgsj(numeric)' -->

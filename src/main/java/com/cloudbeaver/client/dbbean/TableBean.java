@@ -264,6 +264,7 @@ public class TableBean implements Serializable{
                 		+ " order by " + table + "." + rowVersionColumn + " limit " + sqlLimitNum;
 
 			case CommonUploader.DB_TYPE_SQL_ORACLE:
+			case CommonUploader.DB_TYPE_MYSQL:
 				return "SELECT " + selectColumnClause() + fromClause() + whereClause(rowVersionColumn, dbType, sqlLimitNum)
 		                + " order by " + table + "." + rowVersionColumn;
 			default:
@@ -289,8 +290,8 @@ public class TableBean implements Serializable{
 	}
 
     private String whereClause(String rowVersionColumn, String dbType, int sqlLimitNum) {
-//    	only used by oracle
-		if (dbType.equals(CommonUploader.DB_TYPE_SQL_ORACLE)) {
+//    	only used by oracle or mysql
+		if (dbType.equals(CommonUploader.DB_TYPE_SQL_ORACLE) || dbType.equals(CommonUploader.DB_TYPE_MYSQL)) {
 			if (isXFZXFlowTable(dbType)) {
 				return String.format(" WHERE %s to_number(to_char(%s.%s, '" + ORACLE_DATA_FORMAT + "')) > %s AND to_number(to_char(%s.%s, '" + ORACLE_DATA_FORMAT + "')) <= %s", 
 						(join !=null && key != null)? key + " AND ":"", table, rowVersionColumn, xgsj, table, rowVersionColumn, SqlHelper.nextOracleDateTime(xgsj, sqlLimitNum));
@@ -355,9 +356,6 @@ public class TableBean implements Serializable{
 		if (isXFZXDateSystem(type, rowversionColumn)) {/*hack here*/
 			return "select max(to_number(to_char(" + rowversionColumn +",'" + ORACLE_DATA_FORMAT + "'))) as " + rowversionColumn + " from " + table;
 		}
-//		else if (isXFZXFlowTable(type, rowversionColumn)) {/*hack here*/
-//			return "select max(to_number(" + rowversionColumn + ")) as " + rowversionColumn + " from " + table;
-//		}
 		else{
 			return "select max(" + rowversionColumn +") as " + rowversionColumn + " from " + table;
 		}
@@ -368,9 +366,6 @@ public class TableBean implements Serializable{
 		if (isXFZXDateSystem(type, rowversionColumn)) {/*hack here*/
 			columnExp = "to_number(to_char(" + rowversionColumn + ", '" + ORACLE_DATA_FORMAT  + "'))";
 		}
-//		else if (isXFZXFlowTable(type, rowversionColumn)) {/*hack here*/
-//			columnExp = "to_number(" + rowversionColumn + ")";
-//		}
 
 		return String.format("select min(%s) as %s from %s where %s > %s", columnExp, rowversionColumn, table, columnExp, xgsj);
 	}
