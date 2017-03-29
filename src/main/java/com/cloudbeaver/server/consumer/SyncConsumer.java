@@ -56,7 +56,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 	protected static final boolean STOR_IN_LOCAL = false;
 	protected static final boolean UPLOAD_FILE_TO_WEB_SERVER = true;
 
-	protected static final int MAX_POST_RETRY_TIME = 20;
+	protected static final int MAX_POST_RETRY_TIME = 70;
 
 	List<KafkaStream<byte[], byte[]>> streams = null;
 	ConsumerConnector consumer = null;
@@ -208,7 +208,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 							logger.error("invalid json message, errMsg:" + e.getMessage() + " key:" + msgKey + " msg:" + msgBody);
 							if (e instanceof ConnectException || BeaverUtils.isHttpServerInternalError(e.getMessage())) {
 //								can't connect to server, or server return internal error, retry again
-								BeaverUtils.sleep(300);
+								BeaverUtils.sleep(2000);
 							}else {
 //								other response code, don't retry
 								break;
