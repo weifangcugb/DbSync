@@ -74,14 +74,14 @@ public class DbUploaderTest extends DbUploader{
 		//start the mocked SqlServer
 //		mocksqlserver.
 		//start the mocked web server
-		mockServer.start(false);
+//		mockServer.start(false);
 	}
 
 //	@AfterClass
 	@After
 //	@Ignore
 	public void tearDownServers(){
-		mockServer.stop();
+//		mockServer.stop();
 	}
 
 	@Override

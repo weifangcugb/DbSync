@@ -82,7 +82,7 @@ public class PostDataServlet extends HttpServlet{
 			System.out.println("dbName = " + dbName);
 			Assert.assertTrue("this database or file doesn't exists", DBName2DBType.containsKey(dbName));
 			//write data to local
-	    	String fileName = DATABASE_FILE_PREFIX + dbName + "_" + tName;
+	    	String fileName = DATABASE_FILE_PREFIX + dbName + "/" + dbName + "_" + tName;
 	    	RandomAccessFile file = new RandomAccessFile(fileName, "rw");
 			file.seek(file.length());
 			file.write((content.substring(1, content.length()-1) + ",").getBytes());
