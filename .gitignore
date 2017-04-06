@@ -6,3 +6,4 @@ logs/
 .project
 dbsync.iml
 conf_test/
+deploy/

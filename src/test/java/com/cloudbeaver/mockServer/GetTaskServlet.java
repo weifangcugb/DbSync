@@ -367,6 +367,14 @@ public class GetTaskServlet extends HttpServlet{
 			+ "]}"
 			+ "]}";
 
+	private static String bookDBInitJson = "{\"databases\":["
+			+ "{\"db\":\"LIBDB1\",\"rowversion\":\"ID\",\"tables\":[{\"table\":\"tb_access_log\",\"join\":[\"tb_book\"],\"key\":\"resource_type = 1 and resource_id = tb_book.id\",\"ID\":\"0\"}]},"
+			+ "{\"db\":\"LIBDB2\",\"rowversion\":\"ID\",\"tables\":[{\"table\":\"tb_access_log\",\"join\":[\"tb_magazine\"],\"key\":\"resource_type = 2 and resource_id = tb_magazine.id\",\"ID\":\"0\"}]},"
+			+ "{\"db\":\"LIBDB3\",\"rowversion\":\"ID\",\"tables\":[{\"table\":\"tb_access_log\",\"join\":[\"tb_paper\"],\"key\":\"resource_type = 3 and resource_id = tb_paper.id\",\"ID\":\"0\"}]},"
+			+ "{\"db\":\"LIBDB4\",\"rowversion\":\"ID\",\"tables\":[{\"table\":\"tb_access_log\",\"join\":[\"tb_course\"],\"key\":\"resource_type = 5 and resource_id = tb_course.id\",\"ID\":\"0\"}]},"
+			+ "{\"db\":\"LIBDB5\",\"rowversion\":\"ID\",\"tables\":[{\"table\":\"tb_access_log\",\"join\":[\"tb_lectures\"],\"key\":\"resource_type = 6 and resource_id = tb_lectures.id\",\"ID\":\"0\"}]}"
+			+ "]}";
+
 	public static String AllDBInitJsonForMockTest = "{\"databases\":["
 //			+ "{\"db\":\"SqlServerTest\",\"rowversion\":\"ID\",\"tables\":["
 //			+ "{\"table\":\"users\",\"ID\":\"0\"},"
@@ -440,7 +448,7 @@ public class GetTaskServlet extends HttpServlet{
 		}
 
     	System.out.println("start get task succeed!");
-    	
+
     	clientId = url.substring(tableIdIndex + 1);
     	String json;
     	if (clientId.endsWith("db") || clientId.endsWith("documentfile")) {
@@ -457,7 +465,8 @@ public class GetTaskServlet extends HttpServlet{
 
     	resp.setCharacterEncoding("utf-8");
     	PrintWriter pw = resp.getWriter();
-        pw.write(json);
+//        pw.write(json);
+    	pw.write(bookDBInitJson);
         pw.flush();
         pw.close();
         System.out.println("get task succeed!");
