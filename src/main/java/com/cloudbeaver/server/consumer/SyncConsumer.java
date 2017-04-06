@@ -4,13 +4,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
@@ -38,6 +41,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 	protected static final String CONF_UPLOAD_FILE_URL = "upload.file.url";
 	protected static final String CONF_UPLOAD_DB_URL = "upload.db.url";
 	protected static final String CONF_HEARTBEAT_URL = "upload.heartbeat.url";
+	protected static final String CONF_ALLOWED_DBS = "allowed.dbs";
 	protected static final String LOCAL_FILE_STORED_PATH = "/tmp/";
 	protected static final String JSON_FILED_HDFS_DB = "hdfs_db";
 	protected static final String JSON_FILED_HDFS_CLIENT = "hdfs_client";
@@ -67,21 +71,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 	protected String dbUploadUrl = null;
 	protected String heartBeatUrl = null;
 
-	public static Map<String, String> DBName2DBType = new HashMap<String, String>();
-	{
-		DBName2DBType.put("DocumentDB", "sqlserver");
-		DBName2DBType.put("MeetingDB", "webservice");
-		DBName2DBType.put("TalkDB", "webservice");
-		DBName2DBType.put("PrasDB", "webservice");
-		DBName2DBType.put("JfkhDB", "oracle");
-		DBName2DBType.put("DocumentFiles", "file");
-		DBName2DBType.put("VideoMeetingDB", "sqlserver");
-		DBName2DBType.put("HelpDB", "sqlserver");
-		DBName2DBType.put("XfzxDB", "oracle");
-		DBName2DBType.put("XfzxDB1", "oracle");
-		DBName2DBType.put("XfzxDB2", "oracle");
-		DBName2DBType.put("XfzxDB3", "oracle");
-	}
+	public static volatile List<String> allowedDBs = new ArrayList<>();
 
 	@Override
 	protected void setup() throws BeaverFatalException {
@@ -103,6 +93,28 @@ public class SyncConsumer extends FixedNumThreadPool{
 				heartBeatUrl = conf.get(CONF_HEARTBEAT_URL);
 			}else {
 				throw new BeaverFatalException("FATAL: no conf " + CONF_HEARTBEAT_URL + " confFile:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
+			}
+
+			if (conf.containsKey(CONF_ALLOWED_DBS)) {
+				String[] dbs = conf.get(CONF_ALLOWED_DBS).split(",");
+				for (String db : dbs) {
+					allowedDBs.add(db);
+				}
+
+				new Thread(() ->{
+					while(isRunning()){
+						try{
+							Map<String, String> confMap = BeaverUtils.loadConfig(CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
+							allowedDBs = Arrays.asList(conf.get(CONF_ALLOWED_DBS).split(","));
+							logger.info("load new allowed dbs: " + allowedDBs.stream().collect(Collectors.joining(",")));
+						}catch(IOException e) {
+							BeaverUtils.printLogExceptionWithoutSleep(e, "load allowed dbs failed");
+						}
+						BeaverUtils.sleep(2 * 60 * 1000);
+					}
+				}).start();
+			}else {
+				throw new BeaverFatalException("FATAL: no conf " + CONF_ALLOWED_DBS + " confFile:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
 
 			if (!conf.containsKey(ZOOKEEPER_CONNECT)) {
@@ -139,13 +151,13 @@ public class SyncConsumer extends FixedNumThreadPool{
     			MessageAndMetadata<byte[] , byte[]> mam = iter.next();
     			byte[] key = mam.key();
     			byte[] msg = mam.message();
-    			
+
     			int keyStartIndex = 0;
     			if (USE_BEAVER_KAFKA) {
 					int tokenLen = msg[0];
 					keyStartIndex += tokenLen + 1;
 				}
-    			
+
     			int keyLen = ByteBuffer.wrap(msg, keyStartIndex, 4).getInt();
     			String msgKey = new String(msg, keyStartIndex + 4, keyLen);
     			String msgBody = "";
@@ -178,7 +190,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 					int tryTime = 0;
 					for (; tryTime < MAX_POST_RETRY_TIME; tryTime++) {
 						try {
-							if (DBName2DBType.containsKey(dbName)) {
+							if (allowedDBs.contains(dbName)) {
 								if (!dbName.equals(CommonUploader.TASK_FILEDB_NAME)) {
 //									upload db data to web server
 									BeaverUtils.doPost(dbUploadUrl, msgBody);

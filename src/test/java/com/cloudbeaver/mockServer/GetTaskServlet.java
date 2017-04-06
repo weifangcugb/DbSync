@@ -37,8 +37,8 @@ public class GetTaskServlet extends HttpServlet{
 	public static long fiveDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 5 - 8 * 3600 * 1000;
 	public static long fourDayBefore = (now - now % (24 * 3600 * 1000))- 24 * 3600 * 1000 * 4 - 8 * 3600 * 1000;
 	public static String fourDayBeforeString = BeaverUtils.timestampToDateString(fourDayBefore);
-	public static Map<String, String> map = new HashMap<String, String>();
 
+	public static Map<String, String> map = new HashMap<String, String>();
 	{
 		map.put("DocumentDB", "sqlserver");
 		map.put("MeetingDB", "webservice");
