@@ -377,7 +377,7 @@ public class DbUploader extends CommonUploader {
 			try {
 				StringBuilder sb = null;
 				if (dbBean.getDb().equals(TALKDB2)) {
-					sb = new StringBuilder(BeaverUtils.doGet(getDBDataServerUrl2(dbBean, tableBean)));
+					sb = new StringBuilder(BeaverUtils.doGet(getDBDataServerUrl2(webUrl, tableBean)));
 				} else {
 					sb = getDataOfSomeDay(webUrl, dbBean, tableBean);
 				}
@@ -441,8 +441,7 @@ public class DbUploader extends CommonUploader {
 		throw new BeaverTableIsFullException();
 	}
 
-	private String getDBDataServerUrl2(DatabaseBean dbBean, TableBean tableBean) {
-		String webUrl = dbBean.getDbUrl();
+	private String getDBDataServerUrl2(String webUrl, TableBean tableBean) {
 		webUrl += "/p/" + (tableBean.getCurrentPageNum() + 1) + "/timeStart/" + BeaverUtils.timestampToDateString(tableBean.getXgsj()) 
 			+ "/timeEnd/" + BeaverUtils.timestampToDateString(Long.parseLong(tableBean.getXgsj()) + WEB_DB_UPDATE_INTERVAL);
 		logger.debug("get data from TaklDB2, webUrl:" + webUrl);
