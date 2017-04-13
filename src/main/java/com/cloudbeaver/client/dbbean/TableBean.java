@@ -35,6 +35,8 @@ public class TableBean implements Serializable{
     @JsonProperty("FLOWSN")
     private String flowSn;/*flowsn*/
     private String flowid;
+    @JsonProperty("create_time")
+    private String createTime;
 
 	private List<TransformOp> replaceOp = new ArrayList();
 
@@ -94,7 +96,6 @@ public class TableBean implements Serializable{
 
 	public void setmDate(String mDate) {
 		this.mDate = mDate;
-		logger.info("mdate:" + mDate + " xgsj:" + xgsj);
 		xgsj = mDate;
 	}
 
@@ -123,6 +124,15 @@ public class TableBean implements Serializable{
 
 	public void setFlowid(String flowid) {
 		this.flowid = flowid;
+	}
+
+	public String getCreateTime() {
+		return createTime;
+	}
+
+	public void setCreateTime(String createTime) {
+		this.createTime = createTime;
+		xgsj = createTime;
 	}
 
 	public void moveToNextXgsj(int interval) throws BeaverTableIsFullException {

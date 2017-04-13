@@ -25,6 +25,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -416,6 +417,12 @@ public class BeaverUtils {
 	public static String timestampToDateString(long timestamp) {
 		Date date = new Date(timestamp);
 		return sdf.format(date);
+	}
+
+	public static long DateToTimestamp(String date) throws ParseException {
+//		2015-07-13 15:37:03
+		SimpleDateFormat sdf2=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		return sdf2.parse(date).getTime();
 	}
 
 	public static boolean charIsNumber(char tmpChar) {

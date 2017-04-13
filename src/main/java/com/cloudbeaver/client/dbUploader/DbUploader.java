@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -139,7 +140,7 @@ public class DbUploader extends CommonUploader {
 					}
 
 					if (dbType.equals(DB_TYPE_WEB_SERVICE) && dbBean.getDb().equals("TalkDB2")) {
-						dbBean.getTables().stream().forEach(table -> table.setXgsj("1420041600000"));//2015-01-01
+						dbBean.getTables().stream().forEach(tableBean -> {if(tableBean.getXgsj().equals("0")){tableBean.setXgsj("1420041600000");}});
 					}
 
 					if (dbType.equals(DB_TYPE_SQL_ORACLE) && dbBean.getDb().startsWith("XfzxDB")) {
@@ -299,8 +300,7 @@ public class DbUploader extends CommonUploader {
 						dbData = getDataFromSqlServer(dbBean, tableBean);
 					} else if (dbBean.getType().equals(DB_TYPE_SQL_ORACLE)) {
 						dbData = getDataFromOracle(dbBean, tableBean);
-					} else if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE)
-							&& dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)) {
+					} else if (dbBean.getType().equals(DB_TYPE_WEB_SERVICE)) {//&& dbBean.getRowversion().equals(DB_ROW_VERSION_START_TIME)
 						dbData = getDataFromWebService(dbBean, tableBean);
 					} else if (dbBean.getType().equals(DB_TYPE_MYSQL)) {
 						dbData = getDataFromMysql(dbBean, tableBean);
@@ -377,7 +377,7 @@ public class DbUploader extends CommonUploader {
 			try {
 				StringBuilder sb = null;
 				if (dbBean.getDb().equals(TALKDB2)) {
-					sb = new StringBuilder(BeaverUtils.doGet(getDBDataServerUrl2(webUrl, tableBean)));
+					sb = new StringBuilder(BeaverUtils.doGet(getDBDataServerUrl2(webUrl, tableBean)).replaceAll("\\/", "/"));
 				} else {
 					sb = getDataOfSomeDay(webUrl, dbBean, tableBean);
 				}
@@ -413,12 +413,17 @@ public class DbUploader extends CommonUploader {
 						+ tableBean.getTotalPageNum());
 
 				// change webquery data to beaver format
+
 				JSONObject jsonObject = JSONObject.fromObject(sb.toString());
+				if (dbBean.getDb().equals(TALKDB2)) {
+					jsonObject = jsonObject.getJSONObject("message");
+				}				
 				String recordsField= "records";
 				if (dbBean.getDb().equals(TALKDB2)) {
 					recordsField = "content";
 				}
 				JSONArray records = jsonObject.getJSONArray(recordsField);
+				logger.debug("data:" + records);
 				for (int i = 0; i < records.size(); i++) {
 					JSONObject record = (JSONObject) records.get(i);
 					record.element("hdfs_prison", prisonId);
