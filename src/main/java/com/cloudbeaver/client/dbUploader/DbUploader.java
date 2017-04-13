@@ -39,10 +39,12 @@ public class DbUploader extends CommonUploader {
 
 	private BigDecimal DB_QUERY_LIMIT_DB_AS_DECIMAL = new BigDecimal(DB_QEURY_LIMIT_DB);
 
+	private static final String TALKDB2 = "TalkDB2";
+
 	private static final int WEB_DB_UPDATE_INTERVAL = 24 * 3600 * 1000;
 	private static final String DB_ROW_VERSION_START_TIME = "starttime";
 
-	private static final int MAX_RETRY_SEND_TIMES = 5;
+	private static final int MAX_RETRY_SEND_TIMES = 30;
 
 	private static Map<String, String> appKeySecret = new HashMap<String, String>();
 
@@ -161,7 +163,7 @@ public class DbUploader extends CommonUploader {
 				/*
 				 * hack here uion all Youdi webservice db-beans to one db-bean
 				 */
-				if (dbType.equals(DB_TYPE_WEB_SERVICE)) {
+				if (dbType.equals(DB_TYPE_WEB_SERVICE) && (dbBean.getDb().equals("MeetingDB") || dbBean.getDb().equals("TalkDB") || dbBean.getDb().equals("PrasDB"))) {
 					if (uionWebServerBean == null) {
 						uionWebServerBean = dbBean;
 					} else {
@@ -352,8 +354,11 @@ public class DbUploader extends CommonUploader {
 				// change back 'xgsj'
 				// tableBean.rollBackXgsj();
 				BeaverUtils.printLogExceptionAndSleep(e,
-						"post json to flume server failed, server:" + conf.get(CommonUploader.CONF_FLUME_SERVER_URL),
-						500);
+						"post json to flume server failed, retried:" + i + " server:" + conf.get(CommonUploader.CONF_FLUME_SERVER_URL),
+						1000);
+				if (i == MAX_RETRY_SEND_TIMES - 1) {
+					logger.error("post json to flume server failed, drop it! " + sb.toString());
+				}
 			}
 		}
 	}
@@ -364,10 +369,14 @@ public class DbUploader extends CommonUploader {
 		logger.debug("requet one weburl, webUrl:" + webUrl);
 
 		while ((System.currentTimeMillis() - Long.parseLong(tableBean.getXgsj())) > WEB_DB_UPDATE_INTERVAL) {
-			// loop until get some data from web server, or until today's
-			// 00:00:00
+			// loop until get some data from web server, or until today's 00:00:00
 			try {
-				StringBuilder sb = getDataOfSomeDay(webUrl, dbBean, tableBean);
+				StringBuilder sb = null;
+				if (dbBean.getDb().equals(TALKDB2)) {
+					sb = new StringBuilder(BeaverUtils.doGet(getDBDataServerUrl2(dbBean, tableBean)));
+				} else {
+					sb = getDataOfSomeDay(webUrl, dbBean, tableBean);
+				}
 
 				int totalPageThisDay = BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":");
 				if (totalPageThisDay == -1) {
@@ -383,7 +392,11 @@ public class DbUploader extends CommonUploader {
 				}
 
 				tableBean.setTotalPageNum(totalPageThisDay);
-				tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, "\"pageNo\":"));
+				String pageNumField = "\"pageNo\":";
+				if (dbBean.getDb().equals(TALKDB2)) {
+					pageNumField = "\"nowPage\":";
+				}
+				tableBean.setCurrentPageNum(BeaverUtils.getNumberFromStringBuilder(sb, pageNumField));
 				if (tableBean.getTotalPageNum() == tableBean.getCurrentPageNum()) {
 					// has get all of data in this day, or there is no data in
 					// this day, move to next day
@@ -397,7 +410,11 @@ public class DbUploader extends CommonUploader {
 
 				// change webquery data to beaver format
 				JSONObject jsonObject = JSONObject.fromObject(sb.toString());
-				JSONArray records = jsonObject.getJSONArray("records");
+				String recordsField= "records";
+				if (dbBean.getDb().equals(TALKDB2)) {
+					recordsField = "content";
+				}
+				JSONArray records = jsonObject.getJSONArray(recordsField);
 				for (int i = 0; i < records.size(); i++) {
 					JSONObject record = (JSONObject) records.get(i);
 					record.element("hdfs_prison", prisonId);
@@ -418,6 +435,13 @@ public class DbUploader extends CommonUploader {
 
 		// can't get any data since some day
 		throw new BeaverTableIsFullException();
+	}
+
+	private String getDBDataServerUrl2(DatabaseBean dbBean, TableBean tableBean) {
+		String webUrl = dbBean.getDbUrl();
+		webUrl += "/p/" + (tableBean.getCurrentPageNum() + 1) + "/timeStart/" + BeaverUtils.timestampToDateString(tableBean.getXgsj()) 
+			+ "/timeEnd/" + BeaverUtils.timestampToDateString(Long.parseLong(tableBean.getXgsj()) + WEB_DB_UPDATE_INTERVAL);
+		return webUrl;
 	}
 
 	private StringBuilder getDataOfSomeDay(String webUrl, DatabaseBean dbBean, TableBean tableBean)

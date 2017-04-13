@@ -13,7 +13,6 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
