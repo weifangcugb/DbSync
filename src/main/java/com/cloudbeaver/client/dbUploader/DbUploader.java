@@ -138,6 +138,10 @@ public class DbUploader extends CommonUploader {
 						}
 					}
 
+					if (dbType.equals(DB_TYPE_WEB_SERVICE) && dbBean.getDb().equals("TalkDB2")) {
+						dbBean.getTables().stream().forEach(table -> table.setXgsj("1420041600000"));//2015-01-01
+					}
+
 					if (dbType.equals(DB_TYPE_SQL_ORACLE) && dbBean.getDb().startsWith("XfzxDB")) {
 						for (TableBean tableBean : dbBean.getTables()) {
 							if (isXFZXDateColumn(dbBean, tableBean)) {
@@ -441,6 +445,7 @@ public class DbUploader extends CommonUploader {
 		String webUrl = dbBean.getDbUrl();
 		webUrl += "/p/" + (tableBean.getCurrentPageNum() + 1) + "/timeStart/" + BeaverUtils.timestampToDateString(tableBean.getXgsj()) 
 			+ "/timeEnd/" + BeaverUtils.timestampToDateString(Long.parseLong(tableBean.getXgsj()) + WEB_DB_UPDATE_INTERVAL);
+		logger.debug("get data from TaklDB2, webUrl:" + webUrl);
 		return webUrl;
 	}
 
