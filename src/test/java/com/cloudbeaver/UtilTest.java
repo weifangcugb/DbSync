@@ -1,5 +1,6 @@
 package com.cloudbeaver;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -93,18 +94,34 @@ public class UtilTest {
 	}
 
 	@Test
-	public void testJson() {
-		JSONObject jObject = new JSONObject();
-		jObject.put("k2", "v2");
-		jObject.element("k2", "v4");
-//		jObject.put("k2", "v3");
-		jObject.accumulate("k1", "v1");
-		jObject.accumulate("k1", "v4");
-		jObject.put("k3", "v3");
-		jObject.put("k1", "v7");
-		jObject.accumulate("k1", "v8");
-		jObject.put("k5", "v5");
-		System.out.println("object:" + jObject);
+	public void testJson() throws IOException {
+//		JSONObject jObject = new JSONObject();
+//		jObject.put("k2", "v2");
+//		jObject.element("k2", "v4");
+////		jObject.put("k2", "v3");
+//		jObject.accumulate("k1", "v1");
+//		jObject.accumulate("k1", "v4");
+//		jObject.put("k3", "v3");
+//		jObject.put("k1", "v7");
+//		jObject.accumulate("k1", "v8");
+//		jObject.put("k5", "v5");
+//		System.out.println("object:" + jObject);
+
+//		String json = "{\"encrypt\":false,\"success\":true,\"errorCode\":\"\",\"message\":{\"totalPages\":1,\"totalRows\":1,\"nowPage\":1,\"listRows\":18,"
+//				+ "\"content\":[{\"id\":\"124\",\"prisoner_id\":\"6402506830\",\"police_id\":\"6404322\",\"file_name\":\"/Public/Uploads/Files/5513bc4f6ec7c.wav\","
+//				+ "\"type\":\"1\",\"create_time\":\"2015-03-26 15:59:11\",\"length\":\"2\",\"reason\":\"\u638c\u63e1\u57fa\u672c\u60c5\u51b5\","
+//				+ "\"result\":\"\u8f83\u597d\",\"detail\":null,\"jianqu\":\"\u7b2c\u4e00\u76d1\u533a\",\"fenjianqu\":\"\",\"count\":\"1\","
+//				+ "\"policeName\":\"\u5218\u6743\u80dc\",\"prisonerName\":\"\u9a6c\u6797\"}]}}";
+		String json = BeaverUtils.doGet("http://10.173.20.252/prison/content/page/type/1/p/1/timeStart/2015-03-26/timeEnd/2015-03-27").replaceAll("\\\\/", "/");
+		StringBuilder sb = new StringBuilder(json);
+		System.out.println((int)sb.charAt(0));
+		System.out.println(sb.charAt(1));
+		System.out.println((byte)'{');
+		JSONObject jsonObject = JSONObject.fromObject(sb.toString().substring(1));
+		System.out.println(jsonObject);
+
+		int totalPageThisDay = BeaverUtils.getNumberFromStringBuilder(sb, "\"totalPages\":");
+		System.out.println(totalPageThisDay);
 	}
 
 	@Test
@@ -133,14 +150,15 @@ public class UtilTest {
 		sync.sayHi();
 	}
 
-	public static void main(String[] args) throws NoSuchAlgorithmException, ParseException {
+	public static void main(String[] args) throws NoSuchAlgorithmException, ParseException, IOException {
 		UtilTest uTest = new UtilTest();
 //		uTest.testAppSign();
 //		uTest.testBCrypt();
 //		uTest.testSync();
 //		uTest.testJwt();
 //		uTest.testDate();
-		uTest.testLong();
+//		uTest.testLong();
+		uTest.testJson();
 	}
 
 	private void testLong() {

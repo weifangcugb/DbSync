@@ -377,7 +377,8 @@ public class DbUploader extends CommonUploader {
 			try {
 				StringBuilder sb = null;
 				if (dbBean.getDb().equals(TALKDB2)) {
-					sb = new StringBuilder(BeaverUtils.doGet(getDBDataServerUrl2(webUrl, tableBean)).replaceAll("\\/", "/"));
+					String page = BeaverUtils.doGet(getDBDataServerUrl2(webUrl, tableBean));
+					sb = new StringBuilder(page.substring(page.indexOf('{')).replaceAll("\\\\/", "/"));
 				} else {
 					sb = getDataOfSomeDay(webUrl, dbBean, tableBean);
 				}
@@ -409,11 +410,10 @@ public class DbUploader extends CommonUploader {
 				}
 
 				logger.info("web query finished, table:" + tableBean.getTable() + " xgsj:" + tableBean.getXgsj()
-						+ " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:"
-						+ tableBean.getTotalPageNum());
+						+ " currentPage:" + tableBean.getCurrentPageNum() + " totalPage:" + tableBean.getTotalPageNum());
 
 				// change webquery data to beaver format
-
+				logger.debug("get data from webservice, data:\n" + sb);
 				JSONObject jsonObject = JSONObject.fromObject(sb.toString());
 				if (dbBean.getDb().equals(TALKDB2)) {
 					jsonObject = jsonObject.getJSONObject("message");
