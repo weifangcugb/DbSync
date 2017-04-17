@@ -37,6 +37,8 @@ public class TableBean implements Serializable{
     private String flowid;
     @JsonProperty("create_time")
     private String createTime;
+    @JsonProperty("RID")
+    private String rid;
 
 	private List<TransformOp> replaceOp = new ArrayList();
 
@@ -118,12 +120,22 @@ public class TableBean implements Serializable{
 		return id;
 	}
 
+	public String getRid() {
+		return rid;
+	}
+
+	public void setRid(String rid) {
+		this.rid = rid;
+		xgsj = rid;
+	}
+
     public String getFlowid() {
 		return flowid;
 	}
 
 	public void setFlowid(String flowid) {
 		this.flowid = flowid;
+		xgsj = flowid;
 	}
 
 	public String getCreateTime() {

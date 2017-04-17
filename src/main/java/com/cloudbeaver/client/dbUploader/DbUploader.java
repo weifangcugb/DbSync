@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -168,14 +167,14 @@ public class DbUploader extends CommonUploader {
 				/*
 				 * hack here uion all Youdi webservice db-beans to one db-bean
 				 */
-				if (dbType.equals(DB_TYPE_WEB_SERVICE) && (dbBean.getDb().equals("MeetingDB") || dbBean.getDb().equals("TalkDB") || dbBean.getDb().equals("PrasDB"))) {
-					if (uionWebServerBean == null) {
-						uionWebServerBean = dbBean;
-					} else {
-						uionWebServerBean.getTables().addAll(dbBean.getTables());
-					}
-					continue;
-				}
+//				if (dbType.equals(DB_TYPE_WEB_SERVICE) && (dbBean.getDb().equals("MeetingDB") || dbBean.getDb().equals("TalkDB") || dbBean.getDb().equals("PrasDB"))) {
+//					if (uionWebServerBean == null) {
+//						uionWebServerBean = dbBean;
+//					} else {
+//						uionWebServerBean.getTables().addAll(dbBean.getTables());
+//					}
+//					continue;
+//				}
 				newDatabaseBeans.add(dbBean);
 			}
 		}

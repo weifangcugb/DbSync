@@ -431,7 +431,7 @@ public class BeaverUtils {
 
 	public static int getNumberFromStringBuilder(StringBuilder sb, String prefix) throws NumberFormatException {
 		int startIndex = sb.indexOf(prefix) + 1;
-		if (startIndex != -1) {
+		if (startIndex != 0) {
 			while(!BeaverUtils.charIsNumber(sb.charAt(startIndex)) && startIndex < sb.length()){
 				startIndex ++;
 			}

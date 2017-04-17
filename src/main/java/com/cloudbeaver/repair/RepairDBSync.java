@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -58,6 +61,8 @@ public class RepairDBSync extends SyncConsumer{
 		matchers.add(new ErrorMsgMatcher("get db data,.*json:(.*)", false));
 		matchers.add(new ErrorMsgMatcher("post data error, retry too many times, drop it\\. msg:(.*)", false));
 		matchers.add(new ErrorMsgMatcher("invalid json message, .* msg:(.*)", false));
+		matchers.add(new ErrorMsgMatcher("unknow db type, dbName:.* msg:(.*)", false));
+		matchers.add(new ErrorMsgMatcher("invalid json message, errMsg:Connection refused key:.* msg:(.*)", false));
 
 		RepairDBSync dbSync = new RepairDBSync();
 		dbSync.repair(matchers);
@@ -118,6 +123,15 @@ public class RepairDBSync extends SyncConsumer{
 			}else {
 				throw new BeaverFatalException("FATAL: no conf " + CONF_HEARTBEAT_URL + " confFile:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
 			}
+
+			if (conf.containsKey(CONF_ALLOWED_DBS)) {
+				String[] dbs = conf.get(CONF_ALLOWED_DBS).split(",");
+				for (String db : dbs) {
+					allowedDBs.add(db);
+				}
+			}else {
+				throw new BeaverFatalException("FATAL: no conf " + CONF_ALLOWED_DBS + " confFile:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME);
+			}
 		} catch (IOException e) {
 			BeaverUtils.PrintStackTrace(e);
 			logger.fatal("load config failed, please restart process. confName:" + CommonUploader.CONF_KAFKA_CONSUMER_FILE_NAME + " msg:" + e.getMessage());
@@ -128,6 +142,7 @@ public class RepairDBSync extends SyncConsumer{
 	private void repairMsg(String msgBody) throws JsonProcessingException, IOException {
 		ObjectMapper oMapper = new ObjectMapper();
 		JsonNode root= oMapper.readTree(msgBody);
+		msgBody = msgBody.replaceAll("\\\n", "").replaceAll("\\\r", "");
 		if (root.isArray() && root.get(0) != null && (root.get(0).has(SyncConsumer.JSON_FILED_HDFS_DB))) {
 			if (root.get(0).has(CommonUploader.REPORT_TYPE) && root.get(0).get(CommonUploader.REPORT_TYPE).asText().equals(CommonUploader.REPORT_TYPE_HEARTBEAT)) {
 				logger.debug("heart beat data, msg:" + msgBody);
@@ -169,7 +184,7 @@ public class RepairDBSync extends SyncConsumer{
 						logger.info("repair one msg, Num:" + ++repairNum);
 //						logger.debug("repair one msg, msgBody:" + msgBody);
 					}else {
-						logger.error("unknow db type," + " dbName:" + dbName + " msg:" + msgBody);
+						logger.error("repaired failed, unknow db type," + " dbName:" + dbName + " msg:" + msgBody);
 					}
 
 					break;
@@ -186,7 +201,7 @@ public class RepairDBSync extends SyncConsumer{
 				}
 			}
 
-			if (tryTime == SyncConsumer.MAX_POST_RETRY_TIME) {
+			if (tryTime == SyncConsumer.MAX_POST_RETRY_TIME - 1) {
 				logger.error("repair msg failed because of too many retries. msg:" + msgBody);
 			}
 		}else{

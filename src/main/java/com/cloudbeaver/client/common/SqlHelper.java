@@ -40,7 +40,7 @@ public class SqlHelper {
 
                     return (Connection) conMap.get(dbBean.getDb());
             	}catch (SQLException | ClassNotFoundException e) {
-            		BeaverUtils.printLogExceptionAndSleep(e, "can't get connection", 5000);
+            		BeaverUtils.printLogExceptionAndSleep(e, "can't get connection, dbName:" + dbBean.getDb() + " url:" + dbBean.getDbUrl(), 5000);
 				}
 			}
 
