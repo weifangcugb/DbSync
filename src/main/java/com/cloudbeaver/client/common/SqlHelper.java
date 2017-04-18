@@ -233,7 +233,7 @@ public class SqlHelper {
 				}
 
 				for (int i = 0; i < jArray.size(); i++) {
-					JSONObject jsonObj = subArray.getJSONObject(i);
+					JSONObject jsonObj = jArray.getJSONObject(i);
 					if (subTableMap.containsKey(jsonObj.getString(versionColumn))) {
 						jsonObj.put(subtables.stream().collect(Collectors.joining("_")), subTableMap.get(jsonObj.getString(versionColumn)));
 					}
