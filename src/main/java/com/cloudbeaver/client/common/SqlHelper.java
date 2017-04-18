@@ -31,6 +31,8 @@ public class SqlHelper {
      */
     private static Hashtable<String, Connection> conMap = new Hashtable<String, Connection>();
 
+	private static int ORACLE_SUBKEY_MAX_SIZE = 1000;
+
     public static Connection getCachedConnKeepTrying(DatabaseBean dbBean) throws BeaverFatalException {
             while (FixedNumThreadPool.isRunning()) {
             	try{
@@ -215,33 +217,45 @@ public class SqlHelper {
 			}
 
             if (subKeys.size() > 0) {
-				List<String> subtables = tableBean.getJoin_subtable();
-				String subtableSql = tableBean.getSubTableSqlString(dbBean, tableBean, subtables, subKeys);
-				JSONArray subArray = new JSONArray();
-				execSqlQuery(subtableSql, dbBean, subArray);
-
-				Map<String, JSONArray> subTableMap = new HashMap<>();
-				for (int i = 0; i < subArray.size(); i++) {
-					JSONObject jsonObj = subArray.getJSONObject(i);
-					if (subTableMap.containsKey(jsonObj.getString(versionColumn))) {
-						subTableMap.get(jsonObj.getString(versionColumn)).add(jsonObj);
-					}else{
-						JSONArray jArray2 = new JSONArray();
-						jArray2.add(jsonObj);
-						subTableMap.put(jsonObj.getString(versionColumn), jArray2);
+            	if (dbBean.getType().equals(CommonUploader.DB_TYPE_SQL_ORACLE) && subKeys.size() > ORACLE_SUBKEY_MAX_SIZE ) {
+					for (int from = 0; from < subKeys.size(); from += ORACLE_SUBKEY_MAX_SIZE) {
+						int end = from + ORACLE_SUBKEY_MAX_SIZE > subKeys.size() ? subKeys.size() : from + ORACLE_SUBKEY_MAX_SIZE;
+						List<String> subKeys1 = subKeys.subList(from, end);
+						addSubTableData(dbBean, tableBean, subKeys1, versionColumn, jArray);
 					}
-				}
-
-				for (int i = 0; i < jArray.size(); i++) {
-					JSONObject jsonObj = jArray.getJSONObject(i);
-					if (subTableMap.containsKey(jsonObj.getString(versionColumn))) {
-						jsonObj.put(subtables.stream().collect(Collectors.joining("_")), subTableMap.get(jsonObj.getString(versionColumn)));
-					}
+				}else{
+					addSubTableData(dbBean, tableBean, subKeys, versionColumn, jArray);
 				}
 			}
 		}
 
 		return maxRowVersion;
+	}
+
+	private static void addSubTableData(DatabaseBean dbBean, TableBean tableBean, List<String> subKeys, String versionColumn, JSONArray jArray) throws SQLException, BeaverFatalException {
+		List<String> subtables = tableBean.getJoin_subtable();
+		String subtableSql = tableBean.getSubTableSqlString(dbBean, tableBean, subtables, subKeys);
+		JSONArray subArray = new JSONArray();
+		execSqlQuery(subtableSql, dbBean, subArray);
+
+		Map<String, JSONArray> subTableMap = new HashMap<>();
+		for (int i = 0; i < subArray.size(); i++) {
+			JSONObject jsonObj = subArray.getJSONObject(i);
+			if (subTableMap.containsKey(jsonObj.getString(versionColumn))) {
+				subTableMap.get(jsonObj.getString(versionColumn)).add(jsonObj);
+			}else{
+				JSONArray jArray2 = new JSONArray();
+				jArray2.add(jsonObj);
+				subTableMap.put(jsonObj.getString(versionColumn), jArray2);
+			}
+		}
+
+		for (int i = 0; i < jArray.size(); i++) {
+			JSONObject jsonObj = jArray.getJSONObject(i);
+			if (subTableMap.containsKey(jsonObj.getString(versionColumn))) {
+				jsonObj.put(subtables.stream().collect(Collectors.joining("_")), subTableMap.get(jsonObj.getString(versionColumn)));
+			}
+		}
 	}
 
 	public static String getMaxRowVersion(DatabaseBean dbBean, TableBean tableBean) throws SQLException, BeaverFatalException{

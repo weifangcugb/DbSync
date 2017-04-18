@@ -39,7 +39,7 @@ public class DatabaseBean implements Serializable{
     @JsonIgnore
     String appSecret;
     
-//  there are two types now, 'sqlServerDB' and 'oracleDB' and 'urlDB' and 'postgresDB'
+//  there are 4 types now, 'sqlserver' and 'oracle' and 'mysql' and 'webservice'
     @JsonIgnore
     String type;
 
