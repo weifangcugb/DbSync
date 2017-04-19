@@ -197,6 +197,7 @@ public class SqlHelper {
                 jsonObj.put("hdfs_db", dbBean.getDb());
                 jsonObj.element("hdfs_table", tableBean.getTable());
 
+                logger.debug("before replace, json:" + jsonObj);
                 if (tableBean.getReplaceOp() != null) {
 					for (TransformOp op : tableBean.getReplaceOp()) {
 						if (op.getToColumn() == null || !jsonObj.containsKey(op.getToColumn()) || jsonObj.getString(op.getToColumn()).equals("")) {
@@ -210,6 +211,7 @@ public class SqlHelper {
 						}
 					}
 				}
+                logger.debug("after replace, json:" + jsonObj);
 
                 if (tableBean.getJoin_subtable() != null) {
                 	subKeys.add(jsonObj.getString(versionColumn));

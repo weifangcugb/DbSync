@@ -70,7 +70,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 	protected String dbUploadUrl = null;
 	protected String heartBeatUrl = null;
 
-	public static volatile List<String> allowedDBs = new ArrayList<>();
+	public volatile List<String> allowedDBs = new ArrayList<>();
 
 	@Override
 	protected void setup() throws BeaverFatalException {
@@ -210,7 +210,7 @@ public class SyncConsumer extends FixedNumThreadPool{
 									}
 								}
 							}else {
-								logger.error("unknow db type," + " dbName:" + dbName + " msg:" + msgBody);
+								logger.error("unknow db type," + " dbName:" + dbName + " msg:" + msgBody + " allowedDbs: " + allowedDBs.stream().collect(Collectors.joining(",")));
 							}
 
 							break;

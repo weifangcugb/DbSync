@@ -4,6 +4,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
+import org.javatuples.Pair;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverTableIsFullException;
@@ -193,6 +194,12 @@ public class DbUploader extends CommonUploader {
 		}
 
 		for (DatabaseBean dbBean : dbBeans.getDatabases()) {
+			dbBean.getTables().stream().forEach(table -> {
+				table.getReplaceOp().stream().forEach(op -> {if (op.getFromTable() == null) {
+					logger.error(dbBean.getDb() + "," + table.getTable() + "," + op);
+				}});
+			});
+
 			dbBean.getTables().stream().flatMap(t -> t.getReplaceOp().stream())
 			.collect(Collectors.groupingBy(op -> op.getFromTable(), Collectors.toList())).forEach((table, ops) -> {
 				String keyColumn = ops.get(0).getFromKey();

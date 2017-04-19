@@ -40,7 +40,7 @@ public class TableBean implements Serializable{
     @JsonProperty("RID")
     private String rid;
 
-	private List<TransformOp> replaceOp = new ArrayList();
+	private List<TransformOp> replaceOp = new ArrayList<TransformOp>();
 
 	@JsonIgnore
     private String queryTime;

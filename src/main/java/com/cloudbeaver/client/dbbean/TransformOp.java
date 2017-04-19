@@ -78,8 +78,11 @@ public class TransformOp {
 	public void doOp(DatabaseBean dbBean, TableBean tableBean, JSONObject result) throws SQLException, BeaverFatalException {
 		for (String column : fromColumsArry) {
 			String value = dbBean.getOpTableValue(fromTable, result.getString(toColumn), column);
+			logger.debug("replace column, fromColumn:" + column + " toColumn:" + toColumn + " from:" + result.getString(toColumn) + " to:" + value);
+
 			if (value != null) {
-				result.put(toColumn + "_" + column, value);
+//				result.put(toColumn + "_" + column, value);
+				result.put(toColumn, value);
 			}
 		}
 	}
@@ -92,8 +95,14 @@ public class TransformOp {
 		if (!opResult.isEmpty()) {
 			JSONObject jObject = opResult.getJSONObject(0);
 			for (String key : (Set<String>)jObject.keySet()) {
-				result.put(toColumn + "_" +key, jObject.get(key));
+//				result.put(toColumn + "_" +key, jObject.get(key));
+				result.put(toColumn, jObject.get(key));
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "TransformOp [toColumn=" + toColumn + ", fromTable=" + fromTable + ", fromKey=" + fromKey + ", fromColumns=" + fromColumns + "]";
 	}
 }

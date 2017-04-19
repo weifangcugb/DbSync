@@ -161,7 +161,7 @@ public class RepairDBSync extends SyncConsumer{
 			int tryTime = 0;
 			for (; tryTime < SyncConsumer.MAX_POST_RETRY_TIME; tryTime++) {
 				try {
-					if (SyncConsumer.allowedDBs.contains(dbName)) {
+					if (allowedDBs.contains(dbName)) {
 						if (!dbName.equals(CommonUploader.TASK_FILEDB_NAME)) {
 //							upload db data to web server
 							BeaverUtils.doPost(dbUploadUrl, msgBody);
