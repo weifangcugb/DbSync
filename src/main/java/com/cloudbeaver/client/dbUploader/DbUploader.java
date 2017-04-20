@@ -4,7 +4,6 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.*;
-import org.javatuples.Pair;
 
 import com.cloudbeaver.client.common.BeaverFatalException;
 import com.cloudbeaver.client.common.BeaverTableIsFullException;
@@ -15,6 +14,7 @@ import com.cloudbeaver.client.common.CommonUploader;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
 import com.cloudbeaver.client.dbbean.MultiDatabaseBean;
 import com.cloudbeaver.client.dbbean.TableBean;
+import com.cloudbeaver.client.dbbean.TransformOp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -202,7 +202,7 @@ public class DbUploader extends CommonUploader {
 
 			dbBean.getTables().stream().flatMap(t -> t.getReplaceOp().stream())
 			.collect(Collectors.groupingBy(op -> op.getFromTable(), Collectors.toList())).forEach((table, ops) -> {
-				String keyColumn = ops.get(0).getFromKey();
+				List<String> keyColumns = ops.get(0).getOpKeys();
 				List<String> columns = ops.stream().flatMap(op -> Arrays.asList(op.getFromColumsArry()).stream())
 						.distinct().collect(Collectors.toList());
 				String loadingSql = ops.get(0).getOpSqlForLoading(columns);
@@ -210,8 +210,16 @@ public class DbUploader extends CommonUploader {
 				while (true) {
 					try {
 						SqlHelper.execSqlQueryWithConsumer(loadingSql, dbBean, rs -> {
+							String key = keyColumns.stream().map(k -> {
+								try {
+									return rs.getString(k);
+								} catch (SQLException e) {
+									BeaverUtils.printLogExceptionWithoutSleep(e, "result set can't get value, column:" + k);
+									return null;
+								}
+							}).filter(k -> k != null).collect(Collectors.joining(TransformOp.getSpliter()));
 							for (String columnName : columns) {
-								dbBean.putOpTableValue(table, rs.getString(keyColumn), columnName, rs.getString(columnName));
+								dbBean.putOpTableValue(table, key, columnName, rs.getString(columnName));
 							}
 						});
 						break;

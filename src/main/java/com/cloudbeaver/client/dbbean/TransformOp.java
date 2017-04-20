@@ -21,6 +21,7 @@ import net.sf.json.JSONObject;
  */
 public class TransformOp {
 	private static Logger logger = Logger.getLogger(DbUploader.class);
+	private static String spliter = "___";
 
 	private String toColumn;
 	private String fromTable;
@@ -32,16 +33,39 @@ public class TransformOp {
 	
 	@JsonIgnore
 	public String getOpSqlForLoading(List<String> columns) {
-		return String.format("select %s,%s from %s", fromKey, columns.stream().collect(Collectors.joining(",")), fromTable);
+		String keys = getOpKeys().stream().collect(Collectors.joining(","));
+		return String.format("select %s,%s from %s", keys, columns.stream().collect(Collectors.joining(",")), fromTable);
+	}
+
+	@JsonIgnore
+	public static String getSpliter() {
+		return spliter;
+	}
+
+	@JsonIgnore
+	public static void setSpliter(String spliter2){
+		spliter = spliter2;
+	}
+
+	@JsonIgnore
+	public List<String> getOpKeys(){
+		return Arrays.asList(fromKey.split(spliter)).stream().map(part -> part.split("=")[0]).collect(Collectors.toList());
+	}
+
+	@JsonIgnore
+	public List<String> getOpValues(){
+		return Arrays.asList(fromKey.split(spliter)).stream().filter(part -> part.indexOf('=') != -1).map(part -> part.split("=")[1].trim()).collect(Collectors.toList());
 	}
 
 	@JsonIgnore
 	public String getOpSql(DatabaseBean dbBean, TableBean tableBean, String columnValue){
 		String selectColums = Arrays.asList(fromColumsArry).stream().collect(Collectors.joining("," + fromTable + '.', fromTable + '.', " "));
+		String keyCondition = fromKey.replaceAll(spliter, " and ");
 		if (tableBean.getTable().equals("TBFLOW_BASE")) {
-			return String.format("select %s, %s.%s from %s, %s where %s.%s = %s.%s and %s.%s = '%s'", selectColums, tableBean.getTable(), dbBean.getRowversion(), fromTable, tableBean.getTable(), fromTable, fromKey, tableBean.getTable(), toColumn, tableBean.getTable(), toColumn, columnValue);
+			return String.format("select %s from %s where %s = '%s'", selectColums, fromTable, keyCondition, columnValue);
 		}else{
-			return String.format("select %s, %s.%s from %s, %s where %s.%s = %s.%s and %s.%s = %s", selectColums, tableBean.getTable(), dbBean.getRowversion(), fromTable, tableBean.getTable(), fromTable, fromKey, tableBean.getTable(), toColumn, tableBean.getTable(), toColumn, columnValue);
+			return String.format("select %s from %s where %s = %s", selectColums, fromTable, keyCondition, columnValue);
+//			return String.format("select %s, %s.%s from %s, %s where %s.%s = %s.%s and %s.%s = %s", selectColums, tableBean.getTable(), dbBean.getRowversion(), fromTable, tableBean.getTable(), fromTable, fromKey, tableBean.getTable(), toColumn, tableBean.getTable(), toColumn, columnValue);
 		}
 	}
 
@@ -77,12 +101,19 @@ public class TransformOp {
 
 	public void doOp(DatabaseBean dbBean, TableBean tableBean, JSONObject result) throws SQLException, BeaverFatalException {
 		for (String column : fromColumsArry) {
-			String value = dbBean.getOpTableValue(fromTable, result.getString(toColumn), column);
-			logger.debug("replace column, fromColumn:" + column + " toColumn:" + toColumn + " from:" + result.getString(toColumn) + " to:" + value);
+			String key ="";
+			if (getOpValues().size() > 0) {
+				key = getOpValues().stream().collect(Collectors.joining(spliter)) + spliter;
+			}
+			key += result.getString(toColumn);
+
+			String value = dbBean.getOpTableValue(fromTable, key, column);
+			logger.debug("replace column, fromColumn:" + column + " toColumn:" + toColumn + " from:" 
+					+ result.getString(toColumn) + " to:" + value + " key:" + key);
 
 			if (value != null) {
-//				result.put(toColumn + "_" + column, value);
-				result.put(toColumn, value);
+				result.put(toColumn + "_" + column, value);
+//				result.put(toColumn, value);
 			}
 		}
 	}
@@ -95,8 +126,8 @@ public class TransformOp {
 		if (!opResult.isEmpty()) {
 			JSONObject jObject = opResult.getJSONObject(0);
 			for (String key : (Set<String>)jObject.keySet()) {
-//				result.put(toColumn + "_" +key, jObject.get(key));
-				result.put(toColumn, jObject.get(key));
+				result.put(toColumn + "_" +key, jObject.get(key));
+//				result.put(toColumn, jObject.get(key));
 			}
 		}
 	}

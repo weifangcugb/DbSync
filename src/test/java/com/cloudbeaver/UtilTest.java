@@ -5,10 +5,13 @@ import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -16,13 +19,39 @@ import net.sf.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.auth0.jwt.Algorithm;
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.client.common.SqlHelper;
 import com.cloudbeaver.client.dbbean.DatabaseBean;
-import com.cloudbeaver.jwt.JWTSigner;
+import com.cloudbeaver.client.dbbean.TableBean;
+import com.cloudbeaver.client.dbbean.TransformOp;
 
 public class UtilTest {
+	public static void main(String[] args) throws NoSuchAlgorithmException, ParseException, IOException {
+		UtilTest uTest = new UtilTest();
+//		uTest.testAppSign();
+//		uTest.testBCrypt();
+//		uTest.testSync();
+//		uTest.testJwt();
+//		uTest.testDate();
+//		uTest.testLong();
+//		uTest.testJson();
+//		uTest.testString();
+		uTest.testOpTable();
+	}
+
+	private void testOpTable() {
+		TransformOp op = new TransformOp();
+		op.setFromKey("a=1___b=2___c");
+		op.setFromTable("ttt");
+		op.setFromColumns("a1 b1");
+		op.setToColumn("ori1");
+
+		System.out.println("loadingSql:" + op.getOpSqlForLoading(Arrays.asList(new String[]{"c1"})));
+
+		TableBean tBean = new TableBean();
+		tBean.setTable("t1");
+		System.out.println(op.getOpSql(new DatabaseBean(), tBean, "111"));
+	}
+
 	@Test
 	public void testJsonArrayEmpty(){
 		JSONArray jArray = new JSONArray();
@@ -80,6 +109,9 @@ public class UtilTest {
 		String dirConf = "/tmp/testpics?";
 		String sub = dirConf.substring(dirConf.length() - 1);
 		Assert.assertEquals(sub, "?");
+
+		List<String> list = Arrays.asList(new String[]{"a"});
+		System.out.println(list.stream().collect(Collectors.joining(",")));
 	}
 
 	@Test
@@ -148,17 +180,6 @@ public class UtilTest {
 //		BeaverUtils.sleep(1000);
 //		sync.sayHello();
 		sync.sayHi();
-	}
-
-	public static void main(String[] args) throws NoSuchAlgorithmException, ParseException, IOException {
-		UtilTest uTest = new UtilTest();
-//		uTest.testAppSign();
-//		uTest.testBCrypt();
-//		uTest.testSync();
-//		uTest.testJwt();
-//		uTest.testDate();
-//		uTest.testLong();
-		uTest.testJson();
 	}
 
 	private void testLong() {

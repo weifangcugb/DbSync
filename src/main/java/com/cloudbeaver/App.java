@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import com.cloudbeaver.client.common.BeaverUtils;
 import com.cloudbeaver.client.common.CommonUploader;
 import com.cloudbeaver.client.dbUploader.DbUploader;
+import com.cloudbeaver.client.dbbean.TransformOp;
 import com.cloudbeaver.client.fileUploader.FileUploader;
 import com.cloudbeaver.mockServer.MockWebServer;
 import com.cloudbeaver.repair.RepairDBSync;
@@ -59,6 +60,10 @@ public class App {
         option.setRequired(false);
         options.addOption(option);
 
+        option = new Option("ops", "optable spliter", true, "set spliter for optable's keyColumn, default is '_' * 3");
+        option.setRequired(false);
+        options.addOption(option);
+
         CommandLineParser parser = new GnuParser();
 		try {
 			CommandLine commandLine = parser.parse(options, args);
@@ -79,6 +84,11 @@ public class App {
 	        if (commandLine.hasOption('s')) {
 				String step = commandLine.getOptionValue('s');
 				CommonUploader.DB_QEURY_LIMIT_DB = Integer.parseInt(step);
+			}
+
+	        if (commandLine.hasOption("ops")) {
+				String ops = commandLine.getOptionValue("ops");
+				TransformOp.setSpliter(ops);
 			}
 
             if (commandLine.hasOption('l')) {
