@@ -65,7 +65,6 @@ public class TransformOp {
 			return String.format("select %s from %s where %s = '%s'", selectColums, fromTable, keyCondition, columnValue);
 		}else{
 			return String.format("select %s from %s where %s = %s", selectColums, fromTable, keyCondition, columnValue);
-//			return String.format("select %s, %s.%s from %s, %s where %s.%s = %s.%s and %s.%s = %s", selectColums, tableBean.getTable(), dbBean.getRowversion(), fromTable, tableBean.getTable(), fromTable, fromKey, tableBean.getTable(), toColumn, tableBean.getTable(), toColumn, columnValue);
 		}
 	}
 
