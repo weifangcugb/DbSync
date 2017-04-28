@@ -1,5 +1,6 @@
 package com.cloudbeaver;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
@@ -35,7 +36,15 @@ public class UtilTest {
 //		uTest.testLong();
 //		uTest.testJson();
 //		uTest.testString();
-		uTest.testOpTable();
+//		uTest.testOpTable();
+		uTest.testDir();
+	}
+
+	private void testDir() {
+		File file = new File("/tmp");
+		for (File f : file.listFiles()) {
+			System.out.println(f + "\t" + f.lastModified() + "\t" + f.length());
+		}
 	}
 
 	private void testOpTable() {

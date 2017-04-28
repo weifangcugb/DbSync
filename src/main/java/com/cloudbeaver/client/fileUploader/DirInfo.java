@@ -10,7 +10,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.cloudbeaver.client.common.BeaverUtils;
-import com.cloudbeaver.client.common.CommonUploader;
 
 public class DirInfo {
 	private static Logger logger = Logger.getLogger(DirInfo.class);
@@ -86,18 +85,23 @@ public class DirInfo {
 
 	public void listAndSortFiles() {
 		finfos.clear();
+		listAllLevelsFiles(dir);
+		Collections.sort(finfos);
+	}
 
-		File[] files = dir.listFiles();
+	private void listAllLevelsFiles(File fatherDir) {
+		File[] files = fatherDir.listFiles();
 		for (File file : files) {
-			long changeTime = file.lastModified();
-//			logger.debug("file:" + file.getName() + " changeTime:" + changeTime + " mini:" + miniChangeTime);
-			if (changeTime > miniChangeTime) {
-				FileInfo finfo = new FileInfo(file, changeTime);
-				finfos.add(finfo);
+			if (file.isDirectory()) {
+				listAllLevelsFiles(file);
+			}else{
+				long changeTime = file.lastModified();
+				if (changeTime > miniChangeTime) {
+					FileInfo finfo = new FileInfo(file, changeTime);
+					finfos.add(finfo);
+				}
 			}
 		}
-
-		Collections.sort(finfos);
 	}
 
 	public void uploadFiles() {
@@ -123,7 +127,7 @@ public class DirInfo {
 					fileInfo.uploadFileData(fileInfo.getFile().getName(), fileData, BeaverUtils.longToHex(fileInfo.getModifyTime()), dirName);
 					setMiniChangeTime(fileInfo.getModifyTime());
 					logger.info("finish upload file, file:" + fileInfo.getFile().getAbsolutePath());
-					
+
 					break;
 				} catch (IOException e) {
 					BeaverUtils.PrintStackTrace(e);
