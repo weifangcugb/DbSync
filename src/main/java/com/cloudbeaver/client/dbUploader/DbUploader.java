@@ -120,7 +120,6 @@ public class DbUploader extends CommonUploader {
 		MultiDatabaseBean tmpDbBeans = objectMapper.readValue(taskJson, MultiDatabaseBean.class);
 
 		ArrayList<DatabaseBean> newDatabaseBeans = new ArrayList<DatabaseBean>();
-		DatabaseBean uionWebServerBean = null;
 		for (DatabaseBean dbBean : tmpDbBeans.getDatabases()) {
 			if (conf.get("db." + dbBean.getDb() + ".url") != null) {
 				dbBean.setDbUrl(conf.get("db." + dbBean.getDb() + ".url"));
@@ -165,23 +164,8 @@ public class DbUploader extends CommonUploader {
 					dbBean.setAppSecret(appKeySecret.get(appKey));
 				}
 
-				/*
-				 * hack here uion all Youdi webservice db-beans to one db-bean
-				 */
-//				if (dbType.equals(DB_TYPE_WEB_SERVICE) && (dbBean.getDb().equals("MeetingDB") || dbBean.getDb().equals("TalkDB") || dbBean.getDb().equals("PrasDB"))) {
-//					if (uionWebServerBean == null) {
-//						uionWebServerBean = dbBean;
-//					} else {
-//						uionWebServerBean.getTables().addAll(dbBean.getTables());
-//					}
-//					continue;
-//				}
 				newDatabaseBeans.add(dbBean);
 			}
-		}
-
-		if (uionWebServerBean != null) {
-			newDatabaseBeans.add(uionWebServerBean);
 		}
 
 		tmpDbBeans.setDatabases(newDatabaseBeans);
