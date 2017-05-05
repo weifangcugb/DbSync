@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashMap;
 import java.text.SimpleDateFormat;
 import java.util.Map;
 
@@ -41,6 +42,25 @@ public class PostDataServlet extends HttpServlet{
 	public static final String DATABASE_NAME = "hdfs_db";
 	public static final String TABLE_NAME = "hdfs_table";
 	private static int picNum = 0;
+	public static Map<String, String> DBName2DBType = new HashMap<String, String>();
+	{
+		DBName2DBType.put("DocumentDB", "sqlserver");
+		DBName2DBType.put("MeetingDB", "webservice");
+		DBName2DBType.put("TalkDB", "webservice");
+		DBName2DBType.put("PrasDB", "webservice");
+		DBName2DBType.put("JfkhDB", "oracle");
+		DBName2DBType.put("DocumentDBForSqlite", "sqlite");
+		DBName2DBType.put("DocumentFiles", "file");
+		DBName2DBType.put("VideoMeetingDB", "sqlserver");
+		DBName2DBType.put("HelpDB", "sqlserver");
+		DBName2DBType.put("XfzxDB", "oracle");
+		DBName2DBType.put("XfzxDB1", "oracle");
+		DBName2DBType.put("XfzxDB2", "oracle");
+		DBName2DBType.put("XfzxDB3", "oracle");
+		DBName2DBType.put("SqlServerTest", "sqlserver");
+		DBName2DBType.put("OracleTest", "oracle");
+		DBName2DBType.put("MysqlTest", "mysql");
+	}
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -72,7 +92,6 @@ public class PostDataServlet extends HttpServlet{
 		String tName = null;
 		JSONArray newjArray = JSONArray.fromObject(content);
 
-		Map<String, String> DBName2DBType = GetTaskServlet.map;
 		if(!content.contains("HeartBeat")){
 			if(newjArray.size()>0){
 				JSONObject record = newjArray.getJSONObject(0);
@@ -82,11 +101,18 @@ public class PostDataServlet extends HttpServlet{
 			System.out.println("dbName = " + dbName);
 			Assert.assertTrue("this database or file doesn't exists", DBName2DBType.containsKey(dbName));
 			//write data to local
-	    	String fileName = DATABASE_FILE_PREFIX + dbName + "/" + dbName + "_" + tName;
-	    	RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-			file.seek(file.length());
-			file.write((content.substring(1, content.length()-1) + ",").getBytes());
-			file.close();
+			if (DBName2DBType.get(dbName).equals("file")) {
+				System.out.println("got one pic, Num:" + picNum++);
+				if (NEED_SAVE_FILE) {
+					saveFile(content, dbName);
+				}
+			}else {
+				String fileName = DATABASE_FILE_PREFIX + dbName + "/" + dbName + "_" + tName;
+		    	RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+				file.seek(file.length());
+				file.write((content.substring(1, content.length()-1) + ",").getBytes());
+				file.close();
+			}
 		}
 
 		if(!content.contains("HeartBeat") && DBName2DBType.containsKey(dbName)){
@@ -94,13 +120,6 @@ public class PostDataServlet extends HttpServlet{
 				updateTask(content, DBName2DBType.get(dbName));
 			} catch (ParseException e) {
 				e.printStackTrace();
-			}
-		}
-
-		if (!content.contains("HeartBeat") && DBName2DBType.containsKey(dbName) && DBName2DBType.get(dbName).equals("file")) {
-			System.out.println("got one pic, Num:" + picNum++);
-			if (NEED_SAVE_FILE) {
-				saveFile(content, dbName);
 			}
 		}
 
@@ -277,12 +296,11 @@ public class PostDataServlet extends HttpServlet{
 //				String dirName = iob.getString("hdfs_table");
 				String fileData = iob.getString("file_data");
 				Object database = iob.get("hdfs_db");
-				Map<String, String> DBName2DBType = GetTaskServlet.map;
 				if(!DBName2DBType.get(database).equals("file")){
 					continue;
 				}
 				byte [] fdata = Base64.decodeBase64(fileData.getBytes());
-				FileOutputStream out = new FileOutputStream(new File(FILE_SAVE_DIR+fileName));
+				FileOutputStream out = new FileOutputStream(new File(FILE_SAVE_DIR+ database + "/" + fileName));
 				out.write(fdata);
 				out.flush();
 				out.close();

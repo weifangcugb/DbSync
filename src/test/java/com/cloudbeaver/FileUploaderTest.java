@@ -86,8 +86,9 @@ public class FileUploaderTest extends FileUploader{
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+		}finally {
+//			appFileTest.tearDownServers();
 		}
-//		appFileTest.tearDownServers();
 	}
 
 }

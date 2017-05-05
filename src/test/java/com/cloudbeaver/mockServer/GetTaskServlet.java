@@ -395,8 +395,11 @@ public class GetTaskServlet extends HttpServlet{
 	/*
 	 * file db
 	 */
-	private static String documentFilesInitJson = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"filetime\",\"tables\":"
+	private static String documentFilesInitJson = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"xgsj\",\"tables\":"
 			+ "[{\"table\":\"" + PROJECT_ABSOLUTE_PATH + "/src/resources/fileUploaderTestPics\",\"xgsj\":\"0000000000000000\"}]}]}";
+
+//	private static String documentFilesInitJson = "{\"databases\":[{\"db\":\"DocumentFiles\",\"rowversion\":\"xgsj\",\"tables\":"
+//			+ "[{\"table\":\"" + "/home/beaver/Documents/test/test1\",\"xgsj\":\"0000000000000000\"}]}]}";
 
 	public static String getTableId() {
 		return clientId;
