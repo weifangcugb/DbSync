@@ -376,14 +376,14 @@ public class GetTaskServlet extends HttpServlet{
 			+ "]}";
 
 	public static String AllDBInitJsonForMockTest = "{\"databases\":["
-//			+ "{\"db\":\"SqlServerTest\",\"rowversion\":\"ID\",\"tables\":["
-//			+ "{\"table\":\"users\",\"ID\":\"0\"},"
-//			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"},"
+			+ "{\"db\":\"SqlServerTest\",\"rowversion\":\"ID\",\"tables\":["
+			+ "{\"table\":\"users\",\"ID\":\"0\"},"
+			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}"
 //			+ "{\"table\":\"consumer\",\"join\":[\"department\"],\"key\":\"consumer.depId=department.ID\",\"ID\":\"0\"}"
-//			+ "]},"
+			+ "]},"
 //			+ "{\"db\":\"OracleTest\",\"rowversion\":\"ID\",\"tables\":["
 //			+ "{\"table\":\"users\",\"ID\":\"0\"},"
-//			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"},"
+//			+ "{\"table\":\"student\",\"join\":[\"department\"],\"key\":\"student.depId=department.ID\",\"ID\":\"0\"}"
 //			+ "{\"table\":\"consumer\",\"join\":[\"department\"],\"key\":\"consumer.depId=department.ID\",\"ID\":\"0\"}"
 //			+ "]},"
 			+ "{\"db\":\"MysqlTest\",\"rowversion\":\"ID\",\"tables\":["
@@ -469,7 +469,7 @@ public class GetTaskServlet extends HttpServlet{
     	resp.setCharacterEncoding("utf-8");
     	PrintWriter pw = resp.getWriter();
 //        pw.write(json);
-    	pw.write(bookDBInitJson);
+    	pw.write(AllDBInitJsonForMockTest);
         pw.flush();
         pw.close();
         System.out.println("get task succeed!");

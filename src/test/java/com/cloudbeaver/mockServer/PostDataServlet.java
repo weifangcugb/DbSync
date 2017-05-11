@@ -90,11 +90,11 @@ public class PostDataServlet extends HttpServlet{
 		
 		String dbName = null;
 		String tName = null;
-		JSONArray newjArray = JSONArray.fromObject(content);
+		JSONArray jArray = JSONArray.fromObject(content);
 
 		if(!content.contains("HeartBeat")){
-			if(newjArray.size()>0){
-				JSONObject record = newjArray.getJSONObject(0);
+			if(jArray.size()>0){
+				JSONObject record = jArray.getJSONObject(0);
 				dbName = record.getString(DATABASE_NAME);
 				tName = record.getString(TABLE_NAME);
 			}
@@ -107,11 +107,16 @@ public class PostDataServlet extends HttpServlet{
 					saveFile(content, dbName);
 				}
 			}else {
-				String fileName = DATABASE_FILE_PREFIX + dbName + "/" + dbName + "_" + tName;
-		    	RandomAccessFile file = new RandomAccessFile(fileName, "rw");
-				file.seek(file.length());
-				file.write((content.substring(1, content.length()-1) + ",").getBytes());
-				file.close();
+				synchronized(PostDataServlet.logger){
+		        	//write data to local
+					String fileName = DATABASE_FILE_PREFIX + dbName + "/" + dbName + "_" + tName;
+			    	RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+					file.seek(file.length());
+					for(int i = 0; i < jArray.size(); i++){
+		    			file.write((jArray.get(i) + "\n").getBytes());
+		    		}
+					file.close();
+	        	}
 			}
 		}
 
